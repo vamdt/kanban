@@ -2,6 +2,9 @@ package main
 
 import (
 	"flag"
+	"log"
+	"net/http"
+	"os"
 
 	"./crawl"
 
@@ -24,8 +27,40 @@ func init() {
 	flag.IntVar(&opt.update_days, "update_days", 5, "update days")
 }
 
+func yoWs(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for {
+		messageType, p, err := conn.ReadMessage()
+		if err != nil {
+			return
+		}
+		log.Println(messageType)
+		log.Println(p)
+		if err = conn.WriteMessage(messageType, p); err != nil {
+			return
+		}
+	}
+}
+
 func main() {
 	flag.Parse()
+
+	http.HandleFunc("/yo", yoWs)
+	http.HandleFunc("/stock", serveWs)
+	http.Handle("/", http.FileServer(http.Dir("static")))
+
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "3000"
+	}
+	addr := ":" + port
+	log.Println("serve on", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
+
 	if len(opt.stock) < 1 {
 		panic("need stock id")
 	}
