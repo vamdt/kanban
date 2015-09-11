@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -10,11 +9,10 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"strings"
 	"time"
 
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
+	"./crawl"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -27,44 +25,6 @@ type Tick struct {
 	Volume   int // 手
 	Turnover int // 元
 	Type     int
-}
-
-func Time2ObjectId(t time.Time) bson.ObjectId {
-	var b [12]byte
-	binary.BigEndian.PutUint32(b[:4], uint32(t.Unix()))
-	binary.BigEndian.PutUint16(b[4:6], uint16(t.Nanosecond()/int(time.Millisecond)))
-	return bson.ObjectId(string(b[:]))
-}
-
-func ObjectId2Time(oid bson.ObjectId) time.Time {
-	id := string(oid)
-	if len(oid) != 12 {
-		panic(fmt.Sprintf("Invalid ObjectId: %q", id))
-	}
-	secs := int64(binary.BigEndian.Uint32([]byte(id[0:4])))
-	nsec := int64(binary.BigEndian.Uint16([]byte(id[4:6]))) * int64(time.Millisecond)
-	return time.Unix(secs, nsec).UTC()
-}
-
-func ParseCent(s string) int {
-	ms := strings.SplitN(s, ".", 3)
-
-	m, _ := strconv.Atoi(ms[0])
-	if m < 0 {
-		m = -m
-	}
-
-	var cent string
-	if len(ms) > 1 {
-		cent = ms[1]
-	}
-	cent = cent + "00"
-	cent = cent[:2]
-	c, _ := strconv.Atoi(cent)
-	if s[:1] == "-" {
-		return 100*m - c
-	}
-	return 100*m + c
 }
 
 func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnover, typestr []byte) {
@@ -264,19 +224,12 @@ func (p *Quote) downloadFromSina(t time.Time) []byte {
 	}
 
 	log.Println(p.sinaQuoteUrl(t))
-	resp, err := http_get(p.sinaQuoteUrl(t), nil)
+	body, err = crawl.Http_get_gbk(p.sinaQuoteUrl(t), nil)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
-	defer resp.Body.Close()
 
-	body, err = ioutil.ReadAll(transform.NewReader(resp.Body,
-		simplifiedchinese.GBK.NewDecoder()))
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
 	p.writeRawCache(body, t)
 	return body
 }
