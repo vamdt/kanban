@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
+
+	"./crawl"
 
 	"gopkg.in/mgo.v2"
 )
@@ -36,21 +37,10 @@ func main() {
 	defer session.Close()
 	db := session.DB("stock")
 
-	s := NewQuote(opt.stock)
+	s := crawl.NewQuote(opt.stock)
 	if opt.today {
 		s.UpdateToday(db)
 		return
 	}
 	s.Update(db, opt.update_days)
-}
-
-func DumpAll(c *mgo.Collection) {
-	var result Tick
-	iter := c.Find(nil).Iter()
-	for iter.Next(&result) {
-		fmt.Printf("Result: %v %v\n", ObjectId2Time(result.Id), result.time)
-	}
-	if err := iter.Close(); err != nil {
-		fmt.Printf("err: %v\n", err)
-	}
 }

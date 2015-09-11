@@ -1,4 +1,4 @@
-package main
+package crawl
 
 import (
 	"bytes"
@@ -10,8 +10,6 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"./crawl"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -224,7 +222,7 @@ func (p *Quote) downloadFromSina(t time.Time) []byte {
 	}
 
 	log.Println(p.sinaQuoteUrl(t))
-	body, err = crawl.Http_get_gbk(p.sinaQuoteUrl(t), nil)
+	body, err = Http_get_gbk(p.sinaQuoteUrl(t), nil)
 	if err != nil {
 		log.Println(err)
 		return nil

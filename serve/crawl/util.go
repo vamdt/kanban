@@ -1,4 +1,4 @@
-package main
+package crawl
 
 import (
 	"encoding/binary"
@@ -46,4 +46,14 @@ func ParseCent(s string) int {
 		return 100*m - c
 	}
 	return 100*m + c
+}
+
+func IsTradeDay(t time.Time) bool {
+	switch t.Weekday() {
+	case time.Sunday:
+		return false
+	case time.Saturday:
+		return false
+	}
+	return true
 }
