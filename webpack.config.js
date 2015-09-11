@@ -9,6 +9,9 @@ module.exports = {
 		filename: "[name].js",
 		chunkFilename: "[chunkhash].js"
 	},
+  resolve: {
+    extensions: ['', '.coffee', '.js']
+  },
 	module: {
 		loaders: [
 			// required to write "require('./style.css')"
