@@ -1,0 +1,51 @@
+defaults =
+  '5d':
+    interval: 5
+    color: '#abc'
+  '10d':
+    interval: 10
+    color: 'red'
+
+class KLineMas
+  constructor: (@root) ->
+    @options = KLine.extend {}, @root.options.mas, defaults
+
+  init: ->
+    svg = @root._ui.svg
+    for n,ma of @options
+      interval = +ma.interval
+
+      line = svg.select("path.line.mas.ma#{interval}")
+      if line.empty()
+        line = svg.append("path")
+          .attr("class", "line mas ma#{interval}")
+      line.attr("clip-path", "url(#clip)")
+        .style("stroke", ma.color)
+        .style("stroke-width", "1")
+
+  update: (data) ->
+    svg = @root._ui.svg
+    for n,ma of @options
+      interval = +ma.interval
+      e = svg.select("path.line.mas.ma#{interval}")
+      e.data([data])
+      @drawMA(data, interval, e)
+
+  drawMA: (data, interval, element) ->
+    x = @root._ui.x
+    y = @root._ui.y
+    left = @root._left
+    data = @root._data
+    mean = (d, i) ->
+      if left + i - interval - 1 < 0
+        return 0
+      l = left + i - interval - 1
+      return d3.mean data[l..(left+i)], (d) -> d.close
+
+    line = d3.svg.line()
+      .x((d, i) -> x i)
+      .y((d, i) -> y mean d, i)
+
+    element.attr("d", line)
+
+KLine.register_plugin 'mas', KLineMas

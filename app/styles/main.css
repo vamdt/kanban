@@ -1,0 +1,47 @@
+body {
+  background: #fafafa;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+	stroke: black;
+  shape-rendering: crispEdges;
+}
+
+.axis path {
+  display: none;
+}
+
+.axis line {
+  stroke: #ddd;
+  stroke-dasharray: 2,2;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.focus circle {
+  fill: none;
+  stroke: steelblue;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+}
+
+rect.pane {
+  fill: none;
+  pointer-events: all;
+}
