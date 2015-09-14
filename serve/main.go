@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"./crawl"
 
@@ -12,6 +14,7 @@ import (
 )
 
 type Opt struct {
+	debug       bool
 	today       bool
 	stock       string
 	mongo       string
@@ -21,37 +24,51 @@ type Opt struct {
 var opt Opt
 
 func init() {
+	flag.BoolVar(&opt.debug, "debug", true, "debug")
 	flag.BoolVar(&opt.today, "today", true, "update today's tick data")
 	flag.StringVar(&opt.stock, "stock", "", "stock id")
 	flag.StringVar(&opt.mongo, "mongo", "localhost", "mongo uri")
 	flag.IntVar(&opt.update_days, "update_days", 5, "update days")
 }
 
-func yoWs(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
+func dev_static_handle(w http.ResponseWriter, r *http.Request) {
+	upath := r.URL.Path
+	if strings.HasPrefix(upath, "/bower_components") {
+		http.ServeFile(w, r, upath[1:])
 		return
 	}
-	for {
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			return
-		}
-		log.Println(messageType)
-		log.Println(p)
-		if err = conn.WriteMessage(messageType, p); err != nil {
-			return
-		}
+
+	if strings.HasSuffix(upath, "/") {
+		upath = upath + "index.html"
 	}
+
+	rpath := path.Join("app", upath)
+	if _, err := os.Stat(rpath); err == nil {
+		http.ServeFile(w, r, rpath)
+		return
+	}
+
+	rpath = path.Join(".tmp", upath)
+	if _, err := os.Stat(rpath); err == nil {
+		http.ServeFile(w, r, rpath)
+		return
+	}
+	http.NotFound(w, r)
 }
 
 func main() {
 	flag.Parse()
+	if opt.debug {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	}
 
-	http.HandleFunc("/yo", yoWs)
-	http.HandleFunc("/stock", serveWs)
-	http.Handle("/", http.FileServer(http.Dir("static")))
+	http.HandleFunc("/socket.io/", serveWs)
+
+	if opt.debug {
+		http.HandleFunc("/", dev_static_handle)
+	} else {
+		http.Handle("/", http.FileServer(http.Dir("static")))
+	}
 
 	port := os.Getenv("PORT")
 	if len(port) == 0 {
