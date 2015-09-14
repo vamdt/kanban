@@ -58,11 +58,7 @@ func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
-	if opt.debug {
-		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	}
-
-	http.HandleFunc("/socket.io/", serveWs)
+	http.Handle("/socket.io/", sio)
 
 	if opt.debug {
 		http.HandleFunc("/", dev_static_handle)
