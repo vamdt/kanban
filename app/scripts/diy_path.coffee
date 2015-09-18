@@ -7,17 +7,8 @@ class KLineDiyPath
     @_diy_line = []
 
   init: ->
-    url = =>
-      s = @root.param 's'
-      k = @root.param 'k'
-      fq = @root.param 'fq'
-      param = "s=#{s}&k=#{k}&fq=#{fq}&name=hl"
-      "/stock/path?#{param}"
-
-    @root.watch_api url, 1000, (error, data) =>
-      if error
-        console.log error
-        return
+    @root.on_event 'path hl', (data) =>
+      console.log data
       @diy_line data
 
   diy_line: (data) ->

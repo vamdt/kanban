@@ -62,21 +62,10 @@ class KLine
     @initUI()
     @initPlugins()
 
-    url = =>
-      s = @param 's'
-      k = @param 'k'
-      fq = @param 'fq'
-      param = "s=#{s}&k=#{k}&fq=#{fq}"
-      "/stock/k?#{param}"
-
-    @watch_api url, 5000, (error, data) =>
-      if error
-        console.log error
-        return
+    @on_event 'kdata', (data) =>
+      console.log data
       @data data
       @draw()
-
-    @do_watch()
 
   initPlugins: ->
     for n,c of Plugins
@@ -179,30 +168,14 @@ class KLine
     @updateAxis()
     plugin.update data for plugin in @plugins
 
-  watch_api: (url, interval, cb) ->
-    interval = +interval
-    w = Watcher[interval] = Watcher[interval] || []
-    obj =
-      url: url
-      cb: cb
-      t: +new Date() - 86400000
-    w.push obj
-
-  do_watch: ->
-    t = +new Date()
-    do_one = (task) ->
-      url = task.url
-      url = url() if typeof url is 'function'
-      d3.json url, task.cb
-
-    fn = ->
-      t += 100
-      for interval,watchers of Watcher
-        for task in watchers
-          if (t - task.t) > +interval
-            task.t = +new Date()
-            do_one task
-    setInterval fn, 100
+  on_event: (event, cb) ->
+    s = @param 's'
+    k = @param 'k'
+    fq = @param 'fq'
+    @io = @io || io("http://#{location.hostname}:3002")
+    ename = [s,k,fq,event].join('.')
+    @io.on(ename, cb)
+    @io.emit('watch', ename)
 
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz

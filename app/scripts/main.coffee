@@ -1,6 +1,3 @@
-socket = io("http://#{location.hostname}:3002")
-socket.emit('stop typing')
-
 kl = new KLine(container: '#container')
 
 getQuery = (key) ->

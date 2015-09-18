@@ -24,17 +24,8 @@ class KLineAnnotate
       .attr("d", arrow_path)
       .attr("fill", "#000")
 
-    url = =>
-      s = @root.param 's'
-      k = @root.param 'k'
-      fq = @root.param 'fq'
-      param = "s=#{s}&k=#{k}&fq=#{fq}"
-      "/stock/annotate?#{param}"
-
-    @root.watch_api url, 1000, (error, data) =>
-      if error
-        console.log error
-        return
+    @root.on_event 'annotate', (data) =>
+      console.log data
       @annotate(data)
 
   clear_annotate: ->
