@@ -9,16 +9,10 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
+	writeWait  = 10 * time.Second
+	pongWait   = 60 * time.Second
 	pingPeriod = (pongWait * 9) / 10
 
-	// Maximum message size allowed from peer.
 	maxMessageSize = 512
 )
 
@@ -27,16 +21,27 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 10240,
 }
 
-// connection is an middleman between the websocket connection and the hub.
 type connection struct {
-	// The websocket connection.
 	ws *websocket.Conn
 
-	// Buffered channel of outbound messages.
 	send chan []byte
 }
 
-// readPump pumps messages from the websocket connection to the hub.
+type watchRequest struct {
+	StockId string      `json:"s"`
+	Fq      string      `json:"fq"`
+	Level   string      `json:"k"`
+	Event   string      `json:"event"`
+	Num     int         `json:"num,omitempty"`
+	Conn    *connection `json:"-"`
+}
+
+func (c *connection) watch(req *watchRequest) {
+	log.Println(req)
+	req.Conn = c
+	h.register <- req
+}
+
 func (c *connection) readPump() {
 	defer func() {
 		h.unregister <- c
@@ -46,21 +51,21 @@ func (c *connection) readPump() {
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.ws.ReadMessage()
+		wreq := &watchRequest{}
+		err := c.ws.ReadJSON(wreq)
 		if err != nil {
+			log.Println("read request from ws fail", err)
 			break
 		}
-		h.broadcast <- message
+		c.watch(wreq)
 	}
 }
 
-// write writes a message with the given message type and payload.
 func (c *connection) write(mt int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
 }
 
-// writePump pumps messages from the hub to the websocket connection.
 func (c *connection) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
@@ -85,7 +90,6 @@ func (c *connection) writePump() {
 	}
 }
 
-// serverWs handles websocket requests from the peer.
 func serveWs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
@@ -97,7 +101,6 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := &connection{send: make(chan []byte, 256), ws: ws}
-	h.register <- c
 	go c.writePump()
 	c.readPump()
 }

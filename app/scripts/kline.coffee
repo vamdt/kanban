@@ -62,7 +62,7 @@ class KLine
     @initUI()
     @initPlugins()
 
-    @on_event 'kdata', (data) =>
+    @on_event 'kdata', num:1000, (data) =>
       console.log data
       @data data
       @draw()
@@ -168,14 +168,76 @@ class KLine
     @updateAxis()
     plugin.update data for plugin in @plugins
 
-  on_event: (event, cb) ->
-    s = @param 's'
-    k = @param 'k'
-    fq = @param 'fq'
-    @io = @io || io("http://#{location.hostname}:3002")
-    ename = [s,k,fq,event].join('.')
-    @io.on(ename, cb)
-    @io.emit('watch', ename)
+  init_websocket: (done) ->
+    if @io
+      if @io.connected
+        return done()
+      @io.on('ready', done)
+      return
+
+    io = {}
+    @io = io
+
+    ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
+
+    ws.onopen = (evt) ->
+      console.log("Connected to WebSocket server.")
+      io.connected = true
+      done() if done
+      io.trigger('ready')
+
+    ws.onclose = (evt) ->
+      io.connected = false
+      console.log("Disconnected")
+
+    ws.onmessage = (evt) ->
+      console.log('Retrieved data from server: ' + evt.data)
+
+    ws.onerror = (evt) ->
+      console.log('Error occured: ' + evt)
+
+    io.ws = ws
+    handles = {}
+    io.handles = handles
+    io.on = (event, cb) ->
+      console.log("reg on", event)
+      handles[event] = handles[event] || []
+      handles[event].push(cb)
+    io.off = (event, cb) ->
+      return unless handles[event]
+      i = handles[event].indexOf(cb)
+      if i > -1
+        handles[event].splice i, 1
+
+    io.emit = (event, data) ->
+      msg = event: event, data: data
+      ws.send(JSON.stringify(msg))
+
+    io.watch = (ev) ->
+      console.log("watch", ev)
+      ws.send(JSON.stringify(ev))
+
+    io.trigger = (event) ->
+      return unless handles[event]
+      fn() for fn in handles[event]
+
+  on_event: (event, opt, cb) ->
+    if 'function' == typeof opt
+      cb = opt
+      opt = undefined
+    @init_websocket =>
+      s = @param 's'
+      k = @param 'k'
+      fq = @param 'fq'
+      ename = [s,k,fq,event].join('.')
+      @io.on(ename, cb)
+      ev =
+        event: event
+        s: s
+        k: k
+        fq: fq
+      ev[k] = v for k,v of opt
+      @io.watch(ev)
 
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
