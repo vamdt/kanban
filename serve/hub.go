@@ -9,27 +9,28 @@ const (
 type hub struct {
 	connections map[string][]*connection
 
-	broadcast chan []byte
+	broadcast chan data_response
 
 	register   chan *watchRequest
 	unregister chan *connection
 }
 
 var h = hub{
-	broadcast:   make(chan []byte),
+	broadcast:   make(chan data_response),
 	register:    make(chan *watchRequest),
 	unregister:  make(chan *connection),
 	connections: make(map[string][]*connection),
 }
 
 func (h *hub) do_register(r *watchRequest) {
-	name := r.StockId + ":" + r.Fq + ":" + r.Level
+	name := r.StockId
 	if _, ok := h.connections[name]; !ok {
 		h.connections[name] = []*connection{}
 	}
 	conns := h.connections[name]
 	conns = append(conns, r.Conn)
 	h.connections[name] = conns
+	go load_data(r.StockId, h.broadcast)
 }
 
 func (h *hub) do_unregister(c *connection) {
@@ -58,6 +59,7 @@ func (h *hub) run() {
 	defer func() {
 		ticker.Stop()
 	}()
+
 	for {
 		select {
 		case req := <-h.register:
@@ -66,13 +68,10 @@ func (h *hub) run() {
 			h.do_unregister(c)
 		case <-ticker.C:
 		case m := <-h.broadcast:
-			for _, conns := range h.connections {
-				if conns == nil {
-					continue
-				}
+			if conns, ok := h.connections[m.stock_id]; ok {
 				for _, c := range conns {
 					select {
-					case c.send <- m:
+					case c.send <- m.data:
 					default:
 						h.do_unregister(c)
 					}

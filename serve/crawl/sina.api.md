@@ -83,3 +83,17 @@ http://vip.stock.finance.sina.com.cn/quotes_service/view/js/detail_a.js
 
 根据最新的成交额和成交量计算出ticks信息
 
+3. 新浪日数据
+http://biz.finance.sina.com.cn/stock/flash_hq/kline_data.php?&rand=9000&symbol=sz002241&end_date=&begin_date=&type=plain
+
+4. 腾讯实时行情
+http://qt.gtimg.cn/r=0.8409869808238&q=s_sz000559,s_sz000913,s_sz002048,s_sz002085,s_sz002126,s_sz002284,s_sh600001,s_sh600003,s_sh600004
+
+5. other
+http://ifzq.gtimg.cn/appstock/app/fqkline/get?p=1&param=sz000819,week,,,10000,hfq
+http://ifzq.gtimg.cn/appstock/app/kline/kline?p=1&param=sh600765,day,,,320     开盘、收盘、最高、最低，成交量
+http://ifzq.gtimg.cn/appstock/indicators/MACD/D1?market=SH&code=600765&args=12-26-9&start=&end=&limit=320&fq=bfq
+
+http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sz002405&scale=5&ma=no&datalen=1023
+
+http://data.gtimg.cn/flashdata/hushen/daily/15/sh600604.js

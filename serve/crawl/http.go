@@ -24,6 +24,20 @@ func Http_get(url string, referer *string) (*http.Response, error) {
 	return client.Do(req)
 }
 
+func Http_get_raw(url string, referer *string) ([]byte, error) {
+	resp, err := Http_get(url, referer)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
 func Http_get_gbk(url string, referer *string) ([]byte, error) {
 	resp, err := Http_get(url, referer)
 	if err != nil {

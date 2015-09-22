@@ -8,27 +8,20 @@ import (
 	"path"
 	"strings"
 
-	"./crawl"
-
 	"gopkg.in/mgo.v2"
 )
 
 type Opt struct {
-	debug       bool
-	today       bool
-	stock       string
-	mongo       string
-	update_days int
+	debug bool
+	mongo string
 }
 
 var opt Opt
+var db *mgo.Database
 
 func init() {
 	flag.BoolVar(&opt.debug, "debug", true, "debug")
-	flag.BoolVar(&opt.today, "today", true, "update today's tick data")
-	flag.StringVar(&opt.stock, "stock", "", "stock id")
-	flag.StringVar(&opt.mongo, "mongo", "localhost", "mongo uri")
-	flag.IntVar(&opt.update_days, "update_days", 5, "update days")
+	flag.StringVar(&opt.mongo, "mongo", "127.0.0.1", "mongo uri")
 }
 
 func dev_static_handle(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +54,15 @@ func main() {
 	if opt.debug {
 		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	}
-  go h.run()
+
+	session, err := mgo.Dial(opt.mongo)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	db = session.DB("stock")
+
+	go h.run()
 	http.HandleFunc("/socket.io/", serveWs)
 
 	if opt.debug {
@@ -77,22 +78,4 @@ func main() {
 	addr := ":" + port
 	log.Println("serve on", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
-
-	if len(opt.stock) < 1 {
-		panic("need stock id")
-	}
-
-	session, err := mgo.Dial(opt.mongo)
-	if err != nil {
-		panic(err)
-	}
-	defer session.Close()
-	db := session.DB("stock")
-
-	s := crawl.NewQuote(opt.stock)
-	if opt.today {
-		s.UpdateToday(db)
-		return
-	}
-	s.Update(db, opt.update_days)
 }
