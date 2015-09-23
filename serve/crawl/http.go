@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -51,4 +52,13 @@ func Http_get_gbk(url string, referer *string) ([]byte, error) {
 		return nil, err
 	}
 	return body, nil
+}
+
+func Download(url string) []byte {
+	body, err := Http_get_raw(url, nil)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return body
 }
