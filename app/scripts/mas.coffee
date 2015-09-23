@@ -37,9 +37,8 @@ class KLineMas
     left = @root._left
     data = @root._data
     mean = (d, i) ->
-      if left + i - interval - 1 < 0
-        return 0
       l = left + i - interval - 1
+      l = Math.max(l, 0)
       return d3.mean data[l..(left+i)], (d) -> d.close
 
     line = d3.svg.line()

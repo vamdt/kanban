@@ -36,7 +36,15 @@ class KLine
       return @_data.slice(@_left, @_left+@options.size)
 
     s = data.id
-    data = data.days.data
+    k = data.param.k
+    switch k
+      when '1' then data = data.m1s.data
+      when '2' then data = data.m5s.data
+      when '4' then data = data.m30s.data
+      when '7' then data = data.weeks.data
+      when '8' then data = data.months.data
+      else data = data.days.data
+
     data.forEach (d) ->
       d.open = +d.open / 100
       d.close = +d.close / 100
@@ -62,7 +70,6 @@ class KLine
     @initPlugins()
 
     @on_event 'kdata', (data) =>
-      console.log data
       @data data
       @draw()
 
@@ -223,6 +230,7 @@ class KLine
     io.on 'data', (data) ->
       for event in ['kdata']
         ename = [ev.s,ev.k,ev.fq,event].join('.')
+        data.param = ev
         io.trigger ename, data
 
   on_event: (event, cb) ->
