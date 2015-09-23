@@ -85,6 +85,7 @@ http://vip.stock.finance.sina.com.cn/quotes_service/view/js/detail_a.js
 
 3. 新浪日数据
 http://biz.finance.sina.com.cn/stock/flash_hq/kline_data.php?&rand=9000&symbol=sz002241&end_date=&begin_date=&type=plain
+date open high close low volume
 
 4. 腾讯实时行情
 http://qt.gtimg.cn/r=0.8409869808238&q=s_sz000559,s_sz000913,s_sz002048,s_sz002085,s_sz002126,s_sz002284,s_sh600001,s_sh600003,s_sh600004

@@ -17,10 +17,10 @@ func init() {
 }
 
 type Stock struct {
-	Id     string
-	Months []Month
-	Days   []Day
-	Ticks  []Tick
+	Id     string  `json:"id"`
+	Months []Month `json:"months"`
+	Days   Days    `json:"days"`
+	Ticks  []Tick  `json:"ticks"`
 }
 
 func (p *Stock) day_collection_name() string {
@@ -34,19 +34,6 @@ func (p *Stock) day_collection(db *mgo.Database) *mgo.Collection {
 func (p *Stock) day_sina_url(t time.Time) string {
 	return fmt.Sprintf("http://biz.finance.sina.com.cn/stock/flash_hq/kline_data.php?&rand=9000&symbol=%s&end_date=&begin_date=%s&type=plain",
 		p.Id, t.Format("2006-01-02"))
-}
-
-func (p *Stock) days_load(db *mgo.Database) {
-	c := p.day_collection(db)
-	d := Day{}
-	iter := c.Find(nil).Sort("_id").Iter()
-	for iter.Next(&d) {
-		d.Time = ObjectId2Time(d.Id)
-		p.Days = append(p.Days, d)
-	}
-	if err := iter.Close(); err != nil {
-		log.Println(err)
-	}
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
@@ -68,11 +55,7 @@ func (p *Stock) days_download(t time.Time) (bool, error) {
 		}
 
 		day.FromString(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5])
-		if len(p.Days) < 1 {
-			p.Days = append(p.Days, day)
-		} else if day.Time.After(p.Days[len(p.Days)-1].Time) {
-			p.Days = append(p.Days, day)
-		}
+		p.Days.Add(day)
 	}
 	return true, nil
 }
@@ -88,24 +71,25 @@ func (p *Stock) downloadDaysFromSina(t time.Time) []byte {
 
 func (p *Stock) Days_sync(db *mgo.Database) int {
 	c := p.day_collection(db)
-	p.days_load(db)
+	p.Days.Load(c)
 	t := p.get_days_latest_time()
-	l := len(p.Days)
+	l := len(p.Days.Data)
 	p.days_download(t)
-	count := len(p.Days)
+	count := len(p.Days.Data)
 	if count > l {
 		for i, j := l, count; i < j; i++ {
-			p.Days[i].Save(c)
+			p.Days.Data[i].Save(c)
 		}
 	}
+	p.Days.Delta = count - l
 	return count - l
 }
 
 func (p *Stock) get_days_latest_time() time.Time {
-	if len(p.Days) < 1 {
+	if len(p.Days.Data) < 1 {
 		return market_begin_day
 	}
-	return p.Days[len(p.Days)-1].Time
+	return p.Days.Data[len(p.Days.Data)-1].Time
 }
 
 func (p *Stock) get_latest_time_from_db(c *mgo.Collection) time.Time {

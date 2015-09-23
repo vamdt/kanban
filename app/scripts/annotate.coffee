@@ -1,4 +1,4 @@
-parseDate = d3.time.format("%Y-%m-%d").parse
+parseDate = d3.time.format("%Y-%m-%dT%XZ").parse
 
 class KLineAnnotate
   constructor: (@root) ->

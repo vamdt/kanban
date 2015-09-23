@@ -13,7 +13,7 @@ extend = ->
       dest[k] = dest[k] || v
   dest
 
-parseDate = d3.time.format("%Y-%m-%d").parse
+parseDate = d3.time.format("%Y-%m-%dT%XZ").parse
 formatValue = d3.format(",.2f")
 formatCurrency = (d) -> formatValue(d)
 
@@ -35,14 +35,13 @@ class KLine
     if not arguments.length
       return @_data.slice(@_left, @_left+@options.size)
 
-    return if data.code != 200
-    s = data.param.s
-    data = data.data[s]
+    s = data.id
+    data = data.days.data
     data.forEach (d) ->
-      d.open = +d.data[0]
-      d.close = +d.data[1]
-      d.high = +d.data[2]
-      d.low = +d.data[3]
+      d.open = +d.open / 100
+      d.close = +d.close / 100
+      d.high = +d.high / 100
+      d.low = +d.low / 100
       d.date = parseDate(d.time)
     @_data = data
     @_max_left = Math.max(0, data.length - 1 - @options.size)
@@ -62,7 +61,7 @@ class KLine
     @initUI()
     @initPlugins()
 
-    @on_event 'kdata', num:1000, (data) =>
+    @on_event 'kdata', (data) =>
       console.log data
       @data data
       @draw()
@@ -180,27 +179,31 @@ class KLine
 
     ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
 
+    ev =
+      s: @param 's'
+      k: @param 'k'
+      fq: @param 'fq'
     ws.onopen = (evt) ->
-      console.log("Connected to WebSocket server.")
       io.connected = true
       done() if done
-      io.trigger('ready')
+      io.trigger('ready', evt)
+      ws.send(JSON.stringify(ev))
 
     ws.onclose = (evt) ->
       io.connected = false
-      console.log("Disconnected")
+      io.trigger('close', evt)
 
     ws.onmessage = (evt) ->
-      console.log('Retrieved data from server: ' + evt.data)
+      res = JSON.parse(evt.data)
+      io.trigger('data', res)
 
     ws.onerror = (evt) ->
-      console.log('Error occured: ' + evt)
+      io.trigger('error', evt)
 
     io.ws = ws
     handles = {}
     io.handles = handles
     io.on = (event, cb) ->
-      console.log("reg on", event)
       handles[event] = handles[event] || []
       handles[event].push(cb)
     io.off = (event, cb) ->
@@ -213,31 +216,22 @@ class KLine
       msg = event: event, data: data
       ws.send(JSON.stringify(msg))
 
-    io.watch = (ev) ->
-      console.log("watch", ev)
-      ws.send(JSON.stringify(ev))
-
-    io.trigger = (event) ->
+    io.trigger = (event, data) ->
       return unless handles[event]
-      fn() for fn in handles[event]
+      fn(data) for fn in handles[event]
 
-  on_event: (event, opt, cb) ->
-    if 'function' == typeof opt
-      cb = opt
-      opt = undefined
+    io.on 'data', (data) ->
+      for event in ['kdata']
+        ename = [ev.s,ev.k,ev.fq,event].join('.')
+        io.trigger ename, data
+
+  on_event: (event, cb) ->
     @init_websocket =>
       s = @param 's'
       k = @param 'k'
       fq = @param 'fq'
       ename = [s,k,fq,event].join('.')
       @io.on(ename, cb)
-      ev =
-        event: event
-        s: s
-        k: k
-        fq: fq
-      ev[k] = v for k,v of opt
-      @io.watch(ev)
 
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz

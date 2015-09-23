@@ -29,7 +29,7 @@ class KLineCandle
 
     tips = @_ui.tips
     show = (d, i) ->
-      tips.html("#{d.day}<br/>open: #{d.open}<br/>high: #{d.high}<br/>low: #{d.low}<br/>close: #{d.close}")
+      tips.html("#{d.date}<br/>open: #{d.open}<br/>high: #{d.high}<br/>low: #{d.low}<br/>close: #{d.close}")
     svg.selectAll("rect.candle").remove()
     svg.selectAll("line.candle").remove()
 
