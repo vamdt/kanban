@@ -1,8 +1,6 @@
 package crawl
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,8 +14,8 @@ import (
 )
 
 type Tick struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-	time     time.Time
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"-"`
+	Time     time.Time
 	Price    int
 	Change   int
 	Volume   int // 手
@@ -25,9 +23,15 @@ type Tick struct {
 	Type     int
 }
 
+type Ticks struct {
+	Data    []Tick `json:"data"`
+	EndTime time.Time
+	Delta   int
+}
+
 func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnover, typestr []byte) {
-	p.time, _ = time.Parse("15:04:05", string(timestr))
-	p.time = date.Add(time.Second * time.Duration(TheSeconds(p.time)))
+	p.Time, _ = time.Parse("15:04:05", string(timestr))
+	p.Time = date.Add(time.Second * time.Duration(TheSeconds(p.Time)))
 
 	p.Price = ParseCent(string(price))
 	p.Change = ParseCent(string(change))
@@ -45,105 +49,35 @@ func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnov
 	}
 }
 
-type Quote struct {
-	Stock string
-	Ticks []Tick
-}
-
-func NewQuote(stock string) *Quote {
-	return &Quote{Stock: stock}
-}
-
-func (p *Quote) collectionName() string {
-	return fmt.Sprintf("%s.tick", p.Stock)
-}
-
-func (p *Quote) Collection(db *mgo.Database) *mgo.Collection {
-	return db.C(p.collectionName())
-}
-
-func (p *Quote) collectionTodayName() string {
-	return fmt.Sprintf("%s.tick.0day", p.Stock)
-}
-
-func (p *Quote) CollectionToday(db *mgo.Database) *mgo.Collection {
-	return db.C(p.collectionTodayName())
-}
-
-func (p *Quote) sinaQuoteUrl(t time.Time) string {
-	return fmt.Sprintf("http://market.finance.sina.com.cn/downxls.php?date=%s&symbol=%s",
-		t.Format("2006-01-02"), p.Stock)
-}
-
+/*
 func (p *Quote) sinaTodayQuoteUrl(t time.Time) string {
 	return fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=100000&symbol=%s&rn=%ld",
 		p.Stock, t.UnixNano()/int64(time.Millisecond))
 }
+*/
 
-func (p *Quote) rawCacheFilename(t time.Time) string {
-	return path.Join(os.Getenv("HOME"), "cache", t.Format("2006/0102"), p.Stock)
+func raw_cache_filename(id string, t time.Time) string {
+	return path.Join(os.Getenv("HOME"), "cache", t.Format("2006/0102"), id)
 }
 
-func (p *Quote) readRawCache(t time.Time) ([]byte, error) {
-	return ioutil.ReadFile(p.rawCacheFilename(t))
+func tick_read_raw_cache(id string, t time.Time) ([]byte, error) {
+	return ioutil.ReadFile(raw_cache_filename(id, t))
 }
 
-func (p *Quote) writeRawCache(c []byte, t time.Time) {
+func tick_write_raw_cache(c []byte, id string, t time.Time) {
 	if len(c) < 1 {
 		return
 	}
-	f := p.rawCacheFilename(t)
+	f := raw_cache_filename(id, t)
 	os.MkdirAll(path.Dir(f), 0755)
-	ioutil.WriteFile(p.rawCacheFilename(t), c, 0644)
+	ioutil.WriteFile(f, c, 0644)
 }
 
 func TheSeconds(t time.Time) int {
 	return t.Hour()*60*60 + t.Minute()*60 + t.Second()
 }
 
-func (p *Quote) UpdateToday(db *mgo.Database) {
-}
-
-func (p *Quote) Update(db *mgo.Database, days int) {
-	now := time.Now().UTC()
-	t := now.Truncate(time.Hour * 24)
-	if now.Hour() > 10 {
-		t = t.AddDate(0, 0, 1)
-	}
-
-	if days < 1 {
-		days = 5
-	}
-
-	i := 0
-	for i < days {
-		t = t.AddDate(0, 0, -1)
-		if !IsTradeDay(t) {
-			log.Println(t, "skip non trading day")
-			continue
-		}
-
-		i++
-		if p.HasInDB(t, db) {
-			log.Println(t, "already in db, skip")
-			continue
-		}
-
-		log.Println("prepare download ticks", t)
-		if i > 1 {
-			time.Sleep(time.Second)
-		}
-
-		if ok, err := p.downloadTicks(t); ok {
-			p.Save(db, t)
-		} else if err != nil {
-			log.Println(err)
-		}
-	}
-}
-
-func (p *Quote) HasInDB(t time.Time, db *mgo.Database) bool {
-	c := p.Collection(db)
+func TickHasInDB(t time.Time, c *mgo.Collection) bool {
 	begin_id := Time2ObjectId(t)
 	end_id := Time2ObjectId(t.AddDate(0, 0, 1))
 	n, err := c.Find(bson.M{"_id": bson.M{"$gt": begin_id, "$lt": end_id}}).Count()
@@ -154,91 +88,101 @@ func (p *Quote) HasInDB(t time.Time, db *mgo.Database) bool {
 	return n > 0
 }
 
-var UnknowSinaRes error = errors.New("could not find '成交时间' in head line")
-
-func (p *Quote) downloadTicks(t time.Time) (bool, error) {
-	body := p.downloadFromSina(t)
-	body = bytes.TrimSpace(body)
-	lines := bytes.Split(body, []byte("\n"))
-	count := len(lines) - 1
-	if count < 1 {
-		return false, nil
+func FixTickTime(ticks []Tick) {
+	if ticks == nil {
+		return
 	}
-	if bytes.Contains(lines[0], []byte("script")) {
-		return false, nil
-	}
-	if !bytes.Contains(lines[0], []byte("成交时间")) {
-		return false, UnknowSinaRes
-	}
-
-	p.Ticks = make([]Tick, count)
-	for i := count; i > 0; i-- {
-		line := bytes.TrimSpace(lines[i])
-		infos := bytes.Split(line, []byte("\t"))
-		if len(infos) != 6 {
-			err := errors.New("could not parse line " + string(line))
-			return false, err
-		}
-		p.Ticks[count-i].FromString(t, infos[0], infos[1], infos[2],
-			infos[3], infos[4], infos[5])
-	}
-	p.fixTickTime()
-	p.fixTickId()
-	return true, nil
-}
-
-func (p *Quote) fixTickTime() {
-	c := len(p.Ticks)
+	c := len(ticks)
 	if c < 2 {
 		return
 	}
 	for i := 1; i < c; i++ {
-		t := p.Ticks[i-1].time
-		for j := 1; i < c && t == p.Ticks[i].time; i++ {
-			p.Ticks[i].time = t.Add(time.Duration(j) * time.Millisecond)
+		t := ticks[i-1].Time
+		for j := 1; i < c && t == ticks[i].Time; i++ {
+			ticks[i].Time = t.Add(time.Duration(j) * time.Millisecond)
 			j++
 		}
 	}
 }
 
-func (p *Quote) fixTickId() {
-	c := len(p.Ticks)
+func FixTickId(ticks []Tick) {
+	if ticks == nil {
+		return
+	}
+	c := len(ticks)
 	for i := 0; i < c; i++ {
-		p.Ticks[i].Id = Time2ObjectId(p.Ticks[i].time)
+		ticks[i].Id = Time2ObjectId(ticks[i].Time)
 	}
 }
 
-func (p *Quote) Dump() {
-	c := len(p.Ticks)
-	for i := 0; i < c; i++ {
-		fmt.Printf("%+v\n", p.Ticks[i])
-	}
-}
-
-func (p *Quote) downloadFromSina(t time.Time) []byte {
-	body, err := p.readRawCache(t)
+func Tick_download_from_sina(id string, t time.Time) []byte {
+	body, err := tick_read_raw_cache(id, t)
 	if err == nil {
 		return body
 	}
 
-	log.Println(p.sinaQuoteUrl(t))
-	body, err = Http_get_gbk(p.sinaQuoteUrl(t), nil)
+	body, err = Http_get_gbk(Tick_sina_url(id, t), nil)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	p.writeRawCache(body, t)
+	tick_write_raw_cache(body, id, t)
 	return body
 }
 
-func (p *Quote) Save(db *mgo.Database, t time.Time) {
-	c := p.Collection(db)
-	dlen := len(p.Ticks)
-	for i := 0; i < dlen; i++ {
-		_, err := c.Upsert(bson.M{"_id": p.Ticks[i].Id}, &p.Ticks[i])
-		if err != nil {
-			log.Fatal("insert Quote error", err, p.Ticks[i])
-		}
+func Tick_collection_name(id string) string {
+	return fmt.Sprintf("%s.tick", id)
+}
+
+func Tick_collection(db *mgo.Database, id string) *mgo.Collection {
+	return db.C(Tick_collection_name(id))
+}
+
+func Tick_sina_url(id string, t time.Time) string {
+	return fmt.Sprintf("http://market.finance.sina.com.cn/downxls.php?date=%s&symbol=%s",
+		t.Format("2006-01-02"), id)
+}
+
+func (p *Ticks) Load(c *mgo.Collection) {
+	d := Tick{}
+	iter := c.Find(nil).Sort("_id").Iter()
+	num := len(p.Data)
+	for iter.Next(&d) {
+		d.Time = ObjectId2Time(d.Id)
+		p.Data = append(p.Data, d)
 	}
+	if err := iter.Close(); err != nil {
+		log.Println(err)
+	}
+	nnum := len(p.Data)
+	p.Delta = nnum - num
+	if nnum > 0 {
+		p.EndTime = p.Data[nnum-1].Time
+	}
+}
+
+func (p *Ticks) latest_time() time.Time {
+	if len(p.Data) < 1 {
+		return market_begin_day
+	}
+	return p.Data[len(p.Data)-1].Time
+}
+
+func (p *Tick) Save(c *mgo.Collection) {
+	_, err := c.Upsert(bson.M{"_id": p.Id}, p)
+	if err != nil {
+		log.Println("insert tick error", err, *p)
+	}
+}
+
+func (p *Ticks) Add(data Tick) {
+	if len(p.Data) < 1 {
+		p.Data = append(p.Data, data)
+		p.Delta++
+	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
+		p.Data = append(p.Data, data)
+		p.Delta++
+	}
+	p.EndTime = p.Data[len(p.Data)-1].Time
 }
