@@ -40,4 +40,12 @@ func load_data(stock_id string, cb chan data_response) {
 	new_num = stock.Ticks_update(db)
 	res.trans_data(&stock, cb)
 	log.Println("new ticks update", new_num)
+
+	new_num = stock.Ticks_today_update()
+	res.trans_data(&stock, cb)
+	log.Println("new ticks today update", new_num)
+
+	new_num = stock.Ticks_realtime_update()
+	res.trans_data(&stock, cb)
+	log.Println("new ticks today update", new_num)
 }

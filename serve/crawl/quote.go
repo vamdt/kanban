@@ -40,21 +40,20 @@ func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnov
 	p.Turnover, _ = strconv.Atoi(string(turnover))
 
 	switch string(typestr) {
+	case "UP":
+		fallthrough
 	case "买盘":
 		p.Type = 1
+	case "DOWN":
+		fallthrough
 	case "卖盘":
 		p.Type = 2
+	case "EQUAL":
+		fallthrough
 	case "中性盘":
 		p.Type = 3
 	}
 }
-
-/*
-func (p *Quote) sinaTodayQuoteUrl(t time.Time) string {
-	return fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=100000&symbol=%s&rn=%ld",
-		p.Stock, t.UnixNano()/int64(time.Millisecond))
-}
-*/
 
 func raw_cache_filename(id string, t time.Time) string {
 	return path.Join(os.Getenv("HOME"), "cache", t.Format("2006/0102"), id)
@@ -115,6 +114,23 @@ func FixTickId(ticks []Tick) {
 	}
 }
 
+func FixTickData(ticks []Tick) {
+	if ticks == nil {
+		return
+	}
+	c := len(ticks)
+	for i := 0; i < c; i++ {
+		ticks[i].Id = Time2ObjectId(ticks[i].Time)
+		if i == 0 {
+			ticks[i].Change = ticks[i].Price
+		} else {
+			ticks[i].Change = ticks[i].Price - ticks[i-1].Price
+		}
+		ticks[i].Turnover = ticks[i].Volume * ticks[i].Price / 100
+		ticks[i].Volume = ticks[i].Volume / 100
+	}
+}
+
 func Tick_download_from_sina(id string, t time.Time) []byte {
 	body, err := tick_read_raw_cache(id, t)
 	if err == nil {
@@ -128,6 +144,37 @@ func Tick_download_from_sina(id string, t time.Time) []byte {
 	}
 
 	tick_write_raw_cache(body, id, t)
+	return body
+}
+
+func Tick_download_today_from_sina(id string) []byte {
+	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=9000&symbol=%s&rn=%ld",
+		id, time.Now().UnixNano()/int64(time.Millisecond))
+	body, err := Http_get_gbk(url, nil)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	return body
+}
+
+type RealtimeTick struct {
+	last_time, time         time.Time
+	last_volume, volume     int
+	last_price, price       int
+	last_turnover, turnover int
+}
+
+func Tick_download_real_from_sina(id string) []byte {
+	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%ld&list=%s",
+		id, time.Now().UnixNano()/int64(time.Millisecond))
+	body, err := Http_get_gbk(url, nil)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
 	return body
 }
 
@@ -183,6 +230,40 @@ func (p *Ticks) Add(data Tick) {
 	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
 		p.Data = append(p.Data, data)
 		p.Delta++
+	}
+	p.EndTime = p.Data[len(p.Data)-1].Time
+}
+
+func (p *Ticks) Insert(data Tick) {
+	if len(p.Data) < 1 {
+		p.Data = []Tick{data}
+		p.Delta = 1
+	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
+		p.Data = append(p.Data, data)
+		p.Delta++
+	} else {
+		j := len(p.Data) - 1
+		should_insert := true
+		for i := j - 1; i > -1; i-- {
+			if p.Data[i].Time.After(data.Time) {
+				j = i
+				continue
+			} else if p.Data[i].Time.Equal(data.Time) {
+				p.Data[i] = data
+				should_insert = false
+			}
+			break
+		}
+
+		if should_insert {
+			if j < 1 {
+				p.Data = append([]Tick{data}, p.Data...)
+			} else {
+				p.Data = p.Data[0 : len(p.Data)+1]
+				copy(p.Data[j+1:], p.Data[j:])
+				p.Data[j] = data
+			}
+		}
 	}
 	p.EndTime = p.Data[len(p.Data)-1].Time
 }

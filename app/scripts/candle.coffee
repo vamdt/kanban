@@ -1,7 +1,7 @@
 defaults =
   width: 4
 
-[cup, cdown, ceq] = ["red", "green", "black"]
+[cup, cdown, ceq] = ["#f00", "#080", "#000"]
 
 kColor = (d) ->
   if d.open == d.close
