@@ -13,6 +13,12 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	buy_tick  = 1
+	sell_tick = 2
+	eq_tick   = 3
+)
+
 type Tick struct {
 	Id       bson.ObjectId `bson:"_id,omitempty" json:"-"`
 	Time     time.Time
@@ -29,6 +35,21 @@ type Ticks struct {
 	Delta   int
 }
 
+type RealtimeTick struct {
+	Tick
+	buyone  int
+	sellone int
+	status  int
+}
+
+func (p *RealtimeTick) set_status(s []byte) {
+	//"00":"","01":"临停1H","02":"停牌","03":"停牌","04":"临停","05":"停1/2","07":"暂停","-1":"无记录","-2":"未上市","-3":"退市"
+	p.status, _ = strconv.Atoi(string(s))
+	if p.status == 3 {
+		p.status = 2
+	}
+}
+
 func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnover, typestr []byte) {
 	p.Time, _ = time.Parse("15:04:05", string(timestr))
 	p.Time = date.Add(time.Second * time.Duration(TheSeconds(p.Time)))
@@ -43,15 +64,15 @@ func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnov
 	case "UP":
 		fallthrough
 	case "买盘":
-		p.Type = 1
+		p.Type = buy_tick
 	case "DOWN":
 		fallthrough
 	case "卖盘":
-		p.Type = 2
+		p.Type = sell_tick
 	case "EQUAL":
 		fallthrough
 	case "中性盘":
-		p.Type = 3
+		p.Type = eq_tick
 	}
 }
 
@@ -157,13 +178,6 @@ func Tick_download_today_from_sina(id string) []byte {
 	}
 
 	return body
-}
-
-type RealtimeTick struct {
-	last_time, time         time.Time
-	last_volume, volume     int
-	last_price, price       int
-	last_turnover, turnover int
 }
 
 func Tick_download_real_from_sina(id string) []byte {

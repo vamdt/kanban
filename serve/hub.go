@@ -3,7 +3,7 @@ package main
 import "time"
 
 const (
-	tickPeriod = 2 * time.Second
+	tickPeriod = 5 * time.Second
 )
 
 type hub struct {

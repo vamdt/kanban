@@ -3,6 +3,7 @@ package crawl
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -24,7 +25,7 @@ type Stock struct {
 	Weeks     Weeks  `json:"weeks"`
 	Months    Months `json:"months"`
 	Ticks     Ticks  `json:"-"`
-	last_tick Tick
+	last_tick RealtimeTick
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
@@ -325,47 +326,61 @@ func (p *Stock) ticks_get_today() bool {
 }
 
 func (p *Stock) ticks_get_real() bool {
-	t := time.Now().UTC().Truncate(time.Hour * 24)
 
 	body := Tick_download_real_from_sina(p.Id)
 	if body == nil {
 		return false
 	}
-  //var hq_str_sh600000="������,14.95,14.95,15.27,15.30,14.87,15.24,15.25,78862572,1192962812,36900,15.24,7104,15.23,59604,15.22,40200,15.21,25800,15.20,32200,15.25,7600,15.26,70100,15.27,5600,15.28,194400,15.29,2015-09-24,15:03:01,00";
-  str := fmt.Sprintf("var hq_str_%s=", id)
-  i := bytes.Index(body, []byte(str))
-  if i < 0 {
-    log.Println("not found", str)
-    return false
-  }
 
-  line := body[i+len(str):]
-  i = bytes.Index(line, []byte("\";"))
-  if i < 0 {
-    log.Println("not found \";")
-    return false
-  }
-  line = line[:i]
-  infos := bytes.Split(line, []byte(","))
-  if len(infos) < 32 {
-    log.Println("sina hq api, res format changed")
-    return false
-  }
+	str := fmt.Sprintf("var hq_str_%s=", p.Id)
+	i := bytes.Index(body, []byte(str))
+	if i < 0 {
+		log.Println("not found", str)
+		return false
+	}
+
+	line := body[i+len(str):]
+	i = bytes.Index(line, []byte("\";"))
+	if i < 0 {
+		log.Println("not found \";")
+		return false
+	}
+	line = line[:i]
+	infos := bytes.Split(line, []byte(","))
+	if len(infos) < 33 {
+		log.Println("sina hq api, res format changed")
+		return false
+	}
 
 	nul := []byte("")
-  tick := Tick{}
-  tick.FromString(t, infos[31], infos[3], nul, infos[8], infos[9], nul)
-  if p.last_tick.Volume == 0 {
-    p.last_tick = tick
-    return
-  }
-  if tick.Time.Before(p.last_tick.Time) {
-    p.last_tick.Volume = 0
-  }
-  if tick.Volume != p.last_tick.Volume {
-  }
+	tick := RealtimeTick{}
+  t, _ := time.Parse("2006-01-02", string(infos[30]))
+	tick.FromString(t, infos[31], infos[3], nul, infos[8], infos[9], nul)
+	tick.buyone = ParseCent(string(infos[11]))
+	tick.sellone = ParseCent(string(infos[21]))
+	tick.set_status(infos[32])
 
-  tick.Volume = tick.Volume / 100
-  p.Ticks.Insert(tick)
+	if p.last_tick.Volume == 0 {
+		p.last_tick = tick
+    if tick.Time.Before(p.last_tick.Time) {
+      p.last_tick.Volume = 0
+    }
+		return false
+	}
+	if tick.Volume != p.last_tick.Volume {
+		if tick.Price >= p.last_tick.sellone {
+			tick.Type = buy_tick
+		} else if tick.Price <= p.last_tick.buyone {
+			tick.Type = sell_tick
+		} else {
+			tick.Type = eq_tick
+		}
+		tick.Change = tick.Price - p.last_tick.Price
+
+		p.last_tick = tick
+		tick.Volume = tick.Volume / 100
+		p.Ticks.Insert(tick.Tick)
+	}
+
 	return true
 }
