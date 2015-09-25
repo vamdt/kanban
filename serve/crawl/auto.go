@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -26,6 +29,49 @@ type Stock struct {
 	Months    Months `json:"months"`
 	Ticks     Ticks  `json:"-"`
 	last_tick RealtimeTick
+	hash      int
+}
+
+type PStockSlice []*Stock
+
+func (p PStockSlice) Len() int      { return len(p) }
+func (p PStockSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p PStockSlice) Less(i, j int) bool {
+	if p[i].hash == p[j].hash {
+		return strings.Compare(p[i].Id, p[j].Id) == -1
+	}
+	return p[i].hash < p[j].hash
+}
+
+func SearchPStockSlice(a PStockSlice, id string) int {
+	hash := StockHash(id)
+	return sort.Search(len(a), func(i int) bool {
+		if a[i].hash == hash {
+			return strings.Compare(a[i].Id, id) > -1
+		}
+		return a[i].hash > hash
+	})
+}
+
+func (p PStockSlice) Search(id string) int {
+	return SearchPStockSlice(p, id)
+}
+
+type Stocks struct {
+	stocks PStockSlice
+}
+
+func (p *Stocks) Watch(id string) {
+}
+
+func StockHash(id string) int {
+	for i, c := range []byte(id) {
+		if c >= '0' && c <= '9' {
+			i, _ = strconv.Atoi(id[i:])
+			return i
+		}
+	}
+	return 0
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
@@ -354,7 +400,7 @@ func (p *Stock) ticks_get_real() bool {
 
 	nul := []byte("")
 	tick := RealtimeTick{}
-  t, _ := time.Parse("2006-01-02", string(infos[30]))
+	t, _ := time.Parse("2006-01-02", string(infos[30]))
 	tick.FromString(t, infos[31], infos[3], nul, infos[8], infos[9], nul)
 	tick.buyone = ParseCent(string(infos[11]))
 	tick.sellone = ParseCent(string(infos[21]))
@@ -362,9 +408,9 @@ func (p *Stock) ticks_get_real() bool {
 
 	if p.last_tick.Volume == 0 {
 		p.last_tick = tick
-    if tick.Time.Before(p.last_tick.Time) {
-      p.last_tick.Volume = 0
-    }
+		if tick.Time.Before(p.last_tick.Time) {
+			p.last_tick.Volume = 0
+		}
 		return false
 	}
 	if tick.Volume != p.last_tick.Volume {

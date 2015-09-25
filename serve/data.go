@@ -7,6 +7,8 @@ import (
 	"./crawl"
 )
 
+var stocks crawl.Stocks
+
 type data_response struct {
 	stock_id string
 	data     []byte
@@ -42,10 +44,6 @@ func load_data(stock_id string, cb chan data_response) {
 	log.Println("new ticks update", new_num)
 
 	new_num = stock.Ticks_today_update()
-	res.trans_data(&stock, cb)
-	log.Println("new ticks today update", new_num)
-
-	new_num = stock.Ticks_realtime_update()
 	res.trans_data(&stock, cb)
 	log.Println("new ticks today update", new_num)
 }
