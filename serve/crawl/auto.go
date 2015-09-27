@@ -69,8 +69,7 @@ type Stocks struct {
 }
 
 func (p Stocks) Insert(id string) int {
-	s := &Stock{}
-	s.Id = id
+	s := &Stock{Id: id, hash: StockHash(id)}
 	i, ok := p.stocks.Search(id)
 	if ok {
 		return i
@@ -88,7 +87,9 @@ func (p Stocks) Insert(id string) int {
 	return i
 }
 
-func (p *Stocks) Watch(id string) {
+func (p *Stocks) Watch(id string) *Stock {
+	i := p.Insert(id)
+	return p.stocks[i]
 }
 
 func StockHash(id string) int {
