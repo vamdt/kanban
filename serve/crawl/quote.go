@@ -273,7 +273,7 @@ func (p *Ticks) Insert(data Tick) {
 			if j < 1 {
 				p.Data = append([]Tick{data}, p.Data...)
 			} else {
-				p.Data = p.Data[0 : len(p.Data)+1]
+				p.Data = append(p.Data, data)
 				copy(p.Data[j+1:], p.Data[j:])
 				p.Data[j] = data
 			}

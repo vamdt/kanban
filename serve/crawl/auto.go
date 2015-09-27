@@ -53,12 +53,39 @@ func SearchPStockSlice(a PStockSlice, id string) int {
 	})
 }
 
-func (p PStockSlice) Search(id string) int {
-	return SearchPStockSlice(p, id)
+func (p PStockSlice) Search(id string) (int, bool) {
+	i := SearchPStockSlice(p, id)
+	if i >= p.Len() || i < 0 {
+		return i, false
+	}
+	if strings.Compare(p[i].Id, id) == 0 {
+		return i, true
+	}
+	return i, false
 }
 
 type Stocks struct {
 	stocks PStockSlice
+}
+
+func (p Stocks) Insert(id string) int {
+	s := &Stock{}
+	s.Id = id
+	i, ok := p.stocks.Search(id)
+	if ok {
+		return i
+	}
+	if i < 1 {
+		p.stocks = append(PStockSlice{s}, p.stocks...)
+		return 0
+	} else if i >= p.stocks.Len() {
+		p.stocks = append(p.stocks, s)
+		return p.stocks.Len() - 1
+	}
+	p.stocks = append(p.stocks, s)
+	copy(p.stocks[i+1:], p.stocks[i:])
+	p.stocks[i] = s
+	return i
 }
 
 func (p *Stocks) Watch(id string) {
