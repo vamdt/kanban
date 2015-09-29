@@ -3,14 +3,18 @@ package crawl
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/mgo.v2"
+)
+
+const (
+	tickPeriod = 5 * time.Second
 )
 
 var market_begin_day time.Time
@@ -30,6 +34,8 @@ type Stock struct {
 	Ticks     Ticks  `json:"-"`
 	last_tick RealtimeTick
 	hash      int
+	count     int
+	loaded    int
 }
 
 type PStockSlice []*Stock
@@ -65,15 +71,42 @@ func (p PStockSlice) Search(id string) (int, bool) {
 }
 
 type Stocks struct {
-	stocks PStockSlice
+	stocks  PStockSlice
+	rwmutex sync.RWMutex
+	wg      sync.WaitGroup
+	db      *mgo.Database
+}
+
+func (p *Stocks) Run() {
+	for {
+		p.Ticks_update_real()
+		time.Sleep(tickPeriod)
+	}
+}
+
+func (p Stocks) DB(db *mgo.Database) {
+	p.db = db
+}
+
+func (p Stocks) Update() {
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+	for _, s := range p.stocks {
+		s.Update(p.db)
+	}
 }
 
 func (p Stocks) Insert(id string) int {
-	s := &Stock{Id: id, hash: StockHash(id)}
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+	s := &Stock{Id: id, hash: StockHash(id), count: 1}
 	i, ok := p.stocks.Search(id)
 	if ok {
+		p.stocks[i].count++
 		return i
 	}
+
+	defer func() { go p.Update() }()
 	if i < 1 {
 		p.stocks = append(PStockSlice{s}, p.stocks...)
 		return 0
@@ -87,9 +120,62 @@ func (p Stocks) Insert(id string) int {
 	return i
 }
 
+func (p Stocks) Remove(id string) {
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+	if i, ok := p.stocks.Search(id); ok {
+		p.stocks[i].count--
+		if p.stocks[i].count < 1 {
+		}
+	}
+}
+
 func (p *Stocks) Watch(id string) *Stock {
 	i := p.Insert(id)
 	return p.stocks[i]
+}
+
+func (p *Stocks) UnWatch(id string) {
+	p.Remove(id)
+}
+
+func (p *Stocks) Ticks_update_real() {
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+	var b bytes.Buffer
+
+	for i, l := 0, len(p.stocks); i < l; {
+		b.Reset()
+		for j := 0; j < 10 && i < l; i, j = i+1, j+1 {
+			if p.stocks[i].loaded < 1 {
+				continue
+			}
+			if j > 0 {
+				b.WriteString(",")
+			}
+			b.WriteString(p.stocks[i].Id)
+		}
+		body := Tick_download_real_from_sina(b.String())
+		if body == nil {
+			continue
+		}
+		for _, line := range bytes.Split(body, []byte("\";")) {
+			line = bytes.TrimSpace(line)
+			info := bytes.Split(line, []byte("=\""))
+			if len(info) != 2 {
+				continue
+			}
+			prefix := "var hq_str_"
+			if !bytes.HasPrefix(info[0], []byte(prefix)) {
+				continue
+			}
+			id := info[0][len(prefix):]
+			if idx, ok := p.stocks.Search(string(id)); ok {
+				p.stocks[idx].tick_get_real(info[1])
+			}
+		}
+	}
+
 }
 
 func StockHash(id string) int {
@@ -100,6 +186,19 @@ func StockHash(id string) int {
 		}
 	}
 	return 0
+}
+
+func (p *Stock) Update(db *mgo.Database) {
+	if p.loaded > 0 {
+		return
+	}
+	p.loaded = 1
+	p.Days_update(db)
+	p.M30s_update(db)
+	p.M5s_update(db)
+	p.Ticks_update(db)
+	p.Ticks_today_update()
+	p.loaded = 2
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
@@ -399,27 +498,7 @@ func (p *Stock) ticks_get_today() bool {
 	return true
 }
 
-func (p *Stock) ticks_get_real() bool {
-
-	body := Tick_download_real_from_sina(p.Id)
-	if body == nil {
-		return false
-	}
-
-	str := fmt.Sprintf("var hq_str_%s=", p.Id)
-	i := bytes.Index(body, []byte(str))
-	if i < 0 {
-		log.Println("not found", str)
-		return false
-	}
-
-	line := body[i+len(str):]
-	i = bytes.Index(line, []byte("\";"))
-	if i < 0 {
-		log.Println("not found \";")
-		return false
-	}
-	line = line[:i]
+func (p *Stock) tick_get_real(line []byte) bool {
 	infos := bytes.Split(line, []byte(","))
 	if len(infos) < 33 {
 		log.Println("sina hq api, res format changed")

@@ -1,11 +1,5 @@
 package main
 
-import "time"
-
-const (
-	tickPeriod = 5 * time.Second
-)
-
 type hub struct {
 	connections map[string][]*connection
 
@@ -28,9 +22,14 @@ func (h *hub) do_register(r *watchRequest) {
 		h.connections[name] = []*connection{}
 	}
 	conns := h.connections[name]
+  for _, conn := range conns {
+    if conn == r.Conn {
+      return
+    }
+  }
 	conns = append(conns, r.Conn)
 	h.connections[name] = conns
-	go load_data(r.StockId, h.broadcast)
+	stocks.Watch(r.StockId)
 }
 
 func (h *hub) do_unregister(c *connection) {
@@ -39,6 +38,15 @@ func (h *hub) do_unregister(c *connection) {
 		if conns == nil {
 			continue
 		}
+    has := false
+		for _, conn := range conns {
+			if conn == c {
+        has = true
+			}
+		}
+    if !has {
+      continue
+    }
 		connections := []*connection{}
 		for _, conn := range conns {
 			if conn != c {
@@ -46,19 +54,17 @@ func (h *hub) do_unregister(c *connection) {
 			}
 		}
 		holder[name] = connections
-		h.connections[name] = conns[:len(conns)-1]
 	}
 	for name, conns := range holder {
 		h.connections[name] = conns
+    stocks.UnWatch(name)
 	}
 	close(c.send)
 }
 
 func (h *hub) run() {
-	ticker := time.NewTicker(tickPeriod)
-	defer func() {
-		ticker.Stop()
-	}()
+  stocks.DB(db)
+	go stocks.Run()
 
 	for {
 		select {
@@ -66,7 +72,6 @@ func (h *hub) run() {
 			h.do_register(req)
 		case c := <-h.unregister:
 			h.do_unregister(c)
-		case <-ticker.C:
 		case m := <-h.broadcast:
 			if conns, ok := h.connections[m.stock_id]; ok {
 				for _, c := range conns {
