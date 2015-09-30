@@ -169,7 +169,7 @@ func Tick_download_from_sina(id string, t time.Time) []byte {
 }
 
 func Tick_download_today_from_sina(id string) []byte {
-	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=9000&symbol=%s&rn=%ld",
+	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=9000&symbol=%s&rn=%d",
 		id, time.Now().UnixNano()/int64(time.Millisecond))
 	body, err := Http_get_gbk(url, nil)
 	if err != nil {
@@ -181,8 +181,8 @@ func Tick_download_today_from_sina(id string) []byte {
 }
 
 func Tick_download_real_from_sina(id string) []byte {
-	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%ld&list=%s",
-		id, time.Now().UnixNano()/int64(time.Millisecond))
+	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
+		time.Now().UnixNano()/int64(time.Millisecond), id)
 	body, err := Http_get_gbk(url, nil)
 	if err != nil {
 		log.Println(err)

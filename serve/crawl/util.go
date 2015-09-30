@@ -29,11 +29,11 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 
 func ParseCent(s string) int {
 	ms := strings.SplitN(s, ".", 3)
+	if len(ms) < 1 {
+		return 0
+	}
 
 	m, _ := strconv.Atoi(ms[0])
-	if m < 0 {
-		m = -m
-	}
 
 	var cent string
 	if len(ms) > 1 {
@@ -42,7 +42,7 @@ func ParseCent(s string) int {
 	cent = cent + "00"
 	cent = cent[:2]
 	c, _ := strconv.Atoi(cent)
-	if s[:1] == "-" {
+	if strings.HasPrefix(s, "-") {
 		return 100*m - c
 	}
 	return 100*m + c

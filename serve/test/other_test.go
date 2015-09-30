@@ -15,3 +15,15 @@ func TestAtoi(t *testing.T) {
 		)
 	}
 }
+
+func TestByteString(t *testing.T) {
+	var b []byte
+	s := string(b)
+	if s != "" {
+		t.Error(
+			"For", "",
+			"expected", "",
+			"got", s,
+		)
+	}
+}

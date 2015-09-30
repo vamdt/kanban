@@ -75,6 +75,7 @@ type Stocks struct {
 	rwmutex sync.RWMutex
 	wg      sync.WaitGroup
 	db      *mgo.Database
+	ch      chan *Stock
 }
 
 func (p *Stocks) Run() {
@@ -84,43 +85,55 @@ func (p *Stocks) Run() {
 	}
 }
 
-func (p Stocks) DB(db *mgo.Database) {
+func (p *Stocks) DB(db *mgo.Database) {
 	p.db = db
 }
 
-func (p Stocks) Update() {
-	p.rwmutex.Lock()
-	defer p.rwmutex.Unlock()
-	for _, s := range p.stocks {
-		s.Update(p.db)
+func (p *Stocks) Chan(ch chan *Stock) {
+	p.ch = ch
+}
+
+func (p *Stocks) res(stock *Stock) {
+	if p.ch != nil {
+		p.ch <- stock
 	}
 }
 
-func (p Stocks) Insert(id string) int {
+func (p *Stocks) Update() {
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+	for _, s := range p.stocks {
+		if s.Update(p.db) {
+			p.res(s)
+		}
+	}
+}
+
+func (p *Stocks) Insert(id string) (int, bool) {
 	p.rwmutex.Lock()
 	defer p.rwmutex.Unlock()
 	s := &Stock{Id: id, hash: StockHash(id), count: 1}
 	i, ok := p.stocks.Search(id)
 	if ok {
 		p.stocks[i].count++
-		return i
+		return i, false
 	}
 
-	defer func() { go p.Update() }()
+	log.Println("insert stock", s.Id, i)
 	if i < 1 {
 		p.stocks = append(PStockSlice{s}, p.stocks...)
-		return 0
+		return 0, true
 	} else if i >= p.stocks.Len() {
 		p.stocks = append(p.stocks, s)
-		return p.stocks.Len() - 1
+		return p.stocks.Len() - 1, true
 	}
 	p.stocks = append(p.stocks, s)
 	copy(p.stocks[i+1:], p.stocks[i:])
 	p.stocks[i] = s
-	return i
+	return i, true
 }
 
-func (p Stocks) Remove(id string) {
+func (p *Stocks) Remove(id string) {
 	p.rwmutex.Lock()
 	defer p.rwmutex.Unlock()
 	if i, ok := p.stocks.Search(id); ok {
@@ -131,7 +144,10 @@ func (p Stocks) Remove(id string) {
 }
 
 func (p *Stocks) Watch(id string) *Stock {
-	i := p.Insert(id)
+	i, isnew := p.Insert(id)
+	if isnew {
+		defer func() { go p.Update() }()
+	}
 	return p.stocks[i]
 }
 
@@ -146,6 +162,12 @@ func (p *Stocks) Ticks_update_real() {
 
 	for i, l := 0, len(p.stocks); i < l; {
 		b.Reset()
+		var pstocks PStockSlice
+		if i+10 < l {
+			pstocks = p.stocks[i : i+10]
+		} else {
+			pstocks = p.stocks[i:l]
+		}
 		for j := 0; j < 10 && i < l; i, j = i+1, j+1 {
 			if p.stocks[i].loaded < 1 {
 				continue
@@ -170,8 +192,10 @@ func (p *Stocks) Ticks_update_real() {
 				continue
 			}
 			id := info[0][len(prefix):]
-			if idx, ok := p.stocks.Search(string(id)); ok {
-				p.stocks[idx].tick_get_real(info[1])
+			if idx, ok := pstocks.Search(string(id)); ok {
+				if pstocks[idx].tick_get_real(info[1]) {
+					p.res(pstocks[idx])
+				}
 			}
 		}
 	}
@@ -188,9 +212,9 @@ func StockHash(id string) int {
 	return 0
 }
 
-func (p *Stock) Update(db *mgo.Database) {
+func (p *Stock) Update(db *mgo.Database) bool {
 	if p.loaded > 0 {
-		return
+		return false
 	}
 	p.loaded = 1
 	p.Days_update(db)
@@ -199,6 +223,7 @@ func (p *Stock) Update(db *mgo.Database) {
 	p.Ticks_update(db)
 	p.Ticks_today_update()
 	p.loaded = 2
+	return true
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
@@ -303,7 +328,7 @@ func (p *Stock) Ticks_update(db *mgo.Database) int {
 		if ok, err := p.ticks_download(t); ok {
 			log.Println("download ticks succ", t)
 		} else if err != nil {
-			log.Println(err)
+			log.Println("download ticks err", err)
 		}
 	}
 
@@ -314,6 +339,7 @@ func (p *Stock) Ticks_update(db *mgo.Database) int {
 		}
 	}
 	p.Ticks.Delta = count - l
+	log.Println("download ticks", p.Ticks.Delta)
 	return count - l
 }
 
@@ -470,9 +496,8 @@ func (p *Stock) ticks_get_today() bool {
 	}
 
 	ticks := make([]Tick, count)
-	j := 0
 	nul := []byte("")
-	for i := len(lines) - 1; i > 0 && j < count; i-- {
+	for i, j := len(lines)-1, 0; i > 0 && j < count; i-- {
 		line := bytes.TrimSpace(lines[i])
 		line = bytes.Trim(line, ");")
 		infos := bytes.Split(line, []byte("] = new Array("))
@@ -533,7 +558,7 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		p.last_tick = tick
 		tick.Volume = tick.Volume / 100
 		p.Ticks.Insert(tick.Tick)
+		return true
 	}
-
-	return true
+	return false
 }

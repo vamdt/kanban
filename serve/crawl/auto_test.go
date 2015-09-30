@@ -69,21 +69,21 @@ func TestSearchPStockSlice(t *testing.T) {
 }
 
 func TestStocksInsert(t *testing.T) {
-  s := Stocks{stocks: pstockslice}
-  i := s.Insert("sh600003")
-  if i != 2 {
-    t.Error(
-      "For", "sh600003",
-      "expected", 2,
-      "got", i,
-    )
-  }
-  i = s.Insert("sh600002")
-  if i != 2 || s.stocks[2].Id == "sh600002" {
-    t.Error(
-      "For", "sh600002",
-      "expected", 2,
-      "got", i,
-    )
-  }
+	s := Stocks{stocks: pstockslice}
+	i, _ := s.Insert("sh600003")
+	if i != 2 {
+		t.Error(
+			"For", "sh600003",
+			"expected", 2,
+			"got", i,
+		)
+	}
+	i, _ = s.Insert("sh600002")
+	if i != 2 || s.stocks[2].Id != "sh600002" {
+		t.Error(
+			"For", "sh600002",
+			"expected", 2,
+			"got", i, s.stocks[2].Id,
+		)
+	}
 }
