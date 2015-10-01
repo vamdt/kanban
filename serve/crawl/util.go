@@ -57,3 +57,29 @@ func IsTradeDay(t time.Time) bool {
 	}
 	return true
 }
+
+func Monthend(t time.Time) time.Time {
+	_, _, d := t.Date()
+	t = t.AddDate(0, 1, -d)
+	return t.Truncate(time.Hour * 24).Add(time.Second * 86399)
+}
+
+func Weekend(t time.Time) time.Time {
+	wd := t.Weekday()
+	if wd < time.Saturday {
+		t = t.AddDate(0, 0, int(time.Saturday-wd))
+	}
+	return t.Truncate(time.Hour * 24).Add(time.Second * 86399)
+}
+
+func Minuteend(t time.Time) time.Time {
+	return t.Truncate(time.Minute).Add(time.Minute)
+}
+
+func Minute5end(t time.Time) time.Time {
+	return t.Truncate(5 * time.Minute).Add(5 * time.Minute)
+}
+
+func Minute30end(t time.Time) time.Time {
+	return t.Truncate(30 * time.Minute).Add(30 * time.Minute)
+}

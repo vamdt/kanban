@@ -2,17 +2,40 @@ package crawl
 
 import "time"
 
-func (p *Stock) WeeksFromDays() {
-	for i, c := 0, len(p.Days.Data); i < c; {
-		t := p.Days.Data[i].Time
-		wd := t.Weekday()
-		if wd < time.Saturday {
-			t = t.AddDate(0, 0, int(time.Saturday-wd))
-		}
-		tdata, j := MergeTil(&p.Days, i, t)
-		p.Weeks.Add(tdata)
+func (p *Stock) Ticks2M1s() {
+	for i, c := 0, len(p.Ticks.Data); i < c; {
+		end := Minuteend(p.Ticks.Data[i].Time)
+		tdata, j := MergeTickTil(&p.Ticks, i, end)
+		p.M1s.Add(tdata)
 		i += j
 	}
+}
+
+func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
+	if begin < 0 {
+		begin = 0
+	}
+	tdata := Tdata{}
+	tdata.Open = td.Data[begin].Price
+	tdata.Volume = 0
+	i := begin
+	c := len(td.Data)
+	for ; i < c; i++ {
+		t := td.Data[i]
+		if t.Time.After(end) {
+			break
+		}
+		tdata.Time = t.Time
+		tdata.Close = t.Price
+		if t.Price > tdata.High {
+			tdata.High = t.Price
+		}
+		if t.Price < tdata.Low {
+			tdata.Low = t.Price
+		}
+		tdata.Volume += t.Volume
+	}
+	return tdata, i - begin
 }
 
 func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
@@ -41,11 +64,18 @@ func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
 	return tdata, i - begin
 }
 
-func (p *Stock) MonthsFromDays() {
+func (p *Stock) Days2Weeks() {
 	for i, c := 0, len(p.Days.Data); i < c; {
-		t := p.Days.Data[i].Time
-		_, _, d := t.Date()
-		t = t.AddDate(0, 1, -d)
+		t := Weekend(p.Days.Data[i].Time)
+		tdata, j := MergeTil(&p.Days, i, t)
+		p.Weeks.Add(tdata)
+		i += j
+	}
+}
+
+func (p *Stock) Days2Months() {
+	for i, c := 0, len(p.Days.Data); i < c; {
+		t := Monthend(p.Days.Data[i].Time)
 		tdata, j := MergeTil(&p.Days, i, t)
 		p.Months.Add(tdata)
 		i += j

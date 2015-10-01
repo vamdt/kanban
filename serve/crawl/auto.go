@@ -160,6 +160,7 @@ func (p *Stocks) Ticks_update_real() {
 			id := info[0][len(prefix):]
 			if idx, ok := pstocks.Search(string(id)); ok {
 				if pstocks[idx].tick_get_real(info[1]) {
+					pstocks[idx].Merge()
 					p.res(pstocks[idx])
 				}
 			}
@@ -178,6 +179,11 @@ func StockHash(id string) int {
 	return 0
 }
 
+func (p *Stock) Merge() {
+	p.Days2Weeks()
+	p.Days2Months()
+}
+
 func (p *Stock) Update(db *mgo.Database) bool {
 	if p.loaded > 0 {
 		return false
@@ -188,6 +194,7 @@ func (p *Stock) Update(db *mgo.Database) bool {
 	p.M5s_update(db)
 	p.Ticks_update(db)
 	p.Ticks_today_update()
+	p.Merge()
 	p.loaded = 2
 	return true
 }
