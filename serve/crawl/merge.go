@@ -17,12 +17,14 @@ func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
 	}
 	tdata := Tdata{}
 	tdata.Open = td.Data[begin].Price
+	tdata.High = tdata.Open
+	tdata.Low = tdata.Open
 	tdata.Volume = 0
 	i := begin
 	c := len(td.Data)
 	for ; i < c; i++ {
 		t := td.Data[i]
-		if t.Time.After(end) {
+		if !t.Time.Before(end) {
 			break
 		}
 		tdata.Time = t.Time
@@ -35,6 +37,7 @@ func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
 		}
 		tdata.Volume += t.Volume
 	}
+	tdata.Time = tdata.Time.Truncate(time.Minute).Add(time.Minute)
 	return tdata, i - begin
 }
 
@@ -48,7 +51,7 @@ func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
 	c := len(td.Data)
 	for ; i < c; i++ {
 		data := td.Data[i]
-		if data.Time.After(end) {
+		if !data.Time.Before(end) {
 			break
 		}
 		tdata.Time = data.Time
@@ -61,6 +64,7 @@ func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
 		}
 		tdata.Volume += data.Volume
 	}
+	tdata.Time = tdata.Time.Truncate(time.Hour * 24)
 	return tdata, i - begin
 }
 

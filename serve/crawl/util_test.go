@@ -39,14 +39,15 @@ func TestMonthend(t *testing.T) {
 		f, exp string
 	}
 	tests := []date_pair{
-		date_pair{f: "2000-01-01", exp: "2000-01-31 23:59:59"},
-		date_pair{f: "2000-02-01", exp: "2000-02-29 23:59:59"},
-		date_pair{f: "2001-02-01", exp: "2001-02-28 23:59:59"},
-		date_pair{f: "2000-04-01", exp: "2000-04-30 23:59:59"},
+		date_pair{f: "2000-01-01", exp: "2000-02-01"},
+		date_pair{f: "2000-01-31", exp: "2000-02-01"},
+		date_pair{f: "2000-02-01", exp: "2000-03-01"},
+		date_pair{f: "2000-02-29", exp: "2000-03-01"},
+		date_pair{f: "2000-04-01", exp: "2000-05-01"},
 	}
 	for _, td := range tests {
 		d1, _ := time.Parse("2006-01-02", td.f)
-		d1e, _ := time.Parse("2006-01-02 15:04:05", td.exp)
+		d1e, _ := time.Parse("2006-01-02", td.exp)
 		d2 := Monthend(d1)
 		if !d2.Equal(d1e) {
 			t.Error(
@@ -63,14 +64,14 @@ func TestWeekend(t *testing.T) {
 		f, exp string
 	}
 	tests := []date_pair{
-		date_pair{f: "2000-01-01", exp: "2000-01-01 23:59:59"},
-		date_pair{f: "2000-02-01", exp: "2000-02-05 23:59:59"},
-		date_pair{f: "2001-02-01", exp: "2001-02-03 23:59:59"},
-		date_pair{f: "2000-04-01", exp: "2000-04-01 23:59:59"},
+		date_pair{f: "2000-01-01", exp: "2000-01-01"},
+		date_pair{f: "2000-02-01", exp: "2000-02-05"},
+		date_pair{f: "2001-02-01", exp: "2001-02-03"},
+		date_pair{f: "2000-04-01", exp: "2000-04-01"},
 	}
 	for _, td := range tests {
 		d1, _ := time.Parse("2006-01-02", td.f)
-		d1e, _ := time.Parse("2006-01-02 15:04:05", td.exp)
+		d1e, _ := time.Parse("2006-01-02", td.exp)
 		d2 := Weekend(d1)
 		if !d2.Equal(d1e) {
 			t.Error(

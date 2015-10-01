@@ -39,7 +39,6 @@ type Stock struct {
 type Stocks struct {
 	stocks  PStockSlice
 	rwmutex sync.RWMutex
-	wg      sync.WaitGroup
 	db      *mgo.Database
 	ch      chan *Stock
 }
@@ -75,28 +74,27 @@ func (p *Stocks) Update() {
 	}
 }
 
-func (p *Stocks) Insert(id string) (int, bool) {
+func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	p.rwmutex.Lock()
 	defer p.rwmutex.Unlock()
 	s := &Stock{Id: id, hash: StockHash(id), count: 1}
 	i, ok := p.stocks.Search(id)
 	if ok {
 		p.stocks[i].count++
-		return i, false
+		return i, p.stocks[i], false
 	}
 
-	log.Println("insert stock", s.Id, i)
 	if i < 1 {
 		p.stocks = append(PStockSlice{s}, p.stocks...)
-		return 0, true
+		return 0, s, true
 	} else if i >= p.stocks.Len() {
 		p.stocks = append(p.stocks, s)
-		return p.stocks.Len() - 1, true
+		return p.stocks.Len() - 1, s, true
 	}
 	p.stocks = append(p.stocks, s)
 	copy(p.stocks[i+1:], p.stocks[i:])
 	p.stocks[i] = s
-	return i, true
+	return i, s, true
 }
 
 func (p *Stocks) Remove(id string) {
@@ -109,12 +107,15 @@ func (p *Stocks) Remove(id string) {
 	}
 }
 
-func (p *Stocks) Watch(id string) *Stock {
-	i, isnew := p.Insert(id)
+func (p *Stocks) Watch(id string) (*Stock, bool) {
+	i, s, isnew := p.Insert(id)
 	if isnew {
+		log.Println("watch new stock", id, i)
 		defer func() { go p.Update() }()
+	} else {
+		log.Println("watch stock", id, i)
 	}
-	return p.stocks[i]
+	return s, isnew
 }
 
 func (p *Stocks) UnWatch(id string) {
@@ -180,6 +181,7 @@ func StockHash(id string) int {
 }
 
 func (p *Stock) Merge() {
+	p.Ticks2M1s()
 	p.Days2Weeks()
 	p.Days2Months()
 }
@@ -189,10 +191,27 @@ func (p *Stock) Update(db *mgo.Database) bool {
 		return false
 	}
 	p.loaded = 1
-	p.Days_update(db)
-	p.M30s_update(db)
-	p.M5s_update(db)
+  var wg sync.WaitGroup
+  go func(){
+    wg.Add(1)
+    p.Days_update(db)
+    wg.Done()
+  }()
+  go func(){
+    wg.Add(1)
+    p.M30s_update(db)
+    wg.Done()
+  }()
+  go func(){
+    wg.Add(1)
+    p.M5s_update(db)
+    wg.Done()
+  }()
+  wg.Add(1)
 	p.Ticks_update(db)
+  wg.Done()
+  wg.Wait()
+
 	p.Ticks_today_update()
 	p.Merge()
 	p.loaded = 2
@@ -456,7 +475,16 @@ func (p *Stock) Ticks_today_update() int {
 }
 
 func (p *Stock) ticks_get_today() bool {
+	last_t, err := Tick_get_today_date(p.Id)
+	if err != nil {
+		log.Println("get today date fail", err)
+		return false
+	}
 	t := time.Now().UTC().Truncate(time.Hour * 24)
+	if t.After(last_t) {
+		return false
+	}
+
 	body := Tick_download_today_from_sina(p.Id)
 	if body == nil {
 		return false

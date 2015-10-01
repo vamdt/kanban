@@ -57,5 +57,8 @@ class KLineCandle
       .attr("y1", (d, i) -> y(d.high))
       .attr("x2", (d, i) -> x(i))
       .attr("y2", (d, i) -> y(d.low))
+    opacity = @root.param 'opacity'
+    if opacity
+      svg.selectAll('.candle').style('opacity', opacity)
 
 KLine.register_plugin 'candle', KLineCandle

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"sync"
 
 	"./crawl"
 )
@@ -25,18 +26,26 @@ var h = hub{
 
 func (h *hub) do_register(r *watchRequest) {
 	name := r.StockId
+	log.Println("register", name)
 	if _, ok := h.connections[name]; !ok {
 		h.connections[name] = []*connection{}
 	}
+	has := false
 	conns := h.connections[name]
 	for _, conn := range conns {
 		if conn == r.Conn {
-			return
+			has = true
+			log.Println("the conn had regged")
+			break
 		}
 	}
-	conns = append(conns, r.Conn)
-	h.connections[name] = conns
-	stocks.Watch(r.StockId)
+	if !has {
+		conns = append(conns, r.Conn)
+		h.connections[name] = conns
+	}
+	if s, isnew := stocks.Watch(name); !isnew {
+		h.send(s, r.Conn)
+	}
 }
 
 func (h *hub) do_unregister(c *connection) {
@@ -65,8 +74,47 @@ func (h *hub) do_unregister(c *connection) {
 	for name, conns := range holder {
 		h.connections[name] = conns
 		stocks.UnWatch(name)
+		log.Println("un watch", name)
 	}
 	close(c.send)
+}
+
+func (h *hub) do_broadcast(m *crawl.Stock) {
+	conns, ok := h.connections[m.Id]
+	if !ok {
+		return
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var wg sync.WaitGroup
+	for _, c := range conns {
+		wg.Add(1)
+		go func(c *connection) {
+			defer wg.Done()
+			select {
+			case c.send <- data:
+			default:
+				h.do_unregister(c)
+			}
+		}(c)
+	}
+	wg.Wait()
+}
+
+func (h *hub) send(m *crawl.Stock, c *connection) {
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	select {
+	case c.send <- data:
+	default:
+		h.do_unregister(c)
+	}
 }
 
 func (h *hub) run() {
@@ -81,20 +129,7 @@ func (h *hub) run() {
 		case c := <-h.unregister:
 			h.do_unregister(c)
 		case m := <-h.broadcast:
-			if conns, ok := h.connections[m.Id]; ok {
-				data, err := json.Marshal(m)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-				for _, c := range conns {
-					select {
-					case c.send <- data:
-					default:
-						h.do_unregister(c)
-					}
-				}
-			}
+			h.do_broadcast(m)
 		}
 	}
 }

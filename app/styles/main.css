@@ -4,10 +4,6 @@ body {
   color: #333;
 }
 
-.candle {
-  opacity: .09;
-}
-
 .axis path,
 .axis line {
   fill: none;
