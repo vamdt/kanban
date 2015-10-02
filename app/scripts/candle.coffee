@@ -3,6 +3,8 @@ defaults =
 
 [cup, cdown, ceq] = ["#f00", "#080", "#000"]
 
+formatDate = d3.time.format("%Y-%m-%d %X")
+
 kColor = (d) ->
   if d.open == d.close
     return ceq
@@ -29,7 +31,7 @@ class KLineCandle
 
     tips = @_ui.tips
     show = (d, i) ->
-      tips.html("#{d.date}<br/>open: #{d.open}<br/>high: #{d.high}<br/>low: #{d.low}<br/>close: #{d.close}")
+      tips.html("#{formatDate(d.date)}<br/>open: #{d.open}<br/>high: #{d.high}<br/>low: #{d.low}<br/>close: #{d.close}<br/>volume: #{d.volume}")
     svg.selectAll("rect.candle").remove()
     svg.selectAll("line.candle").remove()
 

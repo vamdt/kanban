@@ -5,6 +5,10 @@ import "time"
 func (p *Stock) Ticks2M1s() {
 	for i, c := 0, len(p.Ticks.Data); i < c; {
 		end := Minuteend(p.Ticks.Data[i].Time)
+		hour, min, _ := end.Clock()
+		if hour == 9 && min <= 30 {
+			end = end.Truncate(30 * time.Minute).Add(31 * time.Minute)
+		}
 		tdata, j := MergeTickTil(&p.Ticks, i, end)
 		p.M1s.Add(tdata)
 		i += j
@@ -37,7 +41,7 @@ func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
 		}
 		tdata.Volume += t.Volume
 	}
-	tdata.Time = tdata.Time.Truncate(time.Minute).Add(time.Minute)
+	tdata.Time = tdata.Time.Truncate(time.Minute)
 	return tdata, i - begin
 }
 

@@ -182,6 +182,9 @@ func Tick_download_today_from_sina(id string) []byte {
 }
 
 func Tick_download_real_from_sina(id string) []byte {
+  if len(id) < 1 {
+    return nil
+  }
 	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
 		time.Now().UnixNano()/int64(time.Millisecond), id)
 	body, err := Http_get_gbk(url, nil)

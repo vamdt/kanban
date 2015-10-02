@@ -125,17 +125,17 @@ func (p *Stocks) UnWatch(id string) {
 func (p *Stocks) Ticks_update_real() {
 	p.rwmutex.Lock()
 	defer p.rwmutex.Unlock()
-	var b bytes.Buffer
+	var wg sync.WaitGroup
 
 	for i, l := 0, len(p.stocks); i < l; {
-		b.Reset()
+		var b bytes.Buffer
 		var pstocks PStockSlice
 		if i+10 < l {
 			pstocks = p.stocks[i : i+10]
 		} else {
 			pstocks = p.stocks[i:l]
 		}
-		for j := 0; j < 10 && i < l; i, j = i+1, j+1 {
+		for j := 0; j < 50 && i < l; i, j = i+1, j+1 {
 			if p.stocks[i].loaded < 1 {
 				continue
 			}
@@ -144,30 +144,39 @@ func (p *Stocks) Ticks_update_real() {
 			}
 			b.WriteString(p.stocks[i].Id)
 		}
-		body := Tick_download_real_from_sina(b.String())
-		if body == nil {
+		if b.Len() < 1 {
 			continue
 		}
-		for _, line := range bytes.Split(body, []byte("\";")) {
-			line = bytes.TrimSpace(line)
-			info := bytes.Split(line, []byte("=\""))
-			if len(info) != 2 {
-				continue
+
+		go func(ids string, pstocks PStockSlice) {
+			wg.Add(1)
+			defer wg.Done()
+			body := Tick_download_real_from_sina(ids)
+			if body == nil {
+				return
 			}
-			prefix := "var hq_str_"
-			if !bytes.HasPrefix(info[0], []byte(prefix)) {
-				continue
-			}
-			id := info[0][len(prefix):]
-			if idx, ok := pstocks.Search(string(id)); ok {
-				if pstocks[idx].tick_get_real(info[1]) {
-					pstocks[idx].Merge()
-					p.res(pstocks[idx])
+			for _, line := range bytes.Split(body, []byte("\";")) {
+				line = bytes.TrimSpace(line)
+				info := bytes.Split(line, []byte("=\""))
+				if len(info) != 2 {
+					continue
+				}
+				prefix := "var hq_str_"
+				if !bytes.HasPrefix(info[0], []byte(prefix)) {
+					continue
+				}
+				id := info[0][len(prefix):]
+				if idx, ok := pstocks.Search(string(id)); ok {
+					if pstocks[idx].tick_get_real(info[1]) {
+						pstocks[idx].Merge()
+						p.res(pstocks[idx])
+					}
 				}
 			}
-		}
-	}
+		}(b.String(), pstocks)
 
+	}
+	wg.Wait()
 }
 
 func StockHash(id string) int {
@@ -191,26 +200,26 @@ func (p *Stock) Update(db *mgo.Database) bool {
 		return false
 	}
 	p.loaded = 1
-  var wg sync.WaitGroup
-  go func(){
-    wg.Add(1)
-    p.Days_update(db)
-    wg.Done()
-  }()
-  go func(){
-    wg.Add(1)
-    p.M30s_update(db)
-    wg.Done()
-  }()
-  go func(){
-    wg.Add(1)
-    p.M5s_update(db)
-    wg.Done()
-  }()
-  wg.Add(1)
+	var wg sync.WaitGroup
+	go func() {
+		wg.Add(1)
+		p.Days_update(db)
+		wg.Done()
+	}()
+	go func() {
+		wg.Add(1)
+		p.M30s_update(db)
+		wg.Done()
+	}()
+	go func() {
+		wg.Add(1)
+		p.M5s_update(db)
+		wg.Done()
+	}()
+	wg.Add(1)
 	p.Ticks_update(db)
-  wg.Done()
-  wg.Wait()
+	wg.Done()
+	wg.Wait()
 
 	p.Ticks_today_update()
 	p.Merge()

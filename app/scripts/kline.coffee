@@ -33,16 +33,16 @@ class KLine
 
   data: (data) ->
     if not arguments.length
-      return @_data.slice(@_left, @_left+@options.size)
+      return @_data.slice(@_left, @_left+@options.size+1)
 
     s = data.id
     k = data.param.k
     switch k
       when '1' then data = data.m1s.data
-      when '2' then data = data.m5s.data
-      when '4' then data = data.m30s.data
-      when '7' then data = data.weeks.data
-      when '8' then data = data.months.data
+      when '5' then data = data.m5s.data
+      when '30' then data = data.m30s.data
+      when 'week' then data = data.weeks.data
+      when 'month' then data = data.months.data
       else data = data.days.data
 
     data.forEach (d) ->
@@ -50,9 +50,10 @@ class KLine
       d.close = +d.close / 100
       d.high = +d.high / 100
       d.low = +d.low / 100
+      d.volume = +d.volume
       d.date = parseDate(d.time)
     @_data = data
-    @_max_left = Math.max(0, data.length - 1 - @options.size)
+    @_max_left = Math.max(0, data.length - @options.size)
     @_left = @_max_left
 
   param: (p) ->
@@ -118,7 +119,7 @@ class KLine
       if data[i].date == data[prevTick].date
         return ''
       if (+data[i].date) - (+data[prevTick].date) < 86400000
-        return d3.time.format("%H-%M")(data[i].date)
+        return d3.time.format("%H:%M")(data[i].date)
       d3.time.format("%Y-%m-%d")(data[i].date)
 
     xAxis = @_ui.xAxis = d3.svg.axis()
@@ -176,43 +177,43 @@ class KLine
 
   init_websocket: (done) ->
     if @io
+      @io.on('ready', done)
       if @io.connected
         return done()
-      @io.on('ready', done)
       return
 
     io = {}
+    handles = {}
     @io = io
 
-    ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
+    connect = ->
+      ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
+      io.ws = ws
+      ws.onopen = (evt) ->
+        io.connected = true
+        io.trigger('ready', evt)
+        io.ws.send(JSON.stringify(ev))
+
+      ws.onclose = (evt) ->
+        io.connected = false
+        io.trigger('close', evt)
+
+      ws.onmessage = (evt) ->
+        res = JSON.parse(evt.data)
+        io.trigger('data', res)
+
+      ws.onerror = (evt) ->
+        io.trigger('error', evt)
 
     ev =
       s: @param 's'
       k: @param 'k'
       fq: @param 'fq'
-    ws.onopen = (evt) ->
-      io.connected = true
-      done() if done
-      io.trigger('ready', evt)
-      ws.send(JSON.stringify(ev))
 
-    ws.onclose = (evt) ->
-      io.connected = false
-      io.trigger('close', evt)
-
-    ws.onmessage = (evt) ->
-      res = JSON.parse(evt.data)
-      io.trigger('data', res)
-
-    ws.onerror = (evt) ->
-      io.trigger('error', evt)
-
-    io.ws = ws
-    handles = {}
-    io.handles = handles
     io.on = (event, cb) ->
       handles[event] = handles[event] || []
       handles[event].push(cb)
+
     io.off = (event, cb) ->
       return unless handles[event]
       i = handles[event].indexOf(cb)
@@ -221,7 +222,7 @@ class KLine
 
     io.emit = (event, data) ->
       msg = event: event, data: data
-      ws.send(JSON.stringify(msg))
+      io.ws.send(JSON.stringify(msg))
 
     io.trigger = (event, data) ->
       return unless handles[event]
@@ -232,6 +233,12 @@ class KLine
         ename = [ev.s,ev.k,ev.fq,event].join('.')
         data.param = ev
         io.trigger ename, data
+
+    if done
+      @io.on 'ready', done
+    io.on 'close', (evt) ->
+      setTimeout((->connect()), 1000)
+    connect()
 
   on_event: (event, cb) ->
     @init_websocket =>
