@@ -15,7 +15,7 @@ extend = ->
 
 parseDate = d3.time.format("%Y-%m-%dT%XZ").parse
 formatValue = d3.format(",.2f")
-formatCurrency = (d) -> formatValue(d)
+fmtCent = (d) -> formatValue d/100
 
 Plugins = {}
 Watcher = {}
@@ -46,10 +46,10 @@ class KLine
       else data = data.days.data
 
     data.forEach (d) ->
-      d.open = +d.open / 100
-      d.close = +d.close / 100
-      d.high = +d.high / 100
-      d.low = +d.low / 100
+      d.open = +d.open
+      d.close = +d.close
+      d.high = +d.high
+      d.low = +d.low
       d.volume = +d.volume
       d.date = parseDate(d.time)
     @_data = data
@@ -107,6 +107,7 @@ class KLine
       .range([height, 0])
 
     xAxisTickFormat = (i) =>
+      console.log arguments
       data = @data()
       if typeof data[i] == 'undefined'
         return 'F'
@@ -133,6 +134,7 @@ class KLine
       .orient("left")
       .ticks(6)
       .tickSize(-width)
+      .tickFormat(fmtCent)
 
     svg.append("g")
       .attr("class", "x axis")
