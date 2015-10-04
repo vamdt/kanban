@@ -3,24 +3,25 @@ import gulp from 'gulp';
 import gulpLoadPlugins from 'gulp-load-plugins';
 import browserSync from 'browser-sync';
 import del from 'del';
-import {stream as wiredep} from 'wiredep';
 import modRewrite from 'connect-modrewrite';
 var exec = require('child_process').exec;
+import webpack from 'webpack';
+import webpackConfig from './webpack.config.js';
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
 
-gulp.task('coffee', () => {
-  return gulp.src('app/scripts/*.coffee')
-    .pipe($.sourcemaps.init({loadMaps: true}))
-    .pipe($.coffee()
-      .on('error', function (err) {
-        console.log(err);
-        this.end();
-      })
-    )
-    .pipe($.sourcemaps.write('./'))
-    .pipe(gulp.dest('.tmp/scripts'));
+gulp.task("webpack", (callback) => {
+  var myConfig = Object.create(webpackConfig);
+  webpack(
+      myConfig
+      , function(err, stats) {
+        if (err) {
+          console.log(err);
+          this.end();
+        }
+        callback();
+      });
 });
 
 gulp.task('styles', () => {
@@ -55,14 +56,12 @@ const testLintOptions = {
 gulp.task('lint', lint('app/scripts/**/*.js'));
 gulp.task('lint:test', lint('test/spec/**/*.js', testLintOptions));
 
-gulp.task('html', ['styles', 'coffee'], () => {
+gulp.task('html', ['styles', 'webpack'], () => {
   const assets = $.useref.assets({searchPath: ['.tmp', 'app', '.']});
 
   return gulp.src('app/*.html')
     .pipe(assets)
-    .pipe($.if('*.js', $.sourcemaps.init({loadMaps: true})))
     .pipe($.if('*.js', $.uglify()))
-    .pipe($.if('*.js', $.sourcemaps.write('./')))
     .pipe($.if('*.css', $.minifyCss({compatibility: '*'})))
     .pipe(assets.restore())
     .pipe($.useref())
@@ -84,14 +83,6 @@ gulp.task('images', () => {
       this.end();
     })))
     .pipe(gulp.dest('dist/static/images'));
-});
-
-gulp.task('fonts', () => {
-  return gulp.src(require('main-bower-files')({
-    filter: '**/*.{eot,svg,ttf,woff,woff2}'
-  }).concat('app/fonts/**/*'))
-    .pipe(gulp.dest('.tmp/fonts'))
-    .pipe(gulp.dest('dist/static/fonts'));
 });
 
 gulp.task('conf', () => {
@@ -124,15 +115,12 @@ gulp.task('extras', ['go', 'conf'], () => {
 
 gulp.task('clean', del.bind(null, ['.tmp', 'dist']));
 
-gulp.task('serve', ['styles', 'fonts', 'coffee'], () => {
+gulp.task('serve', ['styles', 'webpack'], () => {
   browserSync({
     notify: false,
     port: 9000,
     server: {
       baseDir: ['.tmp', 'app'],
-      routes: {
-        '/bower_components': 'bower_components'
-      },
       middleware: [
       modRewrite(['^/(stock/.*)$ http://127.0.0.1:3002/$1 [P]'])
       ]
@@ -144,13 +132,10 @@ gulp.task('serve', ['styles', 'fonts', 'coffee'], () => {
     'app/scripts/**/*.js',
     'app/images/**/*',
     '.tmp/scripts/**/*.js',
-    '.tmp/fonts/**/*'
   ]).on('change', reload);
 
-  gulp.watch('app/scripts/**/*.coffee', ['coffee']);
+  gulp.watch('app/scripts/**/*.coffee', ['webpack']);
   gulp.watch('app/styles/**/*.css', ['styles']);
-  gulp.watch('app/fonts/**/*', ['fonts']);
-  gulp.watch('bower.json', ['wiredep', 'fonts']);
 });
 
 gulp.task('serve:dist', () => {
@@ -183,16 +168,7 @@ gulp.task('serve:test', () => {
   gulp.watch('test/spec/**/*.js', ['lint:test']);
 });
 
-// inject bower components
-gulp.task('wiredep', () => {
-  gulp.src('app/*.html')
-    .pipe(wiredep({
-      ignorePath: /^(\.\.\/)*\.\./
-    }))
-    .pipe(gulp.dest('app'));
-});
-
-gulp.task('build', ['lint', 'html', 'images', 'fonts', 'extras'], () => {
+gulp.task('build', ['lint', 'html', 'images', 'extras'], () => {
   return gulp.src('dist/**/*').pipe($.size({title: 'build', gzip: true}));
 });
 

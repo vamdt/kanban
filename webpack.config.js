@@ -2,13 +2,15 @@ var path = require("path");
 var webpack = require("webpack");
 module.exports = {
 	cache: true,
-	entry: "./app/scripts/main.coffee",
+  entry: {
+    main: "./app/scripts/main.coffee"
+  },
 	output: {
-		path: path.join(__dirname, "dist"),
-		publicPath: "dist/static/scripts",
+		path: path.join(__dirname, ".tmp/scripts"),
 		filename: "[name].js",
 		chunkFilename: "[chunkhash].js"
 	},
+  devtool: 'source-map',
   resolve: {
     extensions: ['', '.coffee', '.js']
   },
@@ -23,7 +25,7 @@ module.exports = {
 			{ test: /\.eot$/,    loader: "file-loader?prefix=font/" },
 			{ test: /\.svg$/,    loader: "file-loader?prefix=font/" },
 
-      { test: /\.coffee$/, loader: "coffee-loader" }
+      { test: /\.coffee$/, loader: "coffee-loader?sourceMap" }
 		]
 	},
 	plugins: [

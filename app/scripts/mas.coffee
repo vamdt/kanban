@@ -1,3 +1,4 @@
+KLine = require './kline'
 defaults =
   '5d':
     interval: 5

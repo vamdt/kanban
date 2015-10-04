@@ -1,3 +1,4 @@
+d3 = require 'd3'
 defaults =
   container: 'body'
   margin:
@@ -255,4 +256,4 @@ KLine.register_plugin = (name, clazz) ->
 
 KLine.extend = extend
 
-@KLine = KLine
+module.exports = KLine

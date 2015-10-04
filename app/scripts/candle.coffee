@@ -1,3 +1,4 @@
+KLine = require './kline'
 defaults =
   width: 4
 
