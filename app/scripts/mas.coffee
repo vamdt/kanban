@@ -1,3 +1,4 @@
+d3 = require 'd3'
 KLine = require './kline'
 defaults =
   '5d':

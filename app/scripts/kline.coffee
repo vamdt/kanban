@@ -19,7 +19,15 @@ formatValue = d3.format(",.2f")
 fmtCent = (d) -> formatValue d/100
 
 Plugins = {}
-Watcher = {}
+
+[cup, cdown, ceq] = ["#f00", "#080", "#000"]
+
+kColor = (d) ->
+  if d.open == d.close
+    return ceq
+  if d.open > d.close
+    return cdown
+  cup
 
 class KLine
   constructor: (@options) ->
@@ -47,11 +55,6 @@ class KLine
       else data = data.days.data
 
     data.forEach (d) ->
-      d.open = +d.open
-      d.close = +d.close
-      d.high = +d.high
-      d.low = +d.low
-      d.volume = +d.volume
       d.date = parseDate(d.time)
     @_data = data
     @_max_left = Math.max(0, data.length - @options.size)
@@ -108,7 +111,6 @@ class KLine
       .range([height, 0])
 
     xAxisTickFormat = (i) =>
-      console.log arguments
       data = @data()
       if typeof data[i] == 'undefined'
         return 'F'
@@ -255,5 +257,6 @@ KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
 KLine.extend = extend
+KLine.kColor = kColor
 
 module.exports = KLine

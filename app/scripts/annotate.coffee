@@ -1,4 +1,5 @@
 KLine = require './kline'
+d3 = require 'd3'
 parseDate = d3.time.format("%Y-%m-%dT%XZ").parse
 
 class KLineAnnotate

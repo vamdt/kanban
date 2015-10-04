@@ -1,23 +1,16 @@
+d3 = require 'd3'
 KLine = require './kline'
 defaults =
   width: 4
-
-[cup, cdown, ceq] = ["#f00", "#080", "#000"]
 
 formatDate = d3.time.format("%Y-%m-%d %X")
 formatValue = d3.format(",.2f")
 fmtCent = (d) -> formatValue d/100
 
-kColor = (d) ->
-  if d.open == d.close
-    return ceq
-  if d.open > d.close
-    return cdown
-  cup
-
 class KLineCandle
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.candle, defaults
+    @root.options.candle = @options
     @_ui = @root._ui
 
   init: ->
@@ -27,6 +20,7 @@ class KLineCandle
     @root.options.size = Math.floor @root.options.width / (3 + @options.width)
 
   update: (data) ->
+    kColor = KLine.kColor
     svg = @_ui.svg
     x = @_ui.x
     y = @_ui.y
@@ -34,7 +28,7 @@ class KLineCandle
 
     tips = @_ui.tips
     show = (d, i) ->
-      tips.html("#{formatDate(d.date)}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{fmtCent(d.volume)}")
+      tips.html("#{formatDate(d.date)}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
     svg.selectAll("rect.candle").remove()
     svg.selectAll("line.candle").remove()
 

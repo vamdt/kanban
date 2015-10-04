@@ -1,3 +1,4 @@
+d3 = require 'd3'
 KLine = require './kline'
 defaults =
   tmpl : '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.high%><br/>最低价：<%- p.low%>'

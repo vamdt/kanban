@@ -1,3 +1,4 @@
+d3 = require 'd3'
 KLine = require './kline'
 parseDate = d3.time.format("%Y-%m-%d").parse
 
