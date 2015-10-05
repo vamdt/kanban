@@ -1,9 +1,8 @@
 KLine = require './kline'
-require './annotate'
 require './candle'
-require './diy_path'
-require './mas'
-require './tooltip'
 require './volume'
+require './tooltip'
+require './annotate'
+require './diy_path'
 
 module.exports = KLine

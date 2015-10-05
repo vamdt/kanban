@@ -1,8 +1,9 @@
 d3 = require 'd3'
 KLine = require './kline'
+KLineMas = require './mas'
 
 formatValue = d3.format(",d")
-fmtVolume = (d) -> formatValue(d/100) + '手'
+fmtVolume = (d) -> formatValue(d/100)
 
 class KLineVolume
   constructor: (@root) ->
@@ -18,16 +19,18 @@ class KLineVolume
     container = @root._ui.container
 
     w = +d3.select(rsvg.node().parentNode).attr("width")
-    top = +margin.top+d3.select(rsvg.node().parentNode).attr("height")
-    svg = container.append("svg")
+    svg = @svg = container.append("svg")
       .attr("width", w)
       .attr("height", height)
       .append("g")
       .attr("transform", "translate(#{margin.left},0)")
-    @svg = svg
 
     y = @y = d3.scale.linear()
       .range([height, 0])
+
+    mas = new KLineMas @root, svg, y, (d) -> d.volume
+    mas.init()
+    @root.add_plugin_obj mas
 
     yAxis = @yAxis = d3.svg.axis()
       .scale(y)
@@ -40,16 +43,18 @@ class KLineVolume
       .attr("class", "y axis")
       .call(yAxis)
 
+  updateAxis: (data) ->
+    @y.domain([0, d3.max(data, (d)->d.volume)])
+    @svg.select(".y.axis").call(@yAxis)
+
   update: (data) ->
     kColor = KLine.kColor
     x = @root._ui.x
     y = @y
-    y.domain([0, d3.max(data, (d)->d.volume)])
     height = @height
     candleWidth = @root.options.candle.width
     svg = @svg
 
-    svg.select(".y.axis").call(@yAxis)
     svg.selectAll("rect").remove()
     svg.selectAll("rect")
       .data(data)

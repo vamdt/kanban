@@ -1,5 +1,6 @@
 d3 = require 'd3'
 KLine = require './kline'
+KLineMas = require './mas'
 defaults =
   width: 4
 
@@ -18,6 +19,9 @@ class KLineCandle
     container = @root._ui.container
     @options.width = +@options.width || 4
     @root.options.size = Math.floor @root.options.width / (3 + @options.width)
+    mas = new KLineMas @root, svg, @root._ui.y, (d) -> d.close
+    mas.init()
+    @root.add_plugin_obj mas
 
   update: (data) ->
     kColor = KLine.kColor

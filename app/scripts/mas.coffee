@@ -9,11 +9,14 @@ defaults =
     color: 'red'
 
 class KLineMas
-  constructor: (@root) ->
+  constructor: (@root, @svg, @y, @d) ->
     @options = KLine.extend {}, @root.options.mas, defaults
+    @root.options.mas = @options
+    @y = @y || @root._ui.y
+    @d = @d || (d) -> d.close
 
   init: ->
-    svg = @root._ui.svg
+    svg = @svg
     for n,ma of @options
       interval = +ma.interval
 
@@ -26,7 +29,7 @@ class KLineMas
         .style("stroke-width", "1")
 
   update: (data) ->
-    svg = @root._ui.svg
+    svg = @svg
     for n,ma of @options
       interval = +ma.interval
       e = svg.select("path.line.mas.ma#{interval}")
@@ -35,13 +38,14 @@ class KLineMas
 
   drawMA: (data, interval, element) ->
     x = @root._ui.x
-    y = @root._ui.y
+    y = @y
     left = @root._left
     data = @root._data
+    dfn = @d
     mean = (d, i) ->
       l = left + i - interval - 1
       l = Math.max(l, 0)
-      return d3.mean data[l..(left+i)], (d) -> d.close
+      d3.mean data[l..(left+i)], dfn
 
     line = d3.svg.line()
       .x((d, i) -> x i)
@@ -49,4 +53,4 @@ class KLineMas
 
     element.attr("d", line)
 
-KLine.register_plugin 'mas', KLineMas
+module.exports = KLineMas

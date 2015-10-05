@@ -78,11 +78,14 @@ class KLine
       @data data
       @draw()
 
+  add_plugin_obj: (plugin) ->
+    @plugins.push plugin
+
   initPlugins: ->
     for n,c of Plugins
       plugin = new c @
       plugin.init()
-      @plugins.push plugin
+      @add_plugin_obj plugin
 
   initUI: ->
     container = @_ui.container = d3.select @options.container || 'body'
@@ -178,6 +181,7 @@ class KLine
 
   update: (data) ->
     @updateAxis()
+    plugin.updateAxis data for plugin in @plugins when plugin.updateAxis
     plugin.update data for plugin in @plugins
 
   init_websocket: (done) ->
