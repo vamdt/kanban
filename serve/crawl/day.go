@@ -25,6 +25,11 @@ type Tdata struct {
 	High   int           `json:"high"`
 	Low    int           `json:"low"`
 	Volume int           `json:"volume"`
+	emas   int
+	emal   int
+	DIFF   int
+	DEA    int
+	MACD   int
 }
 
 type Day struct {

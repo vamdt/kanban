@@ -193,6 +193,7 @@ func (p *Stock) Merge() {
 	p.Ticks2M1s()
 	p.Days2Weeks()
 	p.Days2Months()
+	p.Macd()
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
