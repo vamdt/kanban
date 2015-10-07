@@ -46,13 +46,16 @@ class KLine
 
     s = data.id
     k = data.param.k
-    switch k
-      when '1' then data = data.m1s.data
-      when '5' then data = data.m5s.data
-      when '30' then data = data.m30s.data
-      when 'week' then data = data.weeks.data
-      when 'month' then data = data.months.data
-      else data = data.days.data
+    dataset = switch k
+      when '1' then data.m1s
+      when '5' then data.m5s
+      when '30' then data.m30s
+      when 'week' then data.weeks
+      when 'month' then data.months
+      else data.days
+    @_dataset = data
+    @_datasel = dataset
+    data = dataset.data
 
     data.forEach (d) ->
       d.date = parseDate(d.time)
@@ -173,16 +176,18 @@ class KLine
     x.domain([0, data.length-1])
     y.domain([d3.min(data, (d)->d.low) * 0.99, d3.max(data, (d)->d.high)])
 
-    @update data
+    @update data, @_datasel, @_dataset
 
   updateAxis: ->
     @_ui.svg.select(".x.axis").call(@_ui.xAxis)
     @_ui.svg.select(".y.axis").call(@_ui.yAxis)
 
-  update: (data) ->
+  update: (data, datasel, dataset) ->
     @updateAxis()
-    plugin.updateAxis data for plugin in @plugins when plugin.updateAxis
-    plugin.update data for plugin in @plugins
+    for plugin in @plugins when plugin.updateAxis
+      plugin.updateAxis data, datasel, dataset
+    for plugin in @plugins
+      plugin.update data, datasel, dataset
 
   init_websocket: (done) ->
     if @io

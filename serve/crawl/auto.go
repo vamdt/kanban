@@ -194,6 +194,7 @@ func (p *Stock) Merge() {
 	p.Days2Weeks()
 	p.Days2Months()
 	p.Macd()
+	p.Chan()
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {

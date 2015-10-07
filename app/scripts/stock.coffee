@@ -3,7 +3,6 @@ require './candle'
 require './volume'
 require './macd'
 require './tooltip'
-require './annotate'
-require './diy_path'
+require './typing'
 
 module.exports = KLine

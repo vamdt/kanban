@@ -33,6 +33,7 @@ type Tdata struct {
 
 type Tdatas struct {
 	Data    []Tdata `json:"data"`
+	Typing  []Typing
 	EndTime time.Time
 	Delta   int
 }

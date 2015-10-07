@@ -45,3 +45,8 @@ rect.pane {
   fill: none;
   pointer-events: all;
 }
+
+.tooltip {
+  top: 0;
+  position: absolute;
+}
