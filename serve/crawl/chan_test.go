@@ -24,7 +24,7 @@ var tests_typing = []test_typing_pair{
 			Tdata{High: 100, Low: 100},
 			Tdata{High: 150, Low: 80},
 		},
-		false, false, false,
+		false, false, true,
 	},
 	test_typing_pair{
 		[3]Tdata{
@@ -32,7 +32,7 @@ var tests_typing = []test_typing_pair{
 			Tdata{High: 200, Low: 90},
 			Tdata{High: 150, Low: 80},
 		},
-		false, false, false,
+		false, false, true,
 	},
 	test_typing_pair{
 		[3]Tdata{
@@ -118,7 +118,7 @@ var tests_tdatas = []test_tdatas_pair{
 		},
 	},
 	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 2, in the 3 k line, the High of the k is the lowest, and also the Low",
+		Desc: "Lesson 62 Fig 2, in the 3 k line, the Low of the k is the lowest, and also the High",
 		Data: []Tdata{
 			Tdata{High: 15, Low: 5},
 			Tdata{High: 14, Low: 4},
@@ -150,7 +150,7 @@ var tests_tdatas = []test_tdatas_pair{
 			Tdata{High: 16, Low: 6},
 		},
 		Typing: []Typing{
-      Typing{I: 2, Price: 30, Type: TopTyping},
+      Typing{I: 1, Price: 30, Type: TopTyping},
 		},
 	},
 	test_tdatas_pair{
@@ -162,7 +162,7 @@ var tests_tdatas = []test_tdatas_pair{
 			Tdata{High: 18, Low: 9},
 		},
 		Typing: []Typing{
-      Typing{I: 2, Price: 4, Type: BottomTyping},
+      Typing{I: 1, Price: 4, Type: BottomTyping},
 		},
 	},
 	test_tdatas_pair{

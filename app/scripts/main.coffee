@@ -17,11 +17,13 @@ do ->
   fq = getQuery 'fq'
   k = getQuery 'k'
   opacity = getQuery 'opacity'
+  ocl = getQuery 'ocl'
 
   kl.param
     s: s
     k: k
     fq: fq
     opacity: opacity
+    ocl: ocl
 
   kl.init()

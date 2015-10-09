@@ -3,6 +3,7 @@ package crawl
 import (
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestAtoi(t *testing.T) {
@@ -26,4 +27,9 @@ func TestByteString(t *testing.T) {
 			"got", s,
 		)
 	}
+}
+
+func TestTimeNowHour(t *testing.T) {
+	now := time.Now().UTC()
+	t.Logf("now utc hour %d", now.Hour())
 }

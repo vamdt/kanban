@@ -1,6 +1,8 @@
 d3 = require 'd3'
 KLine = require './kline'
 
+colors = ["#000", "#000", "#f00", "#080", "#f00", "#080"]
+
 class KLineTyping
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.typing
@@ -10,6 +12,7 @@ class KLineTyping
 
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
+    svg.selectAll('circle').remove()
     data = datasel.Typing
     g = @_ui.svg.select("g.typing")
     if !data or data.length < 1
@@ -45,12 +48,22 @@ class KLineTyping
         dataset.push d
       last = d
     path.data([dataset])
-    console.log dataset
 
     line = d3.svg.line()
       .x((d) -> x d.i)
       .y((d) -> y d.Price)
 
     path.attr("d", line)
+
+    svg.selectAll('circle')
+      .data(data)
+      .enter()
+      .append('g')
+      .append('circle')
+      .attr('cx', line.x())
+      .attr('cy', line.y())
+      .attr('r', 3)
+      .style("fill", (d,i) -> colors[d.Type] || colors[0])
+      .on('mouseover', (d,i) -> console.log(d,i))
 
 KLine.register_plugin 'typing', KLineTyping

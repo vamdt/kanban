@@ -1,9 +1,13 @@
 package crawl
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 const (
 	UnknowTyping = iota
+	WaitTyping
 	TopTyping
 	BottomTyping
 	UpTyping
@@ -15,6 +19,10 @@ type Typing struct {
 	Time  time.Time
 	Price int
 	Type  int
+	High  int
+	Low   int
+	begin int
+	end   int
 }
 
 func (p *Stock) Chan() {
@@ -22,53 +30,111 @@ func (p *Stock) Chan() {
 	p.M5s.ParseTyping()
 }
 
+type typing_parser struct {
+	d Tdata
+	t Typing
+}
+
 func (p *Tdatas) ParseTyping() {
+	var prev *typing_parser
 	start := 0
 	typing := Typing{}
-	if l := len(p.Typing); l > 0 {
-		start = p.Typing[l-1].I
+	if l := len(p.tp); l > 0 {
+		start = p.tp[l-1].t.end + 1
+		prev = &p.tp[l-1]
+	} else {
+		start = 0
 	}
-	var pra *Tdata
-	for i, l := start+2, len(p.Data); i < l; i++ {
-		if i > 2 {
-			pra = &p.Data[i-3]
-		} else {
-			pra = nil
-		}
-		a := &p.Data[i-2]
-		b := &p.Data[i-1]
-		c := &p.Data[i]
 
-		for Contain(a, b) {
-			if pra != nil {
-				a = PraTypingMerge(pra, a, b)
+	for i, l := start, len(p.Data); i < l; i++ {
+		a := &p.Data[i]
+
+		if len(p.tp) < 1 {
+			tp := typing_parser{}
+			tp.t.begin = i
+			tp.t.I = i
+			tp.t.end = i
+			tp.t.High = p.Data[i].High
+			tp.t.Low = p.Data[i].Low
+			tp.d = p.Data[i]
+			p.tp = append(p.tp, tp)
+			prev = &p.tp[len(p.tp)-1]
+		}
+
+		if IsUpTyping(&prev.d, a) {
+			prev.t.end = i - 1
+			tp := typing_parser{}
+			tp.t.begin = i
+			tp.t.I = i
+			tp.t.end = i
+			tp.t.High = p.Data[i].High
+			tp.t.Low = p.Data[i].Low
+			tp.d = p.Data[i]
+			p.tp = append(p.tp, tp)
+			prev = &p.tp[len(p.tp)-1]
+		} else if IsDownTyping(&prev.d, a) {
+			prev.t.end = i - 1
+			tp := typing_parser{}
+			tp.t.begin = i
+			tp.t.I = i
+			tp.t.end = i
+			tp.t.High = a.High
+			tp.t.Low = a.Low
+			tp.d = *a
+			p.tp = append(p.tp, tp)
+			prev = &p.tp[len(p.tp)-1]
+		} else if Contain(&prev.d, a) {
+			var base *Tdata
+			if len(p.tp) > 1 {
+				base = &p.tp[len(p.tp)-2].d
 			} else {
-				a = PobTypingMerge(a, b, c)
+				base = &Tdata{}
 			}
-			i++
-			if i >= l {
-				return
+			a = TypingMerge(base, &prev.d, a)
+			if prev.d.High > base.High {
+				if prev.d.High != a.High {
+					prev.t.I = i
+				}
+			} else {
+				if prev.d.Low != a.Low {
+					prev.t.I = i
+				}
 			}
-			b = c
-			c = &p.Data[i]
+			prev.d = *a
+			prev.t.end = i
+			prev.t.High = a.High
+			prev.t.Low = a.Low
+		} else {
+			log.Println("UnknowTyping", a)
 		}
 
-		pra = a
-		if IsTopTyping(a, b, c) {
-			typing.Price = b.High
-			typing.Type = TopTyping
-		} else if IsBottomTyping(a, b, c) {
-			typing.Price = b.Low
-			typing.Type = BottomTyping
-		} else {
-			continue
+		if len(p.tp) > 2 {
+			a := &p.tp[len(p.tp)-3].d
+			b := &p.tp[len(p.tp)-2].d
+			c := &p.tp[len(p.tp)-1].d
+			if IsTopTyping(a, b, c) {
+				typing.Price = b.High
+				typing.Type = TopTyping
+			} else if IsBottomTyping(a, b, c) {
+				typing.Price = b.Low
+				typing.Type = BottomTyping
+			} else {
+				continue
+			}
+			typing.I = p.tp[len(p.tp)-2].t.I
+			if len(p.Typing) > 0 && typing.I-p.Typing[len(p.Typing)-1].I < 4 {
+				continue
+			}
+			typing.Time = b.Time
+			typing.High = b.High
+			typing.Low = b.Low
+			p.Typing = append(p.Typing, typing)
+
+			var tmp []typing_parser
+			tmp = append(tmp, p.tp[1:]...)
+			p.tp = tmp
+			prev = &p.tp[len(p.tp)-1]
 		}
-		typing.I = i - 1
-		if len(p.Typing) > 0 && typing.I-p.Typing[len(p.Typing)-1].I < 4 {
-			continue
-		}
-		typing.Time = b.Time
-		p.Typing = append(p.Typing, typing)
 	}
 }
 
@@ -89,10 +155,10 @@ func IsDownTyping(a, b *Tdata) bool {
 }
 
 func Contain(a, b *Tdata) bool {
-	return (a.High > b.High && a.Low < b.Low) || (a.High < b.High && a.Low > b.Low)
+	return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
 }
 
-func PraTypingMerge(pra, a, b *Tdata) *Tdata {
+func TypingMerge(pra, a, b *Tdata) *Tdata {
 	t := *a
 	if IsUpTyping(pra, a) {
 		if b.High > a.High {
@@ -101,6 +167,7 @@ func PraTypingMerge(pra, a, b *Tdata) *Tdata {
 		if b.Low > a.Low {
 			t.Low = b.Low
 		}
+		return &t
 	} else if IsDownTyping(pra, a) {
 		if b.Low < a.Low {
 			t.Low = b.Low
@@ -108,30 +175,7 @@ func PraTypingMerge(pra, a, b *Tdata) *Tdata {
 		if b.High < a.High {
 			t.High = b.High
 		}
-	} else {
-		return nil
+		return &t
 	}
-	return &t
-}
-
-func PobTypingMerge(a, b, pob *Tdata) *Tdata {
-	t := *a
-	if IsUpTyping(b, pob) {
-		if b.High > a.High {
-			t.High = b.High
-		}
-		if b.Low > a.Low {
-			t.Low = b.Low
-		}
-	} else if IsDownTyping(b, pob) {
-		if b.Low < a.Low {
-			t.Low = b.Low
-		}
-		if b.High < a.High {
-			t.High = b.High
-		}
-	} else {
-		return nil
-	}
-	return &t
+	return nil
 }
