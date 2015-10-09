@@ -52,8 +52,8 @@ var tests_typing = []test_typing_pair{
 	},
 	test_typing_pair{
 		[3]Tdata{
-      Tdata{High: 200, Low: 90},
-      Tdata{High: 140, Low: 100},
+			Tdata{High: 200, Low: 90},
+			Tdata{High: 140, Low: 100},
 			Tdata{High: 150, Low: 80},
 		},
 		false, false, true,
@@ -64,7 +64,7 @@ func TestIsTopTyping(t *testing.T) {
 	for i, td := range tests_typing {
 		if td.is_top != IsTopTyping(&td.tdata[0], &td.tdata[1], &td.tdata[2]) {
 			t.Error(
-        "Test", i,
+				"Test", i,
 				"For", td.tdata,
 				"expected", td.is_top,
 				"got", !td.is_top,
@@ -77,7 +77,7 @@ func TestIsBottomTyping(t *testing.T) {
 	for i, td := range tests_typing {
 		if td.is_bottom != IsBottomTyping(&td.tdata[0], &td.tdata[1], &td.tdata[2]) {
 			t.Error(
-        "Test", i,
+				"Test", i,
 				"For", td.tdata,
 				"expected", td.is_bottom,
 				"got", !td.is_bottom,
@@ -90,7 +90,7 @@ func TestContain(t *testing.T) {
 	for i, td := range tests_typing {
 		if td.is_contain != Contain(&td.tdata[0], &td.tdata[1]) {
 			t.Error(
-        "Test", i,
+				"Test", i,
 				"For", td.tdata,
 				"expected", td.is_contain,
 				"got", !td.is_contain,
@@ -150,7 +150,7 @@ var tests_tdatas = []test_tdatas_pair{
 			Tdata{High: 16, Low: 6},
 		},
 		Typing: []Typing{
-      Typing{I: 1, Price: 30, Type: TopTyping},
+			Typing{I: 1, Price: 30, Type: TopTyping},
 		},
 	},
 	test_tdatas_pair{
@@ -162,7 +162,7 @@ var tests_tdatas = []test_tdatas_pair{
 			Tdata{High: 18, Low: 9},
 		},
 		Typing: []Typing{
-      Typing{I: 1, Price: 4, Type: BottomTyping},
+			Typing{I: 1, Price: 4, Type: BottomTyping},
 		},
 	},
 	test_tdatas_pair{
@@ -197,6 +197,42 @@ var tests_tdatas = []test_tdatas_pair{
 			Typing{I: 5, Price: 3, Type: BottomTyping},
 		},
 	},
+	test_tdatas_pair{
+		Desc: "Lesson 62 Fig 5, should not have two TopTyping together",
+		Data: []Tdata{
+			Tdata{High: 1588, Low: 1586},
+			Tdata{High: 1589, Low: 1587},
+			Tdata{High: 1589, Low: 1588},
+			Tdata{High: 1591, Low: 1589},
+			Tdata{High: 1593, Low: 1590},
+
+			Tdata{High: 1595, Low: 1588},
+			Tdata{High: 1594, Low: 1590},
+			Tdata{High: 1592, Low: 1588},
+			Tdata{High: 1593, Low: 1591},
+			Tdata{High: 1595, Low: 1593},
+
+			Tdata{High: 1594, Low: 1592},
+			Tdata{High: 1593, Low: 1591},
+			Tdata{High: 1593, Low: 1591},
+			Tdata{High: 1592, Low: 1590},
+			Tdata{High: 1592, Low: 1591},
+
+			Tdata{High: 1591, Low: 1590},
+			Tdata{High: 1591, Low: 1589},
+			Tdata{High: 1590, Low: 1588},
+			Tdata{High: 1590, Low: 1589},
+			Tdata{High: 1590, Low: 1589},
+
+			Tdata{High: 1590, Low: 1589},
+			Tdata{High: 1591, Low: 1589},
+			Tdata{High: 1592, Low: 1591},
+		},
+		Typing: []Typing{
+			Typing{I: 5, Price: 1595, Type: TopTyping},
+			Typing{I: 17, Price: 1588, Type: BottomTyping},
+		},
+	},
 }
 
 func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
@@ -207,7 +243,7 @@ func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
 		return true
 	}
 	for i := 0; i < len(a); i++ {
-		if a[i] != b[i] {
+		if a[i].I != b[i].I || a[i].Price != b[i].Price || a[i].Type != b[i].Type {
 			return false
 		}
 	}
@@ -220,7 +256,7 @@ func TestParseTyping(t *testing.T) {
 		td.ParseTyping()
 		if !test_is_typing_equal(t, d.Typing, td.Typing) {
 			t.Error(
-        "Test", i,
+				"Test", i,
 				"For", d.Desc,
 				"expected", d.Typing,
 				"got", td.Typing,

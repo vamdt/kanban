@@ -122,8 +122,13 @@ func (p *Tdatas) ParseTyping() {
 				continue
 			}
 			typing.I = p.tp[len(p.tp)-2].t.I
-			if len(p.Typing) > 0 && typing.I-p.Typing[len(p.Typing)-1].I < 4 {
-				continue
+			if len(p.Typing) > 0 {
+				if typing.I-p.Typing[len(p.Typing)-1].I < 4 {
+					continue
+				}
+				if typing.Type == p.Typing[len(p.Typing)-1].Type {
+					continue
+				}
 			}
 			typing.Time = b.Time
 			typing.High = b.High
