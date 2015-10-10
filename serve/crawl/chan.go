@@ -25,6 +25,12 @@ type Typing struct {
 	end   int
 }
 
+type TypingSlice []Typing
+
+func (p TypingSlice) Len() int           { return len(p) }
+func (p TypingSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p TypingSlice) Less(i, j int) bool { return p[i].I < p[j].I }
+
 func (p *Stock) Chan() {
 	p.M1s.ParseTyping()
 	p.M5s.ParseTyping()
@@ -38,7 +44,6 @@ type typing_parser struct {
 func (p *Tdatas) ParseTyping() {
 	var prev *typing_parser
 	start := 0
-	typing := Typing{}
 	if l := len(p.tp); l > 0 {
 		start = p.tp[l-1].t.end + 1
 		prev = &p.tp[l-1]
@@ -91,11 +96,11 @@ func (p *Tdatas) ParseTyping() {
 				base = &Tdata{}
 			}
 			a = TypingMerge(base, &prev.d, a)
-			if prev.d.High > base.High {
+			if IsUpTyping(base, &prev.d) {
 				if prev.d.High != a.High {
 					prev.t.I = i
 				}
-			} else {
+			} else if IsDownTyping(base, &prev.d) {
 				if prev.d.Low != a.Low {
 					prev.t.I = i
 				}
@@ -108,7 +113,20 @@ func (p *Tdatas) ParseTyping() {
 			log.Println("UnknowTyping", a)
 		}
 
+		//log.Printf("\n---------------------------%d\n", i)
+		//for k, tp := range p.tp {
+		//log.Println(k, tp.t.begin, tp.t.I, tp.t.end)
+		//}
+
+		if len(p.tp) > 3 {
+			var tmp []typing_parser
+			tmp = append(tmp, p.tp[len(p.tp)-3:]...)
+			p.tp = tmp
+			prev = &p.tp[len(p.tp)-1]
+		}
+
 		if len(p.tp) > 2 {
+			typing := p.tp[len(p.tp)-2].t
 			a := &p.tp[len(p.tp)-3].d
 			b := &p.tp[len(p.tp)-2].d
 			c := &p.tp[len(p.tp)-1].d
@@ -121,46 +139,45 @@ func (p *Tdatas) ParseTyping() {
 			} else {
 				continue
 			}
-			typing.I = p.tp[len(p.tp)-2].t.I
+
+			typing.Time = b.Time
+			typing.High = b.High
+			typing.Low = b.Low
+
 			if len(p.Typing) > 0 {
 				if typing.I-p.Typing[len(p.Typing)-1].I < 4 {
 					continue
 				}
 				if typing.Type == p.Typing[len(p.Typing)-1].Type {
+					p.Typing[len(p.Typing)-1] = typing
 					continue
 				}
 			}
-			typing.Time = b.Time
-			typing.High = b.High
-			typing.Low = b.Low
 			p.Typing = append(p.Typing, typing)
-
-			var tmp []typing_parser
-			tmp = append(tmp, p.tp[1:]...)
-			p.tp = tmp
-			prev = &p.tp[len(p.tp)-1]
 		}
 	}
 }
 
 func IsTopTyping(a, b, c *Tdata) bool {
-	return b.High > a.High && b.High > c.High && b.Low > a.Low && b.Low > c.Low
+	return IsUpTyping(a, b) && IsDownTyping(b, c)
 }
 
 func IsBottomTyping(a, b, c *Tdata) bool {
-	return b.High < a.High && b.High < c.High && b.Low < a.Low && b.Low < c.Low
+	return IsDownTyping(a, b) && IsUpTyping(b, c)
 }
 
 func IsUpTyping(a, b *Tdata) bool {
-	return b.High > a.High && b.Low >= a.Low
+	return !Contain(a, b) && b.High >= a.High
 }
 
 func IsDownTyping(a, b *Tdata) bool {
-	return b.Low < a.Low && b.High <= a.High
+	return !Contain(a, b) && b.Low <= a.Low
 }
 
 func Contain(a, b *Tdata) bool {
-	return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
+  //return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
+	// Lesson 65
+	return (a.High > b.High && a.Low < b.Low) || (a.High <= b.High && a.Low >= b.Low)
 }
 
 func TypingMerge(pra, a, b *Tdata) *Tdata {

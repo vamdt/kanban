@@ -168,3 +168,137 @@ func TestMinute30end(t *testing.T) {
 		}
 	}
 }
+
+type test_text_tdata_pair struct {
+	str        string
+	exp_td     []Tdata
+	exp_typing []Typing
+}
+
+var tests_text_tdata = []test_text_tdata_pair{
+	{`
+|
+      `,
+		[]Tdata{
+			Tdata{High: 15, Low: 5},
+		}, nil,
+	},
+	{`
+|
+|
+      `,
+		[]Tdata{
+			Tdata{High: 25, Low: 5},
+		}, nil,
+	},
+	{`
+^
+|
+      `,
+		[]Tdata{
+			Tdata{High: 15, Low: 5},
+		},
+		[]Typing{
+			Typing{I: 0, Price: 15, Type: TopTyping},
+		},
+	},
+	{`
+|^
+||
+      `,
+		[]Tdata{
+			Tdata{High: 25, Low: 5},
+			Tdata{High: 15, Low: 5},
+		},
+		[]Typing{
+      Typing{I: 1, Price: 15, Type: TopTyping},
+		},
+	},
+	{`
+|
+.
+      `,
+		[]Tdata{
+			Tdata{High: 25, Low: 15},
+		},
+		[]Typing{
+			Typing{I: 0, Price: 15, Type: BottomTyping},
+		},
+	},
+	{`
+    ^
+    |
+    | |
+ |  | |_|
+||-_||| |||
+ |  | | | |
+      |
+      .
+      `,
+		[]Tdata{
+			Tdata{High: 45, Low: 35},
+			Tdata{High: 55, Low: 25},
+			Tdata{High: 40, Low: 40},
+			Tdata{High: 35, Low: 35},
+			Tdata{High: 75, Low: 25},
+
+			Tdata{High: 45, Low: 35},
+			Tdata{High: 65, Low: 15},
+			Tdata{High: 45, Low: 45},
+			Tdata{High: 55, Low: 25},
+			Tdata{High: 45, Low: 35},
+
+			Tdata{High: 45, Low: 25},
+		},
+		[]Typing{
+			Typing{I: 4, Price: 75, Type: TopTyping},
+			Typing{I: 6, Price: 15, Type: BottomTyping},
+		},
+	},
+}
+
+func test_tdata_high_low_equal(a, b []Tdata) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, c := 0, len(a); i < c; i++ {
+		if a[i].High != b[i].High || a[i].Low != b[i].Low {
+			return false
+		}
+	}
+	return true
+}
+
+func test_typing_i_price_type_equal(a, b []Typing) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, c := 0, len(a); i < c; i++ {
+		if a[i].I != b[i].I || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
+			return false
+		}
+	}
+	return true
+}
+
+func TestText2Tdata(t *testing.T) {
+	for i, pair := range tests_text_tdata {
+		tds := Text2Tdatas([]byte(pair.str))
+		if !test_tdata_high_low_equal(tds.Data, pair.exp_td) {
+			t.Error(
+				"\nExample", i,
+				"\nFor", pair.str,
+				"\nexpected Tdata", pair.exp_td,
+				"\ngot", tds.Data,
+			)
+		}
+		if !test_typing_i_price_type_equal(tds.Typing, pair.exp_typing) {
+			t.Error(
+				"\nExample", i,
+				"\nFor", pair.str,
+				"\nexpected Typing", pair.exp_typing,
+				"\ngot", tds.Typing,
+			)
+		}
+	}
+}

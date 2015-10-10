@@ -1,8 +1,10 @@
 package crawl
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -82,4 +84,61 @@ func Minute5end(t time.Time) time.Time {
 
 func Minute30end(t time.Time) time.Time {
 	return t.Truncate(30 * time.Minute).Add(30 * time.Minute)
+}
+
+func Text2Tdatas(text []byte) Tdatas {
+	tds := Tdatas{}
+	base := 5
+	td := []Tdata{}
+	typing := []Typing{}
+	lines := bytes.Split(text, []byte("\n"))
+	lines = lines[1 : len(lines)-1]
+	for _, l := range lines {
+		for i, c := 0, len(td); i < c; i++ {
+			if td[i].High > 0 {
+				td[i].High = td[i].High + base*2
+				td[i].Low = td[i].Low + base*2
+			}
+		}
+		for i, c := range l {
+			if len(td) <= i {
+				td = append(td, Tdata{})
+			}
+
+			switch c {
+			case '^':
+				typing = append(typing, Typing{I: i, Type: TopTyping})
+			case '.':
+				typing = append(typing, Typing{I: i, Type: BottomTyping})
+			case '|':
+				if td[i].High == 0 {
+					td[i].High = base * 3
+				}
+				td[i].Low = base
+			case '-':
+				if td[i].High == 0 {
+					td[i].High = base * 2
+				}
+				td[i].Low = base * 2
+			case '_':
+				if td[i].High == 0 {
+					td[i].High = base
+				}
+				td[i].Low = base
+			}
+		}
+	}
+	tds.Data = td
+	for i, c := 0, len(typing); i < c; i++ {
+		typing[i].High = td[typing[i].I].High
+		typing[i].Low = td[typing[i].I].Low
+		if typing[i].Type == TopTyping {
+			typing[i].Price = td[typing[i].I].High
+		} else if typing[i].Type == BottomTyping {
+			typing[i].Price = td[typing[i].I].Low
+		}
+	}
+	sort.Sort(TypingSlice(typing))
+	tds.Typing = typing
+	return tds
 }
