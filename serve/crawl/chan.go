@@ -22,7 +22,7 @@ type Typing struct {
 	High  int
 	Low   int
 	begin int
-	end   int
+	End   int
 }
 
 type TypingSlice []Typing
@@ -45,7 +45,7 @@ func (p *Tdatas) ParseTyping() {
 	var prev *typing_parser
 	start := 0
 	if l := len(p.tp); l > 0 {
-		start = p.tp[l-1].t.end + 1
+		start = p.tp[l-1].t.End + 1
 		prev = &p.tp[l-1]
 	} else {
 		start = 0
@@ -58,7 +58,7 @@ func (p *Tdatas) ParseTyping() {
 			tp := typing_parser{}
 			tp.t.begin = i
 			tp.t.I = i
-			tp.t.end = i
+			tp.t.End = i
 			tp.t.High = p.Data[i].High
 			tp.t.Low = p.Data[i].Low
 			tp.d = p.Data[i]
@@ -67,22 +67,22 @@ func (p *Tdatas) ParseTyping() {
 		}
 
 		if IsUpTyping(&prev.d, a) {
-			prev.t.end = i - 1
+			prev.t.End = i - 1
 			tp := typing_parser{}
 			tp.t.begin = i
 			tp.t.I = i
-			tp.t.end = i
+			tp.t.End = i
 			tp.t.High = p.Data[i].High
 			tp.t.Low = p.Data[i].Low
 			tp.d = p.Data[i]
 			p.tp = append(p.tp, tp)
 			prev = &p.tp[len(p.tp)-1]
 		} else if IsDownTyping(&prev.d, a) {
-			prev.t.end = i - 1
+			prev.t.End = i - 1
 			tp := typing_parser{}
 			tp.t.begin = i
 			tp.t.I = i
-			tp.t.end = i
+			tp.t.End = i
 			tp.t.High = a.High
 			tp.t.Low = a.Low
 			tp.d = *a
@@ -106,17 +106,12 @@ func (p *Tdatas) ParseTyping() {
 				}
 			}
 			prev.d = *a
-			prev.t.end = i
+			prev.t.End = i
 			prev.t.High = a.High
 			prev.t.Low = a.Low
 		} else {
 			log.Println("UnknowTyping", a)
 		}
-
-		//log.Printf("\n---------------------------%d\n", i)
-		//for k, tp := range p.tp {
-		//log.Println(k, tp.t.begin, tp.t.I, tp.t.end)
-		//}
 
 		if len(p.tp) > 3 {
 			var tmp []typing_parser
@@ -148,9 +143,15 @@ func (p *Tdatas) ParseTyping() {
 				if typing.I-p.Typing[len(p.Typing)-1].I < 4 {
 					continue
 				}
+
 				if typing.Type == p.Typing[len(p.Typing)-1].Type {
 					p.Typing[len(p.Typing)-1] = typing
 					continue
+				}
+
+				if typing.Type == TopTyping && p.Typing[len(p.Typing)-1].Type == BottomTyping {
+				} else if typing.Type == BottomTyping && p.Typing[len(p.Typing)-1].Type == TopTyping {
+
 				}
 			}
 			p.Typing = append(p.Typing, typing)
@@ -175,7 +176,7 @@ func IsDownTyping(a, b *Tdata) bool {
 }
 
 func Contain(a, b *Tdata) bool {
-  //return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
+	//return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
 	// Lesson 65
 	return (a.High > b.High && a.Low < b.Low) || (a.High <= b.High && a.Low >= b.Low)
 }

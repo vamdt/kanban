@@ -208,6 +208,20 @@ var tests_tdatas = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
+		Desc: "Lesson 62 Study Case 9, Top should not lower then Bottom",
+		Text: `
+   |
+| ||
+||||
+||||  |
+|||| |||
+||| ||||
+ |  || |
+ |  |
+ .
+    `,
+	},
+	test_tdatas_pair{
 		Desc: "Lesson 65 Fig 4, case TopTop, should skip the first Top",
 		Text: `
        ^
