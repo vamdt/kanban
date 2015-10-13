@@ -35,36 +35,10 @@ func M_sina_url(id, mins string) string {
 		id, mins)
 }
 
-func M5_sina_url(id string) string {
-	return M_sina_url(id, "5")
-}
-
-func M30_sina_url(id string) string {
-	return M_sina_url(id, "30")
-}
-
-func DownloadM30sFromSina(id string) []byte {
-	url := M30_sina_url(id)
-	return Download(url)
-}
-
-func DownloadM5sFromSina(id string) []byte {
-	url := M5_sina_url(id)
-	return Download(url)
-}
-
 func M_collection_name(id, mins string) string {
 	return fmt.Sprintf("%s.tdata.k%s", id, mins)
 }
 
 func M1_collection(db *mgo.Database, id string) *mgo.Collection {
 	return db.C(M_collection_name(id, "1"))
-}
-
-func M5_collection(db *mgo.Database, id string) *mgo.Collection {
-	return db.C(M_collection_name(id, "5"))
-}
-
-func M30_collection(db *mgo.Database, id string) *mgo.Collection {
-	return db.C(M_collection_name(id, "30"))
 }

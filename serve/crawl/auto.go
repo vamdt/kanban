@@ -192,6 +192,8 @@ func StockHash(id string) int {
 
 func (p *Stock) Merge() {
 	p.Ticks2M1s()
+	p.M1s2M5s()
+	p.M1s2M30s()
 	p.Days2Weeks()
 	p.Days2Months()
 	p.Macd()
@@ -209,22 +211,11 @@ func (p *Stock) Update(db *mgo.Database) bool {
 		p.Days_update(db)
 		wg.Done()
 	}()
-	go func() {
-		wg.Add(1)
-		p.M30s_update(db)
-		wg.Done()
-	}()
-	go func() {
-		wg.Add(1)
-		p.M5s_update(db)
-		wg.Done()
-	}()
-	wg.Add(1)
-	p.Ticks_update(db)
-	wg.Done()
-	wg.Wait()
 
+	p.Ticks_update(db)
 	p.Ticks_today_update()
+
+	wg.Wait()
 	p.Merge()
 	p.loaded = 2
 	return true
@@ -267,36 +258,6 @@ func (p *Stock) Days_update(db *mgo.Database) int {
 		}
 	}
 	p.Days.Delta = count - l
-	return count - l
-}
-
-func (p *Stock) M5s_update(db *mgo.Database) int {
-	c := M5_collection(db, p.Id)
-	p.M5s.Load(c)
-	l := len(p.M5s.Data)
-	p.m5s_download()
-	count := len(p.M5s.Data)
-	if count > l {
-		for i, j := l, count; i < j; i++ {
-			p.M5s.Data[i].Save(c)
-		}
-	}
-	p.M5s.Delta = count - l
-	return count - l
-}
-
-func (p *Stock) M30s_update(db *mgo.Database) int {
-	c := M30_collection(db, p.Id)
-	p.M30s.Load(c)
-	l := len(p.M30s.Data)
-	p.m30s_download()
-	count := len(p.M30s.Data)
-	if count > l {
-		for i, j := l, count; i < j; i++ {
-			p.M30s.Data[i].Save(c)
-		}
-	}
-	p.M30s.Delta = count - l
 	return count - l
 }
 
@@ -380,50 +341,6 @@ func (p *Tdata) parse_mins_from_sina(line []byte) error {
 
 	p.FromString(v[0], v[1], v[2], v[3], v[4], v[5])
 	return nil
-}
-
-func (p *Stock) m30s_download() (bool, error) {
-	body := DownloadM30sFromSina(p.Id)
-	body = bytes.TrimSpace(body)
-	lines := bytes.Split(body, []byte("},{"))
-	count := len(lines)
-	if count < 1 {
-		return false, nil
-	}
-
-	data := Tdata{}
-
-	for i := 0; i < count; i++ {
-		err := data.parse_mins_from_sina(lines[i])
-		if err != nil {
-			return false, err
-		}
-		p.M30s.Add(data)
-	}
-
-	return true, nil
-}
-
-func (p *Stock) m5s_download() (bool, error) {
-	body := DownloadM5sFromSina(p.Id)
-	body = bytes.TrimSpace(body)
-	lines := bytes.Split(body, []byte("},{"))
-	count := len(lines)
-	if count < 1 {
-		return false, nil
-	}
-
-	data := Tdata{}
-
-	for i := 0; i < count; i++ {
-		err := data.parse_mins_from_sina(lines[i])
-		if err != nil {
-			return false, err
-		}
-
-		p.M5s.Add(data)
-	}
-	return true, nil
 }
 
 var UnknowSinaRes error = errors.New("could not find '成交时间' in head line")

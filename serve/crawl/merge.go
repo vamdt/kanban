@@ -45,16 +45,16 @@ func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
 	return tdata, i - begin
 }
 
-func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
+func (p *Tdatas) MergeTil(begin int, end time.Time) (Tdata, int) {
 	if begin < 0 {
 		begin = 0
 	}
-	tdata := td.Data[begin]
+	tdata := p.Data[begin]
 	tdata.Volume = 0
 	i := begin
-	c := len(td.Data)
+	c := len(p.Data)
 	for ; i < c; i++ {
-		data := td.Data[i]
+		data := p.Data[i]
 		if !data.Time.Before(end) {
 			break
 		}
@@ -68,14 +68,34 @@ func MergeTil(td *Days, begin int, end time.Time) (Tdata, int) {
 		}
 		tdata.Volume += data.Volume
 	}
-	tdata.Time = tdata.Time.Truncate(time.Hour * 24)
 	return tdata, i - begin
+}
+
+func (p *Stock) M1s2M5s() {
+	for i, c := 0, len(p.M1s.Data); i < c; {
+		t := Minute5end(p.M1s.Data[i].Time)
+		tdata, j := p.M1s.MergeTil(i, t)
+		tdata.Time = t
+		p.M5s.Add(tdata)
+		i += j
+	}
+}
+
+func (p *Stock) M1s2M30s() {
+	for i, c := 0, len(p.M1s.Data); i < c; {
+		t := Minute30end(p.M1s.Data[i].Time)
+		tdata, j := p.M1s.MergeTil(i, t)
+		tdata.Time = t
+		p.M30s.Add(tdata)
+		i += j
+	}
 }
 
 func (p *Stock) Days2Weeks() {
 	for i, c := 0, len(p.Days.Data); i < c; {
 		t := Weekend(p.Days.Data[i].Time)
-		tdata, j := MergeTil(&p.Days, i, t)
+		tdata, j := p.Days.MergeTil(i, t)
+		tdata.Time = tdata.Time.Truncate(time.Hour * 24)
 		p.Weeks.Add(tdata)
 		i += j
 	}
@@ -84,7 +104,8 @@ func (p *Stock) Days2Weeks() {
 func (p *Stock) Days2Months() {
 	for i, c := 0, len(p.Days.Data); i < c; {
 		t := Monthend(p.Days.Data[i].Time)
-		tdata, j := MergeTil(&p.Days, i, t)
+		tdata, j := p.Days.MergeTil(i, t)
+		tdata.Time = tdata.Time.Truncate(time.Hour * 24)
 		p.Months.Add(tdata)
 		i += j
 	}
