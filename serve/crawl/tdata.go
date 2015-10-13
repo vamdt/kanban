@@ -36,22 +36,21 @@ type Tdatas struct {
 	Typing  []Typing
 	tp      []typing_parser
 	EndTime time.Time
-	Delta   int
 }
 
 func (p *Tdatas) Load(c *mgo.Collection) {
+	var data []Tdata
 	d := Tdata{}
 	iter := c.Find(nil).Sort("_id").Iter()
-	num := len(p.Data)
 	for iter.Next(&d) {
 		d.Time = ObjectId2Time(d.Id)
-		p.Data = append(p.Data, d)
+		data = append(data, d)
 	}
 	if err := iter.Close(); err != nil {
 		log.Println(err)
 	}
+	p.Data = data
 	nnum := len(p.Data)
-	p.Delta = nnum - num
 	if nnum > 0 {
 		p.EndTime = p.Data[nnum-1].Time
 	}
@@ -60,10 +59,10 @@ func (p *Tdatas) Load(c *mgo.Collection) {
 func (p *Tdatas) Add(data Tdata) {
 	if len(p.Data) < 1 {
 		p.Data = append(p.Data, data)
-		p.Delta++
 	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
 		p.Data = append(p.Data, data)
-		p.Delta++
+	} else if data.Time.Equal(p.Data[len(p.Data)-1].Time) {
+		p.Data[len(p.Data)-1] = data
 	} else {
 		j := len(p.Data) - 1
 		should_insert := true

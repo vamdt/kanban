@@ -33,7 +33,6 @@ type Tick struct {
 type Ticks struct {
 	Data    []Tick `json:"data"`
 	EndTime time.Time
-	Delta   int
 }
 
 type RealtimeTick struct {
@@ -234,18 +233,18 @@ func Tick_sina_url(id string, t time.Time) string {
 }
 
 func (p *Ticks) Load(c *mgo.Collection) {
+	var data []Tick
 	d := Tick{}
 	iter := c.Find(nil).Sort("_id").Iter()
-	num := len(p.Data)
 	for iter.Next(&d) {
 		d.Time = ObjectId2Time(d.Id)
-		p.Data = append(p.Data, d)
+		data = append(data, d)
 	}
 	if err := iter.Close(); err != nil {
 		log.Println(err)
 	}
+	p.Data = data
 	nnum := len(p.Data)
-	p.Delta = nnum - num
 	if nnum > 0 {
 		p.EndTime = p.Data[nnum-1].Time
 	}
@@ -267,22 +266,11 @@ func (p *Tick) Save(c *mgo.Collection) {
 
 func (p *Ticks) Add(data Tick) {
 	if len(p.Data) < 1 {
-		p.Data = append(p.Data, data)
-		p.Delta++
-	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
-		p.Data = append(p.Data, data)
-		p.Delta++
-	}
-	p.EndTime = p.Data[len(p.Data)-1].Time
-}
-
-func (p *Ticks) Insert(data Tick) {
-	if len(p.Data) < 1 {
 		p.Data = []Tick{data}
-		p.Delta = 1
 	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
 		p.Data = append(p.Data, data)
-		p.Delta++
+	} else if data.Time.Equal(p.Data[len(p.Data)-1].Time) {
+		p.Data[len(p.Data)-1] = data
 	} else {
 		j := len(p.Data) - 1
 		should_insert := true

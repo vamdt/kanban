@@ -118,7 +118,7 @@ func (p *Stocks) Watch(id string) (*Stock, bool) {
 	if isnew {
 		log.Println("watch new stock", id, i)
 	} else {
-		log.Println("watch stock", id, i)
+		log.Println("watch stock", id, i, s.count)
 	}
 	return s, isnew
 }
@@ -288,7 +288,6 @@ func (p *Stock) Days_update(db *mgo.Database) int {
 			p.Days.Data[i].Save(c)
 		}
 	}
-	p.Days.Delta = count - l
 	return count - l
 }
 
@@ -334,8 +333,7 @@ func (p *Stock) Ticks_update(db *mgo.Database) int {
 			p.Ticks.Data[i].Save(c)
 		}
 	}
-	p.Ticks.Delta = count - l
-	log.Println("download ticks", p.Ticks.Delta)
+	log.Println("download ticks", count-l)
 	return count - l
 }
 
@@ -430,8 +428,7 @@ func (p *Stock) Ticks_today_update() int {
 	p.ticks_get_today()
 
 	count := len(p.Ticks.Data)
-	p.Ticks.Delta = count - l
-	return p.Ticks.Delta
+	return count - l
 }
 
 func (p *Stock) ticks_get_today() bool {
@@ -479,7 +476,7 @@ func (p *Stock) ticks_get_today() bool {
 	FixTickData(ticks)
 
 	for _, tick := range ticks {
-		p.Ticks.Insert(tick)
+		p.Ticks.Add(tick)
 	}
 	return true
 }
@@ -519,7 +516,7 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		volume := (tick.Volume - p.last_tick.Volume) / 100
 		p.last_tick = tick
 		tick.Volume = volume
-		p.Ticks.Insert(tick.Tick)
+		p.Ticks.Add(tick.Tick)
 		p.lst_trade = tick.Time
 		return true
 	}
