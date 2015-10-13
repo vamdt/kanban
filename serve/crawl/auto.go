@@ -45,6 +45,7 @@ type Stocks struct {
 }
 
 func (p *Stocks) Run() {
+	go p.update()
 	for {
 		p.Ticks_update_real()
 		time.Sleep(tickPeriod)
@@ -65,13 +66,16 @@ func (p *Stocks) res(stock *Stock) {
 	}
 }
 
-func (p *Stocks) Update() {
-	p.rwmutex.Lock()
-	defer p.rwmutex.Unlock()
-	for _, s := range p.stocks {
-		if s.Update(p.db) {
-			p.res(s)
+func (p *Stocks) update() {
+	for {
+		p.rwmutex.RLock()
+		for i, c := 0, len(p.stocks); i < c; i++ {
+			if p.stocks[i].Update(p.db) {
+				p.res(p.stocks[i])
+			}
 		}
+		p.rwmutex.RUnlock()
+		time.Sleep(time.Second)
 	}
 }
 
@@ -106,8 +110,6 @@ func (p *Stocks) Remove(id string) {
 	defer p.rwmutex.Unlock()
 	if i, ok := p.stocks.Search(id); ok {
 		p.stocks[i].count--
-		if p.stocks[i].count < 1 {
-		}
 	}
 }
 
@@ -115,7 +117,6 @@ func (p *Stocks) Watch(id string) (*Stock, bool) {
 	i, s, isnew := p.Insert(id)
 	if isnew {
 		log.Println("watch new stock", id, i)
-		defer func() { go p.Update() }()
 	} else {
 		log.Println("watch stock", id, i)
 	}
@@ -127,8 +128,8 @@ func (p *Stocks) UnWatch(id string) {
 }
 
 func (p *Stocks) Ticks_update_real() {
-	p.rwmutex.Lock()
-	defer p.rwmutex.Unlock()
+	p.rwmutex.RLock()
+	defer p.rwmutex.RUnlock()
 	var wg sync.WaitGroup
 
 	for i, l := 0, len(p.stocks); i < l; {
@@ -140,7 +141,7 @@ func (p *Stocks) Ticks_update_real() {
 			pstocks = p.stocks[i:l]
 		}
 		for j := 0; j < 50 && i < l; i, j = i+1, j+1 {
-			if p.stocks[i].loaded < 1 {
+			if p.stocks[i].loaded < 2 {
 				continue
 			}
 			if p.stocks[i].count < 1 {
@@ -155,8 +156,8 @@ func (p *Stocks) Ticks_update_real() {
 			continue
 		}
 
+		wg.Add(1)
 		go func(ids string, pstocks PStockSlice) {
-			wg.Add(1)
 			defer wg.Done()
 			body := Tick_download_real_from_sina(ids)
 			if body == nil {
@@ -199,8 +200,8 @@ func StockHash(id string) int {
 func (p *Stock) Merge() {
 	var wg sync.WaitGroup
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		p.Ticks2M1s()
 		p.M1s2M5s()
@@ -213,8 +214,8 @@ func (p *Stock) Merge() {
 		p.M30s.ParseTyping()
 	}()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		p.Days2Weeks()
 		p.Days2Months()
@@ -232,14 +233,18 @@ func (p *Stock) Update(db *mgo.Database) bool {
 	}
 	p.loaded = 1
 	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		p.Days_update(db)
 		wg.Done()
 	}()
 
-	p.Ticks_update(db)
-	p.Ticks_today_update()
+	wg.Add(1)
+	go func() {
+		p.Ticks_update(db)
+		p.Ticks_today_update()
+		wg.Done()
+	}()
 
 	wg.Wait()
 	p.Merge()
@@ -515,7 +520,7 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		p.last_tick = tick
 		tick.Volume = volume
 		p.Ticks.Insert(tick.Tick)
-		p.lst_trade = p.Ticks.EndTime
+		p.lst_trade = tick.Time
 		return true
 	}
 	return false

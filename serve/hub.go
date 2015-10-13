@@ -90,7 +90,7 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 		return
 	}
 	var wg sync.WaitGroup
-	for _, c := range conns {
+	for i, c := 0, len(conns); i<c; i++ {
 		wg.Add(1)
 		go func(c *connection) {
 			defer wg.Done()
@@ -99,7 +99,7 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 			default:
 				h.do_unregister(c)
 			}
-		}(c)
+		}(conns[i])
 	}
 	wg.Wait()
 }
