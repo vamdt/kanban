@@ -34,6 +34,7 @@ type Stock struct {
 	hash      int
 	count     int
 	loaded    int
+	lst_trade time.Time
 }
 
 type Stocks struct {
@@ -552,7 +553,7 @@ func (p *Stock) tick_get_real(line []byte) bool {
 
 	if p.last_tick.Volume == 0 {
 		p.last_tick = tick
-		if tick.Time.Before(p.last_tick.Time) {
+		if tick.Time.Before(p.lst_trade) {
 			p.last_tick.Volume = 0
 		}
 		return false
@@ -567,9 +568,11 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		}
 		tick.Change = tick.Price - p.last_tick.Price
 
+		volume := (tick.Volume - p.last_tick.Volume) / 100
 		p.last_tick = tick
-		tick.Volume = tick.Volume / 100
+		tick.Volume = volume
 		p.Ticks.Insert(tick.Tick)
+		p.lst_trade = p.Ticks.EndTime
 		return true
 	}
 	return false
