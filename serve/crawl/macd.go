@@ -1,14 +1,5 @@
 package crawl
 
-func (p *Stock) Macd() {
-	p.M1s.Macd()
-	p.M5s.Macd()
-	p.M30s.Macd()
-	p.Days.Macd()
-	p.Weeks.Macd()
-	p.Months.Macd()
-}
-
 func (p *Tdatas) Macd() {
 	macd(p, 12, 26, 9)
 }

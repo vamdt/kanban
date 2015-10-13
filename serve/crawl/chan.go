@@ -31,12 +31,6 @@ func (p TypingSlice) Len() int           { return len(p) }
 func (p TypingSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p TypingSlice) Less(i, j int) bool { return p[i].I < p[j].I }
 
-func (p *Stock) Chan() {
-	p.M1s.ParseTyping()
-	p.M5s.ParseTyping()
-	p.M30s.ParseTyping()
-}
-
 type typing_parser struct {
 	d Tdata
 	t Typing

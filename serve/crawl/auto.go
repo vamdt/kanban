@@ -191,13 +191,33 @@ func StockHash(id string) int {
 }
 
 func (p *Stock) Merge() {
-	p.Ticks2M1s()
-	p.M1s2M5s()
-	p.M1s2M30s()
-	p.Days2Weeks()
-	p.Days2Months()
-	p.Macd()
-	p.Chan()
+	var wg sync.WaitGroup
+
+	go func() {
+		wg.Add(1)
+		defer wg.Done()
+		p.Ticks2M1s()
+		p.M1s2M5s()
+		p.M1s2M30s()
+		p.M1s.Macd()
+		p.M5s.Macd()
+		p.M30s.Macd()
+		p.M1s.ParseTyping()
+		p.M5s.ParseTyping()
+		p.M30s.ParseTyping()
+	}()
+
+	go func() {
+		wg.Add(1)
+		defer wg.Done()
+		p.Days2Weeks()
+		p.Days2Months()
+		p.Days.Macd()
+		p.Weeks.Macd()
+		p.Months.Macd()
+	}()
+
+	wg.Wait()
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
