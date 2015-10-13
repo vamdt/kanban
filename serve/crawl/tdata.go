@@ -64,6 +64,29 @@ func (p *Tdatas) Add(data Tdata) {
 	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
 		p.Data = append(p.Data, data)
 		p.Delta++
+	} else {
+		j := len(p.Data) - 1
+		should_insert := true
+		for i := j - 1; i > -1; i-- {
+			if p.Data[i].Time.After(data.Time) {
+				j = i
+				continue
+			} else if p.Data[i].Time.Equal(data.Time) {
+				p.Data[i] = data
+				should_insert = false
+			}
+			break
+		}
+
+		if should_insert {
+			if j < 1 {
+				p.Data = append([]Tdata{data}, p.Data...)
+			} else {
+				p.Data = append(p.Data, data)
+				copy(p.Data[j+1:], p.Data[j:])
+				p.Data[j] = data
+			}
+		}
 	}
 	p.EndTime = p.Data[len(p.Data)-1].Time
 }

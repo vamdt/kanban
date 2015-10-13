@@ -82,6 +82,9 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	i, ok := p.stocks.Search(id)
 	if ok {
 		p.stocks[i].count++
+		if p.stocks[i].count < 1 {
+			p.stocks[i].count = 1
+		}
 		return i, p.stocks[i], false
 	}
 
@@ -140,7 +143,10 @@ func (p *Stocks) Ticks_update_real() {
 			if p.stocks[i].loaded < 1 {
 				continue
 			}
-			if j > 0 {
+			if p.stocks[i].count < 1 {
+				continue
+			}
+			if b.Len() > 0 {
 				b.WriteString(",")
 			}
 			b.WriteString(p.stocks[i].Id)
