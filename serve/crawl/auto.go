@@ -222,6 +222,9 @@ func (p *Stock) Merge() {
 		p.Days.Macd()
 		p.Weeks.Macd()
 		p.Months.Macd()
+		p.Days.ParseTyping()
+		p.Weeks.ParseTyping()
+		p.Months.ParseTyping()
 	}()
 
 	wg.Wait()
