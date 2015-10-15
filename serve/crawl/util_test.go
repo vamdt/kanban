@@ -34,6 +34,36 @@ func TestParseCent(t *testing.T) {
 	}
 }
 
+func TestIsTradeTime(t *testing.T) {
+	type date_pair struct {
+		t  string
+		is bool
+	}
+	tests := []date_pair{
+		date_pair{t: "2000-01-01 01:00:00", is: false},
+		date_pair{t: "2000-05-15 09:25:00", is: true},
+		date_pair{t: "2000-05-15 11:30:00", is: true},
+		date_pair{t: "2000-05-15 11:35:00", is: true},
+		date_pair{t: "2000-05-15 11:36:00", is: false},
+		date_pair{t: "2000-05-15 12:35:01", is: false},
+		date_pair{t: "2000-05-15 13:00:00", is: true},
+		date_pair{t: "2000-05-15 15:00:00", is: true},
+		date_pair{t: "2000-05-15 15:05:00", is: true},
+		date_pair{t: "2000-05-15 15:06:00", is: false},
+	}
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	for _, td := range tests {
+		time, _ := time.ParseInLocation("2006-01-02 15:04:05", td.t, loc)
+		if td.is != IsTradeTime(time) {
+			t.Error(
+				"For", time,
+				"expected", td.is,
+				"got", !td.is,
+			)
+		}
+	}
+}
+
 func TestMonthend(t *testing.T) {
 	type date_pair struct {
 		f, exp string
@@ -211,7 +241,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 			Tdata{High: 15, Low: 5},
 		},
 		[]Typing{
-      Typing{I: 1, Price: 15, Type: TopTyping},
+			Typing{I: 1, Price: 15, Type: TopTyping},
 		},
 	},
 	{`

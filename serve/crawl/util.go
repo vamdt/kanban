@@ -60,6 +60,26 @@ func IsTradeDay(t time.Time) bool {
 	return true
 }
 
+func IsTradeTime(t time.Time) bool {
+	t = t.UTC()
+	if !IsTradeDay(t) {
+		return false
+	}
+	h, m, _ := t.Clock()
+	if h < 1 || h > 7 { // [00:00 - 09:00)  [16:00 - 00:00)
+		return false
+	} else if h == 1 && m < 25 { // 09:25
+		return false
+	} else if h == 7 && m > 5 { // 15:05
+		return false
+	} else if h == 3 && m > 35 { // 11:35
+		return false
+	} else if h == 4 && m < 59 { // 12:59
+		return false
+	}
+	return true
+}
+
 func Monthend(t time.Time) time.Time {
 	_, _, d := t.Date()
 	t = t.AddDate(0, 1, 1-d)

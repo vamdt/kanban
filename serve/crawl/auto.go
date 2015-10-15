@@ -47,6 +47,10 @@ type Stocks struct {
 func (p *Stocks) Run() {
 	go p.update()
 	for {
+		if !IsTradeTime(time.Now()) {
+			time.Sleep(tickPeriod)
+			continue
+		}
 		p.Ticks_update_real()
 		time.Sleep(tickPeriod)
 	}
