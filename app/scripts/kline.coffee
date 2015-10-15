@@ -158,7 +158,18 @@ class KLine
       if d3.event.dx == 0
         return
       @_left = Math.min(@_max_left, Math.max(0, @_left - d3.event.dx))
-      @draw()
+      if @defer_draw_t
+        clearTimeout @defer_draw_t
+        @defer_draw_t = undefined
+
+      if @defer_ttl
+        @defer_ttl--
+      else @defer_ttl = 20
+      if @defer_ttl < 1
+        @draw()
+      else
+        defer_draw = => @draw()
+        @defer_draw_t = setTimeout defer_draw, 100
 
     drag = d3.behavior.drag().on("drag", dragmove)
 
