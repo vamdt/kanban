@@ -192,9 +192,10 @@ var tests_tdatas = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 5, should not have two TopTyping together",
+		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
 		Text: `
          ^
+         |
      |   |
      ||  ||
     ||| |||||
@@ -208,7 +209,24 @@ var tests_tdatas = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
-		Desc: "Lesson 62 Study Case 9, Top should not lower then Bottom",
+		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
+		Text: `
+     ^
+     |   ^
+     |   |
+     ||  ||
+    ||| |||||
+    ||||| |||||       |
+   ||||||  ||||||    ||
+   |||||     | |||||||
+ ||| | |        ||||||
+|||  | |         |
+||               .
+|
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 77 Study Case 1, Top should have a part higher then Bottom",
 		Text: `
    |
 | ||

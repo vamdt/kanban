@@ -31,6 +31,30 @@ func (p TypingSlice) Len() int           { return len(p) }
 func (p TypingSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p TypingSlice) Less(i, j int) bool { return p[i].I < p[j].I }
 
+func (p TypingSlice) MergeTyping(t Typing) (int, bool) {
+	pos := 0
+	ok := false
+	for i := len(p) - 1; i > -1; i-- {
+		if t.Type == p[i].Type {
+			if t.Type == TopTyping {
+				if t.High > p[i].High {
+					p[i] = t
+					pos, ok = i, true
+					continue
+				}
+			} else {
+				if t.Low < p[i].Low {
+					p[i] = t
+					pos, ok = i, true
+					continue
+				}
+			}
+		}
+		break
+	}
+	return pos, ok
+}
+
 type typing_parser struct {
 	d Tdata
 	t Typing
@@ -54,9 +78,10 @@ func (p *Tdatas) ParseTyping() {
 			tp.t.begin = i
 			tp.t.I = i
 			tp.t.End = i
-			tp.t.High = p.Data[i].High
-			tp.t.Low = p.Data[i].Low
 			tp.d = p.Data[i]
+			tp.t.High = tp.d.High
+			tp.t.Low = tp.d.Low
+			tp.t.Time = tp.d.Time
 			p.tp = append(p.tp, tp)
 			prev = &p.tp[len(p.tp)-1]
 		}
@@ -67,9 +92,10 @@ func (p *Tdatas) ParseTyping() {
 			tp.t.begin = i
 			tp.t.I = i
 			tp.t.End = i
-			tp.t.High = p.Data[i].High
-			tp.t.Low = p.Data[i].Low
 			tp.d = p.Data[i]
+			tp.t.High = tp.d.High
+			tp.t.Low = tp.d.Low
+			tp.t.Time = tp.d.Time
 			p.tp = append(p.tp, tp)
 			prev = &p.tp[len(p.tp)-1]
 		} else if IsDownTyping(&prev.d, a) {
@@ -78,9 +104,10 @@ func (p *Tdatas) ParseTyping() {
 			tp.t.begin = i
 			tp.t.I = i
 			tp.t.End = i
-			tp.t.High = a.High
-			tp.t.Low = a.Low
 			tp.d = *a
+			tp.t.High = tp.d.High
+			tp.t.Low = tp.d.Low
+			tp.t.Time = tp.d.Time
 			p.tp = append(p.tp, tp)
 			prev = &p.tp[len(p.tp)-1]
 		} else if Contain(&prev.d, a) {
@@ -94,10 +121,12 @@ func (p *Tdatas) ParseTyping() {
 			if IsUpTyping(base, &prev.d) {
 				if prev.d.High != a.High {
 					prev.t.I = i
+					prev.t.Time = p.Data[i].Time
 				}
 			} else if IsDownTyping(base, &prev.d) {
 				if prev.d.Low != a.Low {
 					prev.t.I = i
+					prev.t.Time = p.Data[i].Time
 				}
 			}
 			prev.d = *a
@@ -130,7 +159,6 @@ func (p *Tdatas) ParseTyping() {
 				continue
 			}
 
-			typing.Time = b.Time
 			typing.High = b.High
 			typing.Low = b.Low
 
@@ -139,14 +167,19 @@ func (p *Tdatas) ParseTyping() {
 					continue
 				}
 
-				if typing.Type == p.Typing[len(p.Typing)-1].Type {
-					p.Typing[len(p.Typing)-1] = typing
-					continue
+				if typing.Type == TopTyping && p.Typing[len(p.Typing)-1].Type == BottomTyping {
+					if typing.High <= p.Typing[len(p.Typing)-1].High {
+						continue
+					}
 				}
 
-				if typing.Type == TopTyping && p.Typing[len(p.Typing)-1].Type == BottomTyping {
-				} else if typing.Type == BottomTyping && p.Typing[len(p.Typing)-1].Type == TopTyping {
-
+				if typing.Type == p.Typing[len(p.Typing)-1].Type {
+					if pos, ok := TypingSlice(p.Typing).MergeTyping(typing); ok {
+						if pos < len(p.Typing)-1 {
+							p.Typing = p.Typing[:pos+1]
+						}
+						continue
+					}
 				}
 			}
 			p.Typing = append(p.Typing, typing)
