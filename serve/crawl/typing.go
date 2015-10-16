@@ -80,9 +80,9 @@ func (p *Tdatas) new_typing_parser_node(i int) {
 	p.tp = append(p.tp, tp)
 }
 
-func (p *Tdatas) parse_top_bottom_typing() {
+func (p *Tdatas) parse_top_bottom_typing() bool {
 	if len(p.tp) < 3 {
-		return
+		return false
 	}
 	typing := p.tp[len(p.tp)-2].t
 	a := &p.tp[len(p.tp)-3].d
@@ -95,7 +95,7 @@ func (p *Tdatas) parse_top_bottom_typing() {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
 	} else {
-		return
+		return false
 	}
 
 	typing.High = b.High
@@ -104,12 +104,12 @@ func (p *Tdatas) parse_top_bottom_typing() {
 
 	if len(p.Typing) > 0 {
 		if typing.I-p.Typing[len(p.Typing)-1].I < 4 {
-			return
+			return false
 		}
 
 		if typing.Type == TopTyping && p.Typing[len(p.Typing)-1].Type == BottomTyping {
 			if typing.High <= p.Typing[len(p.Typing)-1].High {
-				return
+				return false
 			}
 		}
 
@@ -118,14 +118,16 @@ func (p *Tdatas) parse_top_bottom_typing() {
 				if pos < len(p.Typing)-1 {
 					p.Typing = p.Typing[:pos+1]
 				}
-				return
+				return true
 			}
 		}
 	}
 	p.Typing = append(p.Typing, typing)
+	return true
 }
 
-func (p *Tdatas) ParseTyping() {
+func (p *Tdatas) ParseTyping() bool {
+	hasnew := false
 	start := 0
 	if l := len(p.tp); l > 0 {
 		start = p.tp[l-1].t.End + 1
@@ -170,8 +172,11 @@ func (p *Tdatas) ParseTyping() {
 		}
 
 		p.clean_typing_parser()
-		p.parse_top_bottom_typing()
+		if p.parse_top_bottom_typing() {
+			hasnew = true
+		}
 	}
+	return hasnew
 }
 
 func IsTopTyping(a, b, c *Tdata) bool {

@@ -235,9 +235,15 @@ func (p *Stock) Merge() {
 }
 
 func (p *Tdatas) ParseChan() {
-  p.ParseTyping()
-  p.ParseLine()
-  p.ParseSegment()
+	if !p.ParseTyping() {
+		return
+	}
+	if !p.ParseLine() {
+		return
+	}
+	if !p.ParseSegment() {
+		return
+	}
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
