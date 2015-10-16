@@ -13,20 +13,12 @@ class KLineTypingLine
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
     data = datasel.Line
-    g = @_ui.svg.select("g.typing_line")
-    if !data or data.length < 1
-      if !g.empty()
-        g.remove()
-      return
-    if g.empty()
-      g = @_ui.svg.append("g")
-        .attr("class", "typing_line")
-
-    path = g.select("path")
-    if path.empty()
-      path = g.append("path")
-    path.style("fill", "none")
-      .style("stroke", "blue")
+    @_ui.svg.select("g.typing_line").remove()
+    path = @_ui.svg.append("g")
+      .attr("class", "typing_line")
+      .append("path")
+      .style("fill", "none")
+      .style("stroke", '#abc')
       .style("stroke-width", "1")
 
     x = @_ui.x
