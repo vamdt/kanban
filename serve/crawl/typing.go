@@ -117,7 +117,7 @@ func (p *Tdatas) ParseTyping() {
 			} else {
 				base = &Tdata{}
 			}
-			a = TypingMerge(base, &prev.d, a)
+			a = ContainMerge(base, &prev.d, a)
 			if IsUpTyping(base, &prev.d) {
 				if prev.d.High != a.High {
 					prev.t.I = i
@@ -209,7 +209,7 @@ func Contain(a, b *Tdata) bool {
 	return (a.High > b.High && a.Low < b.Low) || (a.High <= b.High && a.Low >= b.Low)
 }
 
-func TypingMerge(pra, a, b *Tdata) *Tdata {
+func ContainMerge(pra, a, b *Tdata) *Tdata {
 	t := *a
 	if IsUpTyping(pra, a) {
 		if b.High > a.High {
