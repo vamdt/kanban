@@ -35,7 +35,9 @@ type Tdatas struct {
 	Data    []Tdata `json:"data"`
 	Typing  []Typing
 	Line    []Typing
+	Segment []Typing
 	tp      []typing_parser
+	sp      []typing_parser
 	EndTime time.Time
 }
 
