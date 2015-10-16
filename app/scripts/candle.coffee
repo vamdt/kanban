@@ -24,7 +24,7 @@ class KLineCandle
     @root.add_plugin_obj mas
 
   update: (data) ->
-    kColor = KLine.kColor
+    kColor = (d, i) -> KLine.kColor d, i, data
     svg = @_ui.svg
     x = @_ui.x
     y = @_ui.y
@@ -36,18 +36,20 @@ class KLineCandle
     svg.selectAll("rect.candle").remove()
     svg.selectAll("line.candle").remove()
 
-    svg.selectAll("rect.candle")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("class", "candle")
-      .attr("x", (d, i) -> x(i) - candleWidth / 2)
-      .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
-      .attr("width", (d, i) -> candleWidth)
-      .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
-      .attr("stroke", kColor)
-      .attr("fill", kColor)
-      .on('mouseover', (d, i) -> show d, i)
+    ocl = @root.param 'ocl'
+    if not ocl
+      svg.selectAll("rect.candle")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "candle")
+        .attr("x", (d, i) -> x(i) - candleWidth / 2)
+        .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
+        .attr("width", (d, i) -> candleWidth)
+        .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
+        .attr("stroke", kColor)
+        .attr("fill", kColor)
+        .on('mouseover', (d, i) -> show d, i)
 
     svg.selectAll("line.candle")
       .data(data)
@@ -64,8 +66,5 @@ class KLineCandle
     opacity = @root.param 'opacity'
     if opacity
       svg.selectAll('.candle').style('opacity', opacity)
-    ocl = @root.param 'ocl'
-    if ocl
-      svg.selectAll('rect.candle').style('display', 'none')
 
 KLine.register_plugin 'candle', KLineCandle

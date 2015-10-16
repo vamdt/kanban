@@ -48,7 +48,7 @@ class KLineVolume
     @svg.select(".y.axis").call(@yAxis)
 
   update: (data) ->
-    kColor = KLine.kColor
+    kColor = (d, i) -> KLine.kColor d, i, data
     x = @root._ui.x
     y = @y
     height = @height

@@ -22,8 +22,12 @@ Plugins = {}
 
 [cup, cdown, ceq] = ["#f00", "#080", "#000"]
 
-kColor = (d) ->
+kColor = (d, i, data) ->
   if d.open == d.close
+    if i and data
+      if data[i] and data[i-1]
+        return cup if data[i].open >= data[i-1].close
+        return cdown if data[i].open < data[i-1].close
     return ceq
   if d.open > d.close
     return cdown
