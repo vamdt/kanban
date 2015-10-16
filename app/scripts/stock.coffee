@@ -4,5 +4,6 @@ require './volume'
 require './macd'
 require './tooltip'
 require './typing'
+require './typing_line'
 
 module.exports = KLine

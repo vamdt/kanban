@@ -213,9 +213,9 @@ func (p *Stock) Merge() {
 		p.M1s.Macd()
 		p.M5s.Macd()
 		p.M30s.Macd()
-		p.M1s.ParseTyping()
-		p.M5s.ParseTyping()
-		p.M30s.ParseTyping()
+		p.M1s.ParseChan()
+		p.M5s.ParseChan()
+		p.M30s.ParseChan()
 	}()
 
 	wg.Add(1)
@@ -226,12 +226,18 @@ func (p *Stock) Merge() {
 		p.Days.Macd()
 		p.Weeks.Macd()
 		p.Months.Macd()
-		p.Days.ParseTyping()
-		p.Weeks.ParseTyping()
-		p.Months.ParseTyping()
+		p.Days.ParseChan()
+		p.Weeks.ParseChan()
+		p.Months.ParseChan()
 	}()
 
 	wg.Wait()
+}
+
+func (p *Tdatas) ParseChan() {
+  p.ParseTyping()
+  p.ParseLine()
+  p.ParseSegment()
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
