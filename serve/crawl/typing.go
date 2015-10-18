@@ -55,32 +55,38 @@ func (p TypingSlice) MergeTyping(t Typing) (int, bool) {
 	return pos, ok
 }
 
-type typing_parser struct {
+type typing_parser_node struct {
 	d Tdata
 	t Typing
 }
 
-func (p *Tdatas) clean_typing_parser() {
+type typing_parser struct {
+	Data []Typing
+	Line []Typing
+	tp   []typing_parser_node
+}
+
+func (p *typing_parser) clean() {
 	if len(p.tp) > 3 {
-		var tmp []typing_parser
+		var tmp []typing_parser_node
 		tmp = append(tmp, p.tp[len(p.tp)-3:]...)
 		p.tp = tmp
 	}
 }
 
-func (p *Tdatas) new_typing_parser_node(i int) {
+func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.End = i - 1
 	}
-	tp := typing_parser{}
+	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.End = i
-	tp.d = p.Data[i]
+	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
 }
 
-func (p *Tdatas) parse_top_bottom_typing() bool {
+func (p *typing_parser) parse_top_bottom() bool {
 	if len(p.tp) < 3 {
 		return false
 	}
@@ -102,35 +108,35 @@ func (p *Tdatas) parse_top_bottom_typing() bool {
 	typing.Low = b.Low
 	typing.Time = b.Time
 
-	if len(p.Typing) > 0 {
-		if typing.I-p.Typing[len(p.Typing)-1].I < 4 {
+	if len(p.Data) > 0 {
+		if typing.I-p.Data[len(p.Data)-1].I < 4 {
 			return false
 		}
 
-		if typing.Type == TopTyping && p.Typing[len(p.Typing)-1].Type == BottomTyping {
-			if typing.High <= p.Typing[len(p.Typing)-1].High {
+		if typing.Type == TopTyping && p.Data[len(p.Data)-1].Type == BottomTyping {
+			if typing.High <= p.Data[len(p.Data)-1].High {
 				return false
 			}
 		}
 
-		if typing.Type == p.Typing[len(p.Typing)-1].Type {
-			if pos, ok := TypingSlice(p.Typing).MergeTyping(typing); ok {
-				if pos < len(p.Typing)-1 {
-					p.Typing = p.Typing[:pos+1]
+		if typing.Type == p.Data[len(p.Data)-1].Type {
+			if pos, ok := TypingSlice(p.Data).MergeTyping(typing); ok {
+				if pos < len(p.Data)-1 {
+					p.Data = p.Data[:pos+1]
 				}
 				return true
 			}
 		}
 	}
-	p.Typing = append(p.Typing, typing)
+	p.Data = append(p.Data, typing)
 	return true
 }
 
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
-	if l := len(p.tp); l > 0 {
-		start = p.tp[l-1].t.End + 1
+	if l := len(p.Typing.tp); l > 0 {
+		start = p.Typing.tp[l-1].t.End + 1
 	} else {
 		start = 0
 	}
@@ -138,20 +144,20 @@ func (p *Tdatas) ParseTyping() bool {
 	for i, l := start, len(p.Data); i < l; i++ {
 		a := &p.Data[i]
 
-		if len(p.tp) < 1 {
-			p.new_typing_parser_node(i)
+		if len(p.Typing.tp) < 1 {
+			p.Typing.new_node(i, p)
 			continue
 		}
 
-		prev := &p.tp[len(p.tp)-1]
+		prev := &p.Typing.tp[len(p.Typing.tp)-1]
 		if IsUpTyping(&prev.d, a) {
-			p.new_typing_parser_node(i)
+			p.Typing.new_node(i, p)
 		} else if IsDownTyping(&prev.d, a) {
-			p.new_typing_parser_node(i)
+			p.Typing.new_node(i, p)
 		} else if Contain(&prev.d, a) {
 			var base *Tdata
-			if len(p.tp) > 1 {
-				base = &p.tp[len(p.tp)-2].d
+			if len(p.Typing.tp) > 1 {
+				base = &p.Typing.tp[len(p.Typing.tp)-2].d
 			} else {
 				base = &Tdata{}
 			}
@@ -171,8 +177,8 @@ func (p *Tdatas) ParseTyping() bool {
 			log.Println("UnknowTyping", a)
 		}
 
-		p.clean_typing_parser()
-		if p.parse_top_bottom_typing() {
+		p.Typing.clean()
+		if p.Typing.parse_top_bottom() {
 			hasnew = true
 		}
 	}
@@ -223,4 +229,39 @@ func ContainMerge(pra, a, b *Tdata) *Tdata {
 		return &t
 	}
 	return nil
+}
+
+func (p *typing_parser) LinkTyping() bool {
+	hasnew := false
+	start := 0
+	if l := len(p.Line); l > 0 {
+		for i := len(p.Data) - 1; i > -1; i-- {
+			if p.Data[i].I == p.Line[l-1].I {
+				start = i + 1
+				break
+			}
+		}
+	}
+
+	for i, c := start, len(p.Data); i < c; i++ {
+		if len(p.Line) > 0 && p.Line[len(p.Line)-1].Type == p.Data[i].Type {
+			continue
+		}
+		t := p.Data[i]
+		if len(p.Line) > 0 {
+			l := &p.Line[len(p.Line)-1]
+			l.End = t.End
+			if l.Type == TopTyping {
+				l.Low = t.Low
+				l.Type = DownTyping
+			} else if l.Type == BottomTyping {
+				l.High = t.High
+				l.Type = UpTyping
+			}
+		}
+		p.Line = append(p.Line, t)
+		hasnew = true
+	}
+
+	return hasnew
 }

@@ -238,7 +238,7 @@ func (p *Tdatas) ParseChan() {
 	if !p.ParseTyping() {
 		return
 	}
-	if !p.ParseLine() {
+	if !p.Typing.LinkTyping() {
 		return
 	}
 	if !p.ParseSegment() {

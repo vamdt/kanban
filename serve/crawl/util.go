@@ -159,6 +159,6 @@ func Text2Tdatas(text []byte) Tdatas {
 		}
 	}
 	sort.Sort(TypingSlice(typing))
-	tds.Typing = typing
+	tds.Typing.Data = typing
 	return tds
 }

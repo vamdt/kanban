@@ -12,7 +12,7 @@ class KLineTypingLine
 
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
-    data = datasel.Line
+    data = datasel.Typing.Line
     @_ui.svg.select("g.typing_line").remove()
     path = @_ui.svg.append("g")
       .attr("class", "typing_line")

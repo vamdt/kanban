@@ -3,19 +3,19 @@ KLine = require './kline'
 
 colors = ["#000", "#000", "#f00", "#080", "#f00", "#080"]
 
-class KLineTyping
+class KLineSegment
   constructor: (@root) ->
-    @options = KLine.extend {}, @root.options.typing
+    @options = KLine.extend {}, @root.options.segment
     @_ui = @root._ui
 
   init: ->
 
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
-    data = datasel.Typing.Data
-    @_ui.svg.select("g.typing").remove()
+    data = datasel.Segment.Data
+    @_ui.svg.select("g.segment").remove()
     g = @_ui.svg.append("g")
-      .attr("class", "typing")
+      .attr("class", "segment")
 
     x = @_ui.x
     y = @_ui.y
@@ -25,7 +25,9 @@ class KLineTyping
     dataset = []
     last = {}
     for d in data
-      d.i = d.I - left
+      if not d.oI
+        d.oI = t.I for t in datasel.Typing.Data when t.Time == d.Time
+      d.i = d.oI - left
 
       if d.i >= 0 and d.i <= size
         if last.i < 0 or last.i > size
@@ -41,8 +43,9 @@ class KLineTyping
       .append('circle')
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
-      .attr('r', 3)
-      .style("fill", (d,i) -> colors[d.Type] || colors[0])
+      .attr('r', 6)
+      .style("stroke", (d,i) -> colors[d.Type] || colors[0])
+      .style("fill", '#fff')
       .on('mouseover', (d,i) -> console.log(d,i))
 
-KLine.register_plugin 'typing', KLineTyping
+KLine.register_plugin 'segment', KLineSegment

@@ -274,7 +274,7 @@ func TestParseTyping(t *testing.T) {
 		exp := Text2Tdatas([]byte(d.Text))
 		td := Tdatas{Data: exp.Data}
 		td.ParseTyping()
-		if !test_is_typing_equal(t, exp.Typing, td.Typing) {
+		if !test_is_typing_equal(t, exp.Typing.Data, td.Typing.Data) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", d.Desc,

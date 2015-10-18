@@ -322,7 +322,7 @@ func TestText2Tdata(t *testing.T) {
 				"\ngot", tds.Data,
 			)
 		}
-		if !test_typing_i_price_type_equal(tds.Typing, pair.exp_typing) {
+		if !test_typing_i_price_type_equal(tds.Typing.Data, pair.exp_typing) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", pair.str,
