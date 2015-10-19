@@ -66,6 +66,10 @@ type typing_parser struct {
 	tp   []typing_parser_node
 }
 
+func (p *typing_parser) clear() {
+	p.tp = []typing_parser_node{}
+}
+
 func (p *typing_parser) clean() {
 	if len(p.tp) > 3 {
 		var tmp []typing_parser_node

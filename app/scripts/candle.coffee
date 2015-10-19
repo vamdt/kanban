@@ -2,7 +2,7 @@ d3 = require 'd3'
 KLine = require './kline'
 KLineMas = require './mas'
 defaults =
-  width: 4
+  width: 2
 
 formatDate = d3.time.format("%Y-%m-%d %X")
 formatValue = d3.format(",.2f")
@@ -18,7 +18,7 @@ class KLineCandle
     svg = @root._ui.svg
     container = @root._ui.container
     @options.width = +@options.width || 4
-    @root.options.size = Math.floor @root.options.width / (3 + @options.width)
+    @root.options.size = Math.floor @root.options.width / (1 + @options.width)
     mas = new KLineMas @root, svg, @root._ui.y, (d) -> d.close
     mas.init()
     @root.add_plugin_obj mas

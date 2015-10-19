@@ -27,7 +27,7 @@ func (p *Tdatas) ParseSegment() bool {
 	}
 
 	l := len(p.Typing.Line)
-	if p.Typing.Line[l-1].Type != UpTyping && p.Typing.Line[l-1].Type != DownTyping {
+	if l > 0 && p.Typing.Line[l-1].Type != UpTyping && p.Typing.Line[l-1].Type != DownTyping {
 		l--
 	}
 
@@ -95,6 +95,8 @@ func (p *Tdatas) ParseSegment() bool {
 		p.Segment.clean()
 		if p.Segment.parse_segment_top_bottom() {
 			hasnew = true
+			i--
+			p.Segment.clear()
 		}
 	}
 	return hasnew
