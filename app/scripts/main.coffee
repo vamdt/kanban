@@ -18,6 +18,7 @@ do ->
   k = getQuery 'k'
   opacity = getQuery 'opacity'
   ocl = getQuery 'ocl'
+  nc = getQuery 'nc'
 
   kl.param
     s: s
@@ -25,5 +26,6 @@ do ->
     fq: fq
     opacity: opacity
     ocl: ocl
+    nc: nc
 
   kl.init()

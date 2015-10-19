@@ -19,6 +19,9 @@ class KLineCandle
     container = @root._ui.container
     @options.width = +@options.width || 4
     @root.options.size = Math.floor @root.options.width / (1 + @options.width)
+    nc = @root.param 'nc'
+    if nc
+      return
     mas = new KLineMas @root, svg, @root._ui.y, (d) -> d.close
     mas.init()
     @root.add_plugin_obj mas
@@ -36,6 +39,9 @@ class KLineCandle
     svg.selectAll("rect.candle").remove()
     svg.selectAll("line.candle").remove()
 
+    nc = @root.param 'nc'
+    if nc
+      return
     ocl = @root.param 'ocl'
     if not ocl
       svg.selectAll("rect.candle")
