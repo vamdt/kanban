@@ -211,26 +211,35 @@ func Contain(a, b *Tdata) bool {
 	return (a.High > b.High && a.Low < b.Low) || (a.High <= b.High && a.Low >= b.Low)
 }
 
-func ContainMerge(pra, a, b *Tdata) *Tdata {
+func DownContainMerge(a, b *Tdata) *Tdata {
 	t := *a
+	if b.Low < a.Low {
+		t.Low = b.Low
+		t.Time = b.Time
+	}
+	if b.High < a.High {
+		t.High = b.High
+	}
+	return &t
+}
+
+func UpContainMerge(a, b *Tdata) *Tdata {
+	t := *a
+	if b.High > a.High {
+		t.High = b.High
+		t.Time = b.Time
+	}
+	if b.Low > a.Low {
+		t.Low = b.Low
+	}
+	return &t
+}
+
+func ContainMerge(pra, a, b *Tdata) *Tdata {
 	if IsUpTyping(pra, a) {
-		if b.High > a.High {
-			t.High = b.High
-			t.Time = b.Time
-		}
-		if b.Low > a.Low {
-			t.Low = b.Low
-		}
-		return &t
+		return UpContainMerge(a, b)
 	} else if IsDownTyping(pra, a) {
-		if b.Low < a.Low {
-			t.Low = b.Low
-			t.Time = b.Time
-		}
-		if b.High < a.High {
-			t.High = b.High
-		}
-		return &t
+		return DownContainMerge(a, b)
 	}
 	return nil
 }

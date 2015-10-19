@@ -58,45 +58,37 @@ func (p *Tdatas) ParseSegment() bool {
 		}
 
 		prev := &p.Segment.tp[len(p.Segment.tp)-1]
-		if i == prev.t.End+1 {
-			continue
-		}
 		a := &Tdata{}
 		a.High = p.Typing.Line[i].High
 		a.Low = p.Typing.Line[i].Low
 		a.Time = p.Typing.Line[i].Time
-		if IsUpTyping(&prev.d, a) {
-			p.Segment.new_segment_node(i, &p.Typing)
-		} else if IsDownTyping(&prev.d, a) {
-			p.Segment.new_segment_node(i, &p.Typing)
-		} else if Contain(&prev.d, a) {
-			var base *Tdata
-			if len(p.Segment.tp) > 1 {
-				base = &p.Segment.tp[len(p.Segment.tp)-2].d
-			} else {
-				base = &Tdata{}
-			}
-			a = ContainMerge(base, &prev.d, a)
-			if IsUpTyping(base, &prev.d) {
-				if prev.d.High != a.High {
+		if Contain(&prev.d, a) {
+			if prev.t.Type == UpTyping {
+				a = DownContainMerge(&prev.d, a)
+				if prev.d.Low != a.Low {
 					prev.t.I = i
 				}
-			} else if IsDownTyping(base, &prev.d) {
-				if prev.d.Low != a.Low {
+			} else {
+				if prev.t.Type != DownTyping {
+					log.Panicf("prev should be a DownTyping line %+v", prev)
+				}
+				a = UpContainMerge(&prev.d, a)
+				if prev.d.High != a.High {
 					prev.t.I = i
 				}
 			}
 			prev.d = *a
 			prev.t.End = i
 		} else {
-			log.Println("UnknowTyping", a)
+			p.Segment.new_segment_node(i, &p.Typing)
 		}
 
 		p.Segment.clean()
 		if p.Segment.parse_segment_top_bottom() {
 			hasnew = true
-			i--
+			i = p.Segment.tp[len(p.Segment.tp)-2].t.I + 1
 			p.Segment.clear()
+			p.Segment.new_segment_node(i, &p.Typing)
 		}
 	}
 	return hasnew
