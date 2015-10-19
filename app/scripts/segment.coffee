@@ -26,7 +26,7 @@ class KLineSegment
     last = {}
     for d in data
       if not d.oI
-        d.oI = t.I for t in datasel.Typing.Data when t.Time == d.Time
+        d.oI = t.I for t in datasel.Typing.Line when t.Time == d.Time
       d.i = d.oI - left
 
       if d.i >= 0 and d.i <= size

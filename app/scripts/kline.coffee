@@ -65,7 +65,7 @@ class KLine
       d.date = parseDate(d.time)
     @_data = data
     @_max_left = Math.max(0, data.length - @options.size)
-    @_left = @_max_left
+    @_left = @_max_left if @_left < 1
 
   param: (p) ->
     switch typeof p

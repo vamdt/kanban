@@ -38,6 +38,11 @@ func (p *Tdatas) ParseSegment() bool {
 				return hasnew
 			}
 
+			if len(p.Segment.Data) > 0 {
+				p.Segment.new_segment_node(i, &p.Typing)
+				continue
+			}
+
 			if p.Typing.Line[i].Type == UpTyping && p.Typing.Line[i+2].Low < p.Typing.Line[i].High {
 				// Up yes
 				i++
@@ -52,11 +57,14 @@ func (p *Tdatas) ParseSegment() bool {
 			continue
 		}
 
+		prev := &p.Segment.tp[len(p.Segment.tp)-1]
+		if i == prev.t.End+1 {
+			continue
+		}
 		a := &Tdata{}
 		a.High = p.Typing.Line[i].High
 		a.Low = p.Typing.Line[i].Low
 		a.Time = p.Typing.Line[i].Time
-		prev := &p.Segment.tp[len(p.Segment.tp)-1]
 		if IsUpTyping(&prev.d, a) {
 			p.Segment.new_segment_node(i, &p.Typing)
 		} else if IsDownTyping(&prev.d, a) {
@@ -100,12 +108,12 @@ func (p *typing_parser) parse_segment_top_bottom() bool {
 	a := &p.tp[len(p.tp)-3].d
 	b := &p.tp[len(p.tp)-2].d
 	c := &p.tp[len(p.tp)-1].d
-	if IsTopTyping(a, b, c) {
-		typing.Price = b.High
-		typing.Type = TopTyping
-	} else if IsBottomTyping(a, b, c) {
+	if typing.Type == UpTyping && IsBottomTyping(a, b, c) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
+	} else if typing.Type == DownTyping && IsTopTyping(a, b, c) {
+		typing.Price = b.High
+		typing.Type = TopTyping
 	} else {
 		return false
 	}
@@ -115,17 +123,12 @@ func (p *typing_parser) parse_segment_top_bottom() bool {
 	typing.Time = b.Time
 
 	if len(p.Data) > 0 {
-		if typing.I-p.Data[len(p.Data)-1].I < 4 {
-			return false
-		}
-
 		if typing.Type == TopTyping && p.Data[len(p.Data)-1].Type == BottomTyping {
 			if typing.High <= p.Data[len(p.Data)-1].High {
-				return false
+				log.Println("find a bottom high then top")
 			}
 		}
-
-		if typing.Type == p.Data[len(p.Data)-1].Type {
+		if false && typing.Type == p.Data[len(p.Data)-1].Type {
 			if pos, ok := TypingSlice(p.Data).MergeTyping(typing); ok {
 				if pos < len(p.Data)-1 {
 					p.Data = p.Data[:pos+1]
