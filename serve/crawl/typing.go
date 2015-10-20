@@ -1,9 +1,6 @@
 package crawl
 
-import (
-	"log"
-	"time"
-)
+import "time"
 
 const (
 	UnknowTyping = iota
@@ -154,11 +151,7 @@ func (p *Tdatas) ParseTyping() bool {
 		}
 
 		prev := &p.Typing.tp[len(p.Typing.tp)-1]
-		if IsUpTyping(&prev.d, a) {
-			p.Typing.new_node(i, p)
-		} else if IsDownTyping(&prev.d, a) {
-			p.Typing.new_node(i, p)
-		} else if Contain(&prev.d, a) {
+		if Contain(&prev.d, a) {
 			var base *Tdata
 			if len(p.Typing.tp) > 1 {
 				base = &p.Typing.tp[len(p.Typing.tp)-2].d
@@ -178,7 +171,7 @@ func (p *Tdatas) ParseTyping() bool {
 			prev.d = *a
 			prev.t.End = i
 		} else {
-			log.Println("UnknowTyping", a)
+			p.Typing.new_node(i, p)
 		}
 
 		p.Typing.clean()
@@ -206,9 +199,11 @@ func IsDownTyping(a, b *Tdata) bool {
 }
 
 func Contain(a, b *Tdata) bool {
-	//return (a.High >= b.High && a.Low <= b.Low) || (a.High <= b.High && a.Low >= b.Low)
-	// Lesson 65
-	return (a.High > b.High && a.Low < b.Low) || (a.High <= b.High && a.Low >= b.Low)
+	// Fuzzy Lesson 67 答疑 2007-08-02 16:19:25
+	// 缠中说禅：只要有一端相同，那必然是包含，
+	// 两端相同那更是了，
+	// 所以如果不是包含关系的，都必然不需要考虑相等关系
+	return a.High == b.High || a.Low == b.Low || (a.High > b.High && a.Low < b.Low) || (a.High < b.High && a.Low > b.Low)
 }
 
 func DownContainMerge(a, b *Tdata) *Tdata {

@@ -24,7 +24,7 @@ var tests_typing = []test_typing_pair{
 			Tdata{High: 100, Low: 100},
 			Tdata{High: 150, Low: 80},
 		},
-		false, false, false,
+		false, false, true,
 	},
 	test_typing_pair{
 		[3]Tdata{
