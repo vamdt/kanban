@@ -2,7 +2,13 @@ package crawl
 
 import "log"
 
-func (p *typing_parser) new_segment_node(i int, ptyping *typing_parser) {
+type segment_parser struct {
+	Data []Typing
+	tp   []typing_parser_node
+	tp2  []typing_parser_node
+}
+
+func (p *segment_parser) new_node(i int, ptyping *typing_parser) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.End = i - 1
 	}
@@ -15,6 +21,18 @@ func (p *typing_parser) new_segment_node(i int, ptyping *typing_parser) {
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
 	p.tp = append(p.tp, tp)
+}
+
+func (p *segment_parser) clear() {
+	p.tp = []typing_parser_node{}
+}
+
+func (p *segment_parser) clean() {
+	if len(p.tp) > 3 {
+		var tmp []typing_parser_node
+		tmp = append(tmp, p.tp[len(p.tp)-3:]...)
+		p.tp = tmp
+	}
 }
 
 func (p *Tdatas) ParseSegment() bool {
@@ -39,18 +57,18 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 
 			if len(p.Segment.Data) > 0 {
-				p.Segment.new_segment_node(i, &p.Typing)
+				p.Segment.new_node(i, &p.Typing)
 				continue
 			}
 
 			if p.Typing.Line[i].Type == UpTyping && p.Typing.Line[i+2].Low < p.Typing.Line[i].High {
 				// Up yes
 				i++
-				p.Segment.new_segment_node(i, &p.Typing)
+				p.Segment.new_node(i, &p.Typing)
 			} else if p.Typing.Line[i].Type == DownTyping && p.Typing.Line[i+2].High > p.Typing.Line[i].Low {
 				// Down yes
 				i++
-				p.Segment.new_segment_node(i, &p.Typing)
+				p.Segment.new_node(i, &p.Typing)
 			} else {
 				i--
 			}
@@ -80,21 +98,21 @@ func (p *Tdatas) ParseSegment() bool {
 			prev.d = *a
 			prev.t.End = i
 		} else {
-			p.Segment.new_segment_node(i, &p.Typing)
+			p.Segment.new_node(i, &p.Typing)
 		}
 
 		p.Segment.clean()
-		if p.Segment.parse_segment_top_bottom() {
+		if p.Segment.parse_top_bottom() {
 			hasnew = true
 			i = p.Segment.tp[len(p.Segment.tp)-2].t.I + 1
 			p.Segment.clear()
-			p.Segment.new_segment_node(i, &p.Typing)
+			p.Segment.new_node(i, &p.Typing)
 		}
 	}
 	return hasnew
 }
 
-func (p *typing_parser) parse_segment_top_bottom() bool {
+func (p *segment_parser) parse_top_bottom() bool {
 	if len(p.tp) < 3 {
 		return false
 	}
