@@ -35,6 +35,54 @@ func (p *segment_parser) clean() {
 	}
 }
 
+func (p *Tdatas) IsLineBreakSegment(li int) bool {
+	cl := len(p.Typing.Line)
+	if cl-1 < li {
+		return false
+	}
+
+	// find segment start
+	si := 0
+	for i := len(p.Segment.Data) - 1; i > -1; i-- {
+		if p.Segment.Data[i].I <= li {
+			si = p.Segment.Data[i].I
+			break
+		}
+	}
+	if si < 0 {
+		si = 0
+	}
+
+	// type check
+	if p.Typing.Line[li].Type != UpTyping && p.Typing.Line[li].Type != DownTyping {
+		return false
+	}
+
+	if p.Typing.Line[si].Type != UpTyping && p.Typing.Line[si].Type != DownTyping {
+		return false
+	}
+
+	if p.Typing.Line[li].Type == p.Typing.Line[si].Type {
+		return false
+	}
+
+	// check break point
+	if p.Typing.Line[si].Type == UpTyping {
+		for i, c := li-2, si-1; i > c; i-- {
+			if p.Typing.Line[i].High >= p.Typing.Line[li].Low {
+				return true
+			}
+		}
+	} else if p.Typing.Line[si].Type == DownTyping {
+		for i, c := li-2, si-1; i > c; i-- {
+			if p.Typing.Line[i].Low <= p.Typing.Line[li].High {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (p *Tdatas) ParseSegment() bool {
 	hasnew := false
 	start := 0
@@ -110,6 +158,10 @@ func (p *Tdatas) ParseSegment() bool {
 		}
 	}
 	return hasnew
+}
+
+func (p *segment_parser) hasGap(a, b *Tdata) bool {
+	return a.Low > b.High || a.High < b.Low
 }
 
 func (p *segment_parser) parse_top_bottom() bool {
