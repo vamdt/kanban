@@ -191,11 +191,11 @@ func IsBottomTyping(a, b, c *Tdata) bool {
 }
 
 func IsUpTyping(a, b *Tdata) bool {
-	return !Contain(a, b) && b.High >= a.High
+	return !Contain(a, b) && b.High > a.High
 }
 
 func IsDownTyping(a, b *Tdata) bool {
-	return !Contain(a, b) && b.Low <= a.Low
+	return !Contain(a, b) && b.Low < a.Low
 }
 
 func Contain(a, b *Tdata) bool {
