@@ -4,13 +4,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
 
 func Http_get(url string, referer *string) (*http.Response, error) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: time.Duration(3 * time.Second)}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
