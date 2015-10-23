@@ -21,9 +21,6 @@ class KLineTypingLine
       .style("stroke", '#abc')
       .style("stroke-width", "1")
       .style("stroke-dasharray", "7 7")
-    nc = @root.param 'nc'
-    if nc
-      path.style('stroke', '#000')
 
     x = @_ui.x
     y = @_ui.y

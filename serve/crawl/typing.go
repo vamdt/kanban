@@ -120,6 +120,12 @@ func (p *typing_parser) parse_top_bottom() bool {
 			}
 		}
 
+		if typing.Type == BottomTyping && p.Data[len(p.Data)-1].Type == TopTyping {
+			if typing.High >= p.Data[len(p.Data)-1].High {
+				return false
+			}
+		}
+
 		if typing.Type == p.Data[len(p.Data)-1].Type {
 			if pos, ok := TypingSlice(p.Data).MergeTyping(typing); ok {
 				if pos < len(p.Data)-1 {
@@ -251,13 +257,22 @@ func (p *typing_parser) LinkTyping() bool {
 		}
 	}
 
-	for i, c := start, len(p.Data); i < c; i++ {
-		if len(p.Line) > 0 && p.Line[len(p.Line)-1].Type == p.Data[i].Type {
+	end := len(p.Data) - 1
+	for i := end - 1; i > -1; i-- {
+		if p.Data[i].Type != p.Data[i+1].Type {
+			end = i + 1
+			break
+		}
+	}
+
+	for i := start; i < end; i++ {
+		llen := len(p.Line)
+		if len(p.Line) > 0 && p.Line[llen-1].Type == p.Data[i].Type {
 			continue
 		}
 		t := p.Data[i]
-		if len(p.Line) > 0 {
-			l := &p.Line[len(p.Line)-1]
+		if llen > 0 {
+			l := &p.Line[llen-1]
 			l.End = t.End
 			if l.Type == TopTyping {
 				l.Low = t.Low

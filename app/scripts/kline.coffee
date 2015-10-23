@@ -277,6 +277,13 @@ class KLine
       ename = [s,k,fq,event].join('.')
       @io.on(ename, cb)
 
+  getQuery: (key) ->
+    for i in location.search.slice(1).split "&"
+      ar = i.split "="
+      if ar[0] == key
+        return ar[1]
+    ''
+
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 

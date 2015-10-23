@@ -41,11 +41,8 @@ class KLineTyping
       .append('circle')
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
-      .attr('r', 3)
+      .attr('r', 2)
       .style("fill", (d,i) -> colors[d.Type] || colors[0])
       .on('mouseover', (d,i) -> console.log(d,i))
-    nc = @root.param 'nc'
-    if not nc
-      g.style('opacity', '.1')
 
 KLine.register_plugin 'typing', KLineTyping

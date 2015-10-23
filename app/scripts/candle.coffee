@@ -19,8 +19,8 @@ class KLineCandle
     container = @root._ui.container
     @options.width = +@options.width || 4
     @root.options.size = Math.floor @root.options.width / (1 + @options.width)
-    nc = @root.param 'nc'
-    if nc
+    nmas = @root.getQuery 'nmas'
+    if nmas
       return
     mas = new KLineMas @root, svg, @root._ui.y, (d) -> d.close
     mas.init()
