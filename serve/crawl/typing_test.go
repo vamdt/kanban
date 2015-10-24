@@ -285,3 +285,42 @@ func TestParseTyping(t *testing.T) {
 		}
 	}
 }
+
+var tests_lines = []test_tdatas_pair{
+	test_tdatas_pair{
+		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
+		Text: `
+     L
+     ^
+     |   ^
+     |   |
+     ||  ||
+    ||| |||||
+    ||||| |||||       |
+   ||||||  ||||||    |||
+   |||||     | ||||||| |
+ ||| | |        ||||||
+|||  | |         |
+||               v
+|                l
+    `,
+	},
+}
+
+func TestLinkTyping(t *testing.T) {
+	for i, d := range tests_lines {
+		exp := Text2Tdatas([]byte(d.Text))
+		td := Tdatas{Data: exp.Data}
+		td.ParseTyping()
+		td.Typing.LinkTyping()
+		if !test_is_typing_equal(t, exp.Typing.Line, td.Typing.Line) {
+			t.Error(
+				"\nExample", i,
+				"\nFor", d.Desc,
+				"\nText", d.Text,
+				"\nexpected", exp.Typing.Line,
+				"\ngot", td.Typing.Line,
+			)
+		}
+	}
+}
