@@ -203,6 +203,7 @@ type test_text_tdata_pair struct {
 	str        string
 	exp_td     []Tdata
 	exp_typing []Typing
+	exp_line   []Typing
 }
 
 var tests_text_tdata = []test_text_tdata_pair{
@@ -211,7 +212,7 @@ var tests_text_tdata = []test_text_tdata_pair{
       `,
 		[]Tdata{
 			Tdata{High: 15, Low: 5},
-		}, nil,
+		}, nil, nil,
 	},
 	{`
 |
@@ -219,7 +220,7 @@ var tests_text_tdata = []test_text_tdata_pair{
       `,
 		[]Tdata{
 			Tdata{High: 25, Low: 5},
-		}, nil,
+		}, nil, nil,
 	},
 	{`
 ^
@@ -230,7 +231,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 		},
 		[]Typing{
 			Typing{I: 0, Price: 15, Type: TopTyping},
-		},
+		}, nil,
 	},
 	{`
 |^
@@ -242,20 +243,21 @@ var tests_text_tdata = []test_text_tdata_pair{
 		},
 		[]Typing{
 			Typing{I: 1, Price: 15, Type: TopTyping},
-		},
+		}, nil,
 	},
 	{`
 |
 .
       `,
 		[]Tdata{
-			Tdata{High: 25, Low: 15},
+			Tdata{High: 15, Low: 5},
 		},
 		[]Typing{
-			Typing{I: 0, Price: 15, Type: BottomTyping},
-		},
+			Typing{I: 0, Price: 5, Type: BottomTyping},
+		}, nil,
 	},
 	{`
+    L
     ^
     |
     | |
@@ -264,25 +266,30 @@ var tests_text_tdata = []test_text_tdata_pair{
  |  | | | |
       |
       .
+      l
       `,
 		[]Tdata{
-			Tdata{High: 45, Low: 35},
-			Tdata{High: 55, Low: 25},
-			Tdata{High: 40, Low: 40},
-			Tdata{High: 35, Low: 35},
-			Tdata{High: 75, Low: 25},
-
-			Tdata{High: 45, Low: 35},
+			Tdata{High: 35, Low: 25},
+			Tdata{High: 45, Low: 15},
+			Tdata{High: 30, Low: 30},
+			Tdata{High: 25, Low: 25},
 			Tdata{High: 65, Low: 15},
-			Tdata{High: 45, Low: 45},
-			Tdata{High: 55, Low: 25},
-			Tdata{High: 45, Low: 35},
 
-			Tdata{High: 45, Low: 25},
+			Tdata{High: 35, Low: 25},
+			Tdata{High: 55, Low: 5},
+			Tdata{High: 35, Low: 35},
+			Tdata{High: 45, Low: 15},
+			Tdata{High: 35, Low: 25},
+
+			Tdata{High: 35, Low: 15},
 		},
 		[]Typing{
-			Typing{I: 4, Price: 75, Type: TopTyping},
-			Typing{I: 6, Price: 15, Type: BottomTyping},
+			Typing{I: 4, Price: 65, Type: TopTyping},
+			Typing{I: 6, Price: 5, Type: BottomTyping},
+		},
+		[]Typing{
+			Typing{I: 4, Price: 65, Type: DownTyping},
+			Typing{I: 6, Price: 5, Type: BottomTyping},
 		},
 	},
 }
@@ -328,6 +335,14 @@ func TestText2Tdata(t *testing.T) {
 				"\nFor", pair.str,
 				"\nexpected Typing", pair.exp_typing,
 				"\ngot", tds.Typing,
+			)
+		}
+		if !test_typing_i_price_type_equal(tds.Typing.Line, pair.exp_line) {
+			t.Error(
+				"\nExample", i,
+				"\nFor", pair.str,
+				"\nexpected Line", pair.exp_line,
+				"\ngot", tds.Typing.Line,
 			)
 		}
 	}
