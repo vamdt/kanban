@@ -252,6 +252,21 @@ var tests_tdatas = []test_tdatas_pair{
 |
     `,
 	},
+	test_tdatas_pair{
+		Desc: "Lesson 77 划分笔的步骤二, case BottomBottom the first Bottom should not higher then the second Bottom",
+		Text: `
+          ^
+          |
+         |||
+        |||||
+       |||||||
+| | | |||  ||| |
+|||||||     ||||
+||||||      ||||
+ |   |        |
+ v   v        v
+    `,
+	},
 }
 
 func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
@@ -303,6 +318,23 @@ var tests_lines = []test_tdatas_pair{
 |||  | |         |
 ||               v
 |                l
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 77 划分笔的步骤二, case BottomBottom the first Bottom should not higher then the second Bottom",
+		Text: `
+          L
+          ^
+          |
+         |||
+        |||||
+       |||||||
+| | | |||  ||| |
+|||||||     ||||
+||||||       |||
+ |   |        |
+ v   v        v
+ l
     `,
 	},
 }
