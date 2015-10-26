@@ -214,8 +214,8 @@ func (p *Stock) Merge() {
 		p.M5s.Macd()
 		p.M30s.Macd()
 		p.M1s.ParseChan()
-		p.M5s.ParseChan()
-		p.M30s.ParseChan()
+		//p.M5s.ParseChan()
+		//p.M30s.ParseChan()
 	}()
 
 	wg.Add(1)
@@ -226,9 +226,9 @@ func (p *Stock) Merge() {
 		p.Days.Macd()
 		p.Weeks.Macd()
 		p.Months.Macd()
-		p.Days.ParseChan()
-		p.Weeks.ParseChan()
-		p.Months.ParseChan()
+		//p.Days.ParseChan()
+		//p.Weeks.ParseChan()
+		//p.Months.ParseChan()
 	}()
 
 	wg.Wait()

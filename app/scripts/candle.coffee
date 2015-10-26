@@ -67,7 +67,7 @@ class KLineCandle
       .attr("x1", (d, i) -> x(i))
       .attr("y1", (d, i) -> y(d.high))
       .attr("x2", (d, i) -> x(i))
-      .attr("y2", (d, i) -> y(d.low))
+      .attr("y2", (d, i) -> y(d.low - Math.max(1, Math.min(d.high - d.low, 0))))
       .on('mouseover', (d, i) -> show d, i)
     opacity = @root.param 'opacity'
     if opacity

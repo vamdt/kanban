@@ -50,3 +50,7 @@ rect.pane {
   top: 0;
   position: absolute;
 }
+
+.candle {
+  opacity: .6;
+}
