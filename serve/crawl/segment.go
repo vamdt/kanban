@@ -29,6 +29,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser) {
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
 	p.tp = append(p.tp, tp)
+	log.Println("new node len(tp)", len(p.tp), "line:", i, "len(data):", len(p.Data))
 }
 
 func (p *segment_parser) clear() {
@@ -157,29 +158,35 @@ func (p *Tdatas) ParseSegment() bool {
 		l--
 	}
 
-	for i := start; i+1 < l; i += 2 {
+	if false && len(p.Segment.tp) < 1 && len(p.Segment.Data) < 1 {
+		for i := start; i < l; i++ {
+			if i+2 > l {
+				return hasnew
+			}
+
+			if p.Typing.Line[i].Type == UpTyping && p.Typing.Line[i+2].High > p.Typing.Line[i].High && p.Typing.Line[i+2].Low > p.Typing.Line[i].Low {
+				// Up yes
+				start = i + 1
+				break
+			} else if p.Typing.Line[i].Type == DownTyping && p.Typing.Line[i+2].High < p.Typing.Line[i].High && p.Typing.Line[i+2].Low < p.Typing.Line[i].Low {
+				// Down yes
+				start = i + 1
+				break
+			}
+		}
+  } else {
+    start = start + 1
+  }
+
+	log.Println("start", start)
+	for i := start; i < l; i += 2 {
 
 		if len(p.Segment.tp) < 1 {
 			if i+2 > l {
 				return hasnew
 			}
 
-			if len(p.Segment.Data) > 0 {
-				p.Segment.new_node(i, &p.Typing)
-				continue
-			}
-
-			if p.Typing.Line[i].Type == UpTyping && p.Typing.Line[i+2].Low < p.Typing.Line[i].High {
-				// Up yes
-				i++
-				p.Segment.new_node(i, &p.Typing)
-			} else if p.Typing.Line[i].Type == DownTyping && p.Typing.Line[i+2].High > p.Typing.Line[i].Low {
-				// Down yes
-				i++
-				p.Segment.new_node(i, &p.Typing)
-			} else {
-				i--
-			}
+			p.Segment.new_node(i, &p.Typing)
 			continue
 		}
 
@@ -287,7 +294,7 @@ func (p *Tdatas) ParseSegment() bool {
 					if Contain(&pprev.d, &prev.d) {
 						need_wait := true
 						case1_seg_ok := false
-						for j := i; j+1 < l; j += 2 {
+						for j := i; j < l; j += 2 {
 							high := p.Typing.Line[j].High
 							low := p.Typing.Line[j].Low
 							if pprev.t.Type == DownTyping {
@@ -305,9 +312,8 @@ func (p *Tdatas) ParseSegment() bool {
 									typing.Price = typing.High
 									typing.Time = pprev.d.Time
 									p.Segment.add_typing(typing, true)
-									i = pprev.t.I + 1
+									i = pprev.t.I - 1
 									p.Segment.clear()
-									p.Segment.new_node(i, &p.Typing)
 									hasnew = true
 									case1_seg_ok = true
 									break
@@ -327,9 +333,8 @@ func (p *Tdatas) ParseSegment() bool {
 									typing.Price = pprev.d.Low
 									typing.Time = pprev.d.Time
 									p.Segment.add_typing(typing, true)
-									i = pprev.t.I + 1
+									i = pprev.t.I - 1
 									p.Segment.clear()
-									p.Segment.new_node(i, &p.Typing)
 									hasnew = true
 									case1_seg_ok = true
 									break
@@ -347,7 +352,7 @@ func (p *Tdatas) ParseSegment() bool {
 				}
 			}
 
-			if len(p.Segment.tp) < 3 && p.IsLineBreakSegment(i) {
+			if len(p.Segment.tp) < 2 && p.IsLineBreakSegment(i) {
 				if prev.t.Type == DownTyping && a.High < prev.d.High {
 					continue
 				}
@@ -361,9 +366,8 @@ func (p *Tdatas) ParseSegment() bool {
 		p.Segment.clean()
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
-			i = p.Segment.tp[len(p.Segment.tp)-2].t.I + 1
+			i = p.Segment.tp[len(p.Segment.tp)-2].t.I - 1
 			p.Segment.clear()
-			p.Segment.new_node(i, &p.Typing)
 		}
 	}
 	return hasnew
