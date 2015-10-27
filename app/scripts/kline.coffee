@@ -64,8 +64,10 @@ class KLine
     data.forEach (d) ->
       d.date = parseDate(d.time)
     @_data = data
+    if @_left == @_max_left
+      @_left = -1
     @_max_left = Math.max(0, data.length - @options.size)
-    @_left = @_max_left if @_left < 1
+    @_left = @_max_left if @_left < 0
 
   param: (p) ->
     switch typeof p
@@ -168,8 +170,8 @@ class KLine
 
       if @defer_ttl
         @defer_ttl--
-      else @defer_ttl = 20
       if @defer_ttl < 1
+        @defer_ttl = 20
         @draw()
       else
         defer_draw = => @draw()
