@@ -2,6 +2,8 @@ package crawl
 
 import (
 	"bytes"
+	"log"
+	"sort"
 	"testing"
 )
 
@@ -9,39 +11,97 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 	base := 5
 	lines := bytes.Split(text, []byte("\n"))
 	lines = lines[1 : len(lines)-1]
-	for _, l := range lines {
-		if bytes.Contains(l, []byte("|")) {
-			for i, c := 0, len(tline); i < c; i++ {
-				if tline[i].High > 0 {
-					tline[i].High = tline[i].High + base*2
-					tline[i].Low = tline[i].Low + base*2
-				}
+
+	findLine := func(I int) int {
+		for i := len(tline) - 1; i > -1; i-- {
+			if tline[i].I == I {
+				return i
 			}
 		}
-		for i, c := range l {
-			if len(tline) <= i {
-				tline = append(tline, Typing{I: i})
-			}
+		return -1
+	}
 
-			switch c {
-			case '^':
-				tline[i].Type = UpTyping
-			case 'v':
-				tline[i].Type = DownTyping
-			case '|':
-				if tline[i].High == 0 {
-					tline[i].High = base * 3
+	findUpLine := func(i, j int) int {
+		index := -1
+		for i, j = i-1, j+1; i > -1; i, j = i-1, j+1 {
+			if len(lines[i]) > j && lines[i][j] == '/' {
+				index = j
+			} else {
+				break
+			}
+		}
+		return findLine(index)
+	}
+
+	findDownLine := func(i, j int) int {
+		index := -1
+		for i, j = i-1, j-1; i > -1 && j > -1; i, j = i-1, j-1 {
+			if len(lines[i]) > j && lines[i][j] == '\\' {
+				index = j
+			} else {
+				break
+			}
+		}
+		return findLine(index)
+	}
+
+	for i, l := 0, len(lines); i < l; i++ {
+		if bytes.IndexAny(lines[i], `/\`) > -1 {
+			for j, c := 0, len(tline); j < c; j++ {
+				tline[j].High = tline[j].High + base*2
+				tline[j].Low = tline[j].Low + base*2
+			}
+		}
+		for j, c := 0, len(lines[i]); j < c; j++ {
+			switch lines[i][j] {
+			case '.':
+				segment = append(segment, Typing{I: j})
+			case '\\':
+				k := findDownLine(i, j)
+				if k < 0 {
+					tline = append(tline, Typing{I: j, Type: DownTyping, High: base * 3, Low: base})
+					k = len(tline) - 1
 				}
-				tline[i].Low = base
+				tline[k].I = j
+				tline[k].Low = base
+			case '/':
+				k := findUpLine(i, j)
+				if k < 0 {
+					tline = append(tline, Typing{I: j, Type: UpTyping, High: base * 3, Low: base})
+					k = len(tline) - 1
+				}
+				tline[k].Low = base
 			}
 		}
 	}
-
+	sort.Sort(TypingSlice(tline))
 	for i := len(tline) - 1; i > -1; i-- {
-		if tline[i].Type == UpTyping {
-			tline[i].Price = tline[i].High
-		} else if tline[i].Type == DownTyping {
+		if tline[i].Type == DownTyping {
 			tline[i].Price = tline[i].Low
+		} else if tline[i].Type == UpTyping {
+			tline[i].Price = tline[i].High
+		}
+	}
+	sort.Sort(TypingSlice(segment))
+	for i, c := 0, len(segment); i < c; i++ {
+		if j := findLine(segment[i].I); j > -1 {
+			segment[i].High = tline[j].High
+			segment[i].Low = tline[j].Low
+			segment[i].Price = tline[j].Price
+
+			if tline[j].Type == DownTyping {
+				segment[i].Type = BottomTyping
+				if i > 0 {
+					segment[i].High = segment[i-1].Price
+				}
+			} else if tline[j].Type == UpTyping {
+				segment[i].Type = TopTyping
+				if i > 0 {
+					segment[i].Low = segment[i-1].Price
+				}
+			}
+		} else {
+			log.Panicf("find segment[%d].I %d in tline fail, %s", i, segment[i].I, string(text))
 		}
 	}
 	return
@@ -55,31 +115,46 @@ type test_text_data_pair struct {
 
 var tests_text_segment = []test_text_data_pair{
 	{`
-^
-|
-|
+ /
+/
       `,
 		[]Typing{
-			Typing{I: 0, Price: 25, Low: 5, High: 25, Type: UpTyping},
+			Typing{I: 1, Price: 25, Low: 5, High: 25, Type: UpTyping},
 		}, nil,
 	},
 	{`
-|
-v
+\
       `,
 		[]Typing{
 			Typing{I: 0, Price: 5, Low: 5, High: 15, Type: DownTyping},
 		}, nil,
 	},
 	{`
-|^
-||
-v
+\
+ \/
       `,
 		[]Typing{
-			Typing{I: 0, Price: 5, Low: 5, High: 25, Type: DownTyping},
-			Typing{I: 1, Price: 15, Low: 5, High: 15, Type: UpTyping},
+			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
+			Typing{I: 2, Price: 15, Low: 5, High: 15, Type: UpTyping},
 		}, nil,
+	},
+	{`
+    .    /
+    /\  /
+\  /  \/
+ \/
+ .
+      `,
+		[]Typing{
+			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
+			Typing{I: 4, Price: 35, Low: 5, High: 35, Type: UpTyping},
+			Typing{I: 6, Price: 15, Low: 15, High: 35, Type: DownTyping},
+			Typing{I: 9, Price: 45, Low: 15, High: 45, Type: UpTyping},
+		},
+		[]Typing{
+			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping},
+			Typing{I: 4, Price: 35, Low: 5, High: 35, Type: TopTyping},
+		},
 	},
 }
 
