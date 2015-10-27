@@ -139,13 +139,43 @@ func (p *typing_parser) parse_top_bottom() bool {
 	return true
 }
 
+func (p *Tdatas) findChanTypingStart() int {
+	l := len(p.Data)
+	if l < 240 {
+		return 0
+	}
+	l = 240
+	li, hi := 0, 0
+	for i := 1; i < l; i++ {
+		if p.Data[li].Low > p.Data[i].Low {
+			li = i
+		}
+		if p.Data[hi].High < p.Data[i].High {
+			hi = i
+		}
+	}
+
+	for i := li - 1; i > -1 && p.Data[li].Low <= p.Data[i].Low; i-- {
+		li = i
+	}
+
+	for i := hi - 1; i > -1 && p.Data[hi].High >= p.Data[i].High; i-- {
+		hi = i
+	}
+
+	if hi > li {
+		return li
+	}
+	return hi
+}
+
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Typing.tp); l > 0 {
 		start = p.Typing.tp[l-1].t.End + 1
 	} else {
-		start = 0
+		start = p.findChanTypingStart()
 	}
 
 	for i, l := start, len(p.Data); i < l; i++ {
