@@ -248,9 +248,16 @@ func ContainMerge(pra, a, b *Tdata) *Tdata {
 func (p *typing_parser) LinkTyping() bool {
 	hasnew := false
 	start := 0
+	typing := Typing{}
 	if l := len(p.Line); l > 0 {
+		typing = p.Line[l-1]
+		if typing.Type == DownTyping {
+			typing.Type = BottomTyping
+		} else if typing.Type == UpTyping {
+			typing.Type = TopTyping
+		}
 		for i := len(p.Data) - 1; i > -1; i-- {
-			if p.Data[i].I == p.Line[l-1].I {
+			if p.Data[i].I == typing.I {
 				start = i + 1
 				break
 			}
@@ -266,23 +273,26 @@ func (p *typing_parser) LinkTyping() bool {
 	}
 
 	for i := start; i < end; i++ {
-		llen := len(p.Line)
-		if len(p.Line) > 0 && p.Line[llen-1].Type == p.Data[i].Type {
+		t := p.Data[i]
+		if typing.Type == UnknowTyping {
+			typing = t
 			continue
 		}
-		t := p.Data[i]
-		if llen > 0 {
-			l := &p.Line[llen-1]
-			l.End = t.End
-			if l.Type == TopTyping {
-				l.Low = t.Low
-				l.Type = DownTyping
-			} else if l.Type == BottomTyping {
-				l.High = t.High
-				l.Type = UpTyping
-			}
+
+		if typing.Type == t.Type {
+			continue
 		}
-		p.Line = append(p.Line, t)
+
+		typing.End = t.End
+		if typing.Type == TopTyping {
+			typing.Low = t.Low
+			typing.Type = DownTyping
+		} else if typing.Type == BottomTyping {
+			typing.High = t.High
+			typing.Type = UpTyping
+		}
+		p.Line = append(p.Line, typing)
+		typing = t
 		hasnew = true
 	}
 

@@ -12,8 +12,12 @@ class KLineSegment
 
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
-    data = datasel.Segment.Data
     @_ui.svg.select("g.segment").remove()
+    if not datasel.Segment
+      return
+    if not datasel.Segment.Data
+      return
+    data = datasel.Segment.Data
     g = @_ui.svg.append("g")
       .attr("class", "segment")
 
