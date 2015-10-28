@@ -235,6 +235,54 @@ var tests_segments = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
+		Desc: "Lesson 67 Study Case 2 Fig 1, Case 2 standard",
+		Text: `
+            g2
+           /\      g3
+          /  \    /\
+         /    \  /  \
+        /      \/    \
+   g1  /        d3    \
+  /\  /                \
+ /  \/                  d4
+/    d2
+d1
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 67 Study Case 2 Fig 2, Case 2 standard ensure",
+		Text: `
+            *g2
+            /\                      g5
+           /  \      g3            /
+          /    \    /\            /
+         /      \  /  \      g4  /
+        /        \/    \    /\  /
+   g1  /          d3    \  /  \/
+  /\  /                  \/    d5
+ /  \/                   *d4
+/    d2
+d1
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 67 Study Case 2 Fig 3, Case 2 standard extend",
+		Text: `
+                                      /g5
+             g2                      /
+            /\                      /
+           /  \      g3            /
+          /    \    /\            /
+         /      \  /  \      g4  /
+        /        \/    \    /\  /
+   g1  /          d3    \  /  \/
+  /\  /                  \/    d5
+ /  \/                   d4
+/    d2
+d1
+    `,
+	},
+	test_tdatas_pair{
 		Desc: "Lesson 67 Study Case 8 special",
 		Text: `
               *
@@ -350,18 +398,18 @@ var tests_segments = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
-		Desc: `Lesson 77 Case 81-82 // Fuzzy 图也不完全一致，请参考书中原图`,
+		Desc: `Lesson 77 Case 81-82 & Lesson 78 // Fuzzy 请参考书中原图`,
 		Text: `
             *80
-            /\                  b                   82
-           /  \                /\                  /f
-          /    \              /  \                /
-         /      \            /    \      d       /
-        /        \  /\      /      \    /\      /
-   /\  /          \/  \    /        \  /  \    /
+            /\                  b                      82
+           /  \                /\                      h
+          /    \              /  \                f   /
+         /      \            /    \      d       /\  /
+        /        \  /\      /      \    /\      /  \/
+   /\  /          \/  \    /        \  /  \    /    g
   /  \/                \  /          \/    \  /
- /                      \/a           c     \/
-/                       *81                  e
+ /                      \/a           c     \/e
+/                       *81
 79
     `,
 	},
