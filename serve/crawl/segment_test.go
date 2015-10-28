@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -54,7 +55,7 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 		}
 		for j, c := 0, len(lines[i]); j < c; j++ {
 			switch lines[i][j] {
-			case '.':
+			case '*':
 				segment = append(segment, Typing{I: j})
 			case '\\':
 				k := findDownLine(i, j)
@@ -155,11 +156,11 @@ var tests_text_segment = []test_text_data_pair{
 		}, nil,
 	},
 	{`
-    .    /
+    *    /
     /\  /
 \  /  \/
  \/
- .
+ *
       `,
 		[]Typing{
 			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
@@ -212,7 +213,7 @@ var tests_segments = []test_tdatas_pair{
 	test_tdatas_pair{
 		Desc: "Lesson 67 Study Fig 1, Case 1 standard",
 		Text: `
-        .
+        *
         /\
        /  \  /\
   /\  /    \/  \
@@ -223,20 +224,20 @@ var tests_segments = []test_tdatas_pair{
 	test_tdatas_pair{
 		Desc: "Lesson 67 Study Fig 2, Case 1 standard extend",
 		Text: `
-         .
+         *
          /\
         /  \                /
        /    \  /\          /
   /\  /      \/  \    /\  /
  /  \/            \  /  \/
 /                  \/
-                   .
+                   *
     `,
 	},
 	test_tdatas_pair{
 		Desc: "Lesson 67 Study Case 8 special",
 		Text: `
-              .
+              *
               /\
              /  \
             /    \  /\
@@ -276,7 +277,7 @@ var tests_segments = []test_tdatas_pair{
 	test_tdatas_pair{
 		Desc: "Lesson 71 Study Case 4 - 3",
 		Text: `
-                         .
+                         *
                          /\
                   /\    /  \      /\
                  /  \  /    \    /  \  /\
@@ -300,6 +301,59 @@ var tests_segments = []test_tdatas_pair{
 /
     `,
 	},
+	test_tdatas_pair{
+		Desc: "Lesson 78 QA 天眼2007-09-10 16:16:44",
+		Text: `
+                      4
+                      /\                   *8
+                     /  \                  /\
+0                   /    \         6      /  \
+\       2          /      \        /\    /    \
+ \      /\        /        \      /  \  /      \
+  \    /  \      /          \    /    \/        \     10
+   \  /    \    /            \  /     7          \    /\
+    \/      \  /              \/                  \  /  \
+    1        \/               5                    \/    \
+             *3                                    9      \
+                                                           \
+                                                            \ 11
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 79 Fig 1-2, //Fuzzy",
+		Text: `
+\0                        4
+ \                        /\                   8
+  \                      /  \                  /\     *10
+   \                    /    \         6      /  \    /\
+    \       2          /      \        /\    /    \  /  \
+     \      /\        /        \      /  \  /      \/    \
+      \    /  \      /          \    /    \/       9      \
+       \  /    \    /            \  /     7                \
+        \/      \  /              \/                        \
+        1        \/               5                          \
+                 *3                                           \11
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 81 QA 袖手旁观 2007-09-19 16:17:15",
+		Text: `
+                                                  9/
+                                                  /
+                              *5                 /
+                              /\      7         /
+                             /  \    /\        /
+        1                   /    \  /  \      /
+       /\        3         /      \/    \    /
+      /  \      /\        /        6     \  /
+     /    \    /  \      /                \/
+    /      \  /    \    /                  8
+   /        \/      \  /
+  /          2       \/
+ /                    4
+/0
+    `,
+	},
 }
 
 func TestParseSegment(t *testing.T) {
@@ -313,7 +367,7 @@ func TestParseSegment(t *testing.T) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", d.Desc,
-				"\nText", d.Text,
+				"\nText", strings.Replace(d.Text, " ", ".", -1),
 				"\nexpected", segments,
 				"\ngot", td.Segment.Data,
 			)
