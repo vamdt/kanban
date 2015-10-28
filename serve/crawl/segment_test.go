@@ -466,6 +466,147 @@ d1
 /0
     `,
 	},
+	test_tdatas_pair{
+		Desc: "Case 1, a",
+		Text: `
+        *
+        /\
+       /  \  /\
+  /\  /    \/  \
+ /  \/          \
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 1, b",
+		Text: `
+        *
+        /\
+       /  \
+  /\  /    \
+ /  \/      \  /\
+/            \/  \
+                  \
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 1, c",
+		Text: `
+                           /
+          /\              /
+         /  \            /
+    /\  /    \          /
+   /  \/      \    /\  /
+  /            \  /  \/
+ /              \/
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 1, d",
+		Text: `
+           *
+           /\
+          /  \
+     /\  /    \          /\
+    /  \/      \    /\  /  \
+   /            \  /  \/    \
+  /              \/          \
+ /                            \
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 1, e // Fuzzy",
+		Text: `
+          *          /\ *
+          /\        /  \/\
+         /  \      /      \/\
+    /\  /    \/\  /          \
+   /  \/        \/
+  /
+ /
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 1, f",
+		Text: `
+                            /
+          *          /\    /
+          /\        /  \  /
+         /  \      /    \/
+    /\  /    \/\  /
+   /  \/        \/
+  /             *
+ /
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 2, a",
+		Text: `
+          *
+          /\
+         /  \  /\      /
+        /    \/  \  /\/
+       /          \/
+  /\  /           *
+ /  \/
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 2, b",
+		Text: `
+          *
+          /\
+         /  \/\        /
+        /      \      /
+       /        \  /\/
+  /\  /          \/
+ /  \/
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 2, c",
+		Text: `
+                   /
+          /\      /
+         /  \  /\/
+        /    \/
+       /
+  /\  /
+ /  \/
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 2, d",
+		Text: `
+          /\
+         /  \  /\/\
+        /    \/    \
+       /
+  /\  /
+ /  \/
+/
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Case 2, e",
+		Text: `
+                       /
+          /\          /
+         /  \      /\/
+        /    \/\  /
+       /        \/
+  /\  /
+ /  \/
+/
+    `,
+	},
 }
 
 func TestParseSegment(t *testing.T) {
