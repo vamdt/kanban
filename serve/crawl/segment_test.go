@@ -248,57 +248,121 @@ var tests_segments = []test_tdatas_pair{
     `,
 	},
 	test_tdatas_pair{
+		Desc: "Lesson 71 Study Case 2 - 1",
+		Text: `
+                         *8
+                   6     /\
+                  /\    /  \/\10
+         4       /  \  /    9 \
+    2   /\      /    \/7       11
+   /\  /  \    /
+  /  \/    \  /
+ /    3     \/
+/1           5
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 71 Study Case 2 - 2",
+		Text: `
+            *4
+            /\      6
+           /  \    /\        8
+          /    \  /  \      /\
+         /      \/    \    /  \
+    2   /        5     \  /    \
+   /\  /                \/      9
+  /  \/                  7
+ /    3
+/1
+    `,
+	},
+	test_tdatas_pair{
+		Desc: "Lesson 71 Study Case 3",
+		Text: `
+                          8
+                   6     /\
+                  /\    /  \
+         4       /  \  /    \
+    2   /\      /    \/7     \
+   /\  /  \    /              \9
+  /  \/    \  /
+ /    3     \/
+/1           5
+    `,
+	},
+	test_tdatas_pair{
 		Desc: "Lesson 71 Study Case 4 - 1",
 		Text: `
-                         /\
-                  /\    /  \      /\
-                 /  \  /    \    /  \
-        /\      /    \/      \  /    \
-   /\  /  \    /              \/
-  /  \/    \  /
- /          \/
-/
+                          /\8
+                   6     /  \        /\10
+                  /\    /    \      /  \
+         4       /  \  /      \    /    \
+    2   /\      /    \/        \  /      11
+   /\  /  \    /      7         \/
+  /  \/    \  /                  9
+ /    3     \/
+/1           5
     `,
 	},
 	test_tdatas_pair{
 		Desc: "Lesson 71 Study Case 4 - 2",
 		Text: `
-                                          /
-                         /\              /
-                  /\    /  \      /\    /
-                 /  \  /    \    /  \  /
-        /\      /    \/      \  /    \/
-   /\  /  \    /              \/
-  /  \/    \  /
- /          \/
-/
+                                             /12
+                          /\8               /
+                   6     /  \        /\ 10 /
+                  /\    /    \      /  \  /
+         4       /  \  /      \    /    \/
+    2   /\      /    \/        \  /      11
+   /\  /  \    /      7         \/
+  /  \/    \  /                  9
+ /    3     \/
+/1           5
     `,
 	},
 	test_tdatas_pair{
 		Desc: "Lesson 71 Study Case 4 - 3",
 		Text: `
-                         *
-                         /\
-                  /\    /  \      /\
-                 /  \  /    \    /  \  /\
-        /\      /    \/      \  /    \/  \
-   /\  /  \    /              \/          \
-  /  \/    \  /                            \
- /          \/
-/
+                          *8
+                          /\          10
+                   6     /  \        /\
+                  /\    /    \      /  \  /\  12
+         4       /  \  /      \    /    \/  \
+    2   /\      /    \/        \  /      11  \
+   /\  /  \    /      7         \/            \
+  /  \/    \  /                  9             \
+ /    3     \/                                  13
+/1           5
     `,
 	},
 	test_tdatas_pair{
-		Desc: "Lesson 77 Case 81-82",
+		Desc: "Lesson 71 Study Case 5, as 4-3",
 		Text: `
-                         /\
-                  /\    /  \      /\
-                 /  \  /    \    /  \  /\
-        /\      /    \/      \  /    \/  \
-   /\  /  \    /              \/          \
-  /  \/    \  /                            \
- /          \/
-/
+                          *8
+                          /\          10
+                   6     /  \        /\
+                  /\    /    \      /  \  /\  12
+         4       /  \  /      \    /    \/  \
+    2   /\      /    \/        \  /      11  \
+   /\  /  \    /      7         \/            \
+  /  \/    \  /                  9             \
+ /    3     \/                                  13
+/1           5
+    `,
+	},
+	test_tdatas_pair{
+		Desc: `Lesson 77 Case 81-82 // Fuzzy 图也不完全一致，请参考书中原图`,
+		Text: `
+            *80
+            /\                  b                   82
+           /  \                /\                  /f
+          /    \              /  \                /
+         /      \            /    \      d       /
+        /        \  /\      /      \    /\      /
+   /\  /          \/  \    /        \  /  \    /
+  /  \/                \  /          \/    \  /
+ /                      \/a           c     \/
+/                       *81                  e
+79
     `,
 	},
 	test_tdatas_pair{
@@ -362,7 +426,6 @@ func TestParseSegment(t *testing.T) {
 		td := Tdatas{}
 		td.Typing.Line = lines
 		td.ParseSegment()
-		t.Log("text segment", segments)
 		if !test_line_i_price_type_equal(segments, td.Segment.Data) {
 			t.Error(
 				"\nExample", i,
