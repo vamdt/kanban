@@ -234,6 +234,12 @@ func IsDownTyping(a, b *Tdata) bool {
 	return !Contain(a, b) && b.Low < a.Low
 }
 
+func LineContain(a, b *Typing) bool {
+	ta := Tdata{High: a.High, Low: a.Low}
+	tb := Tdata{High: b.High, Low: b.Low}
+	return Contain(&ta, &tb)
+}
+
 func Contain(a, b *Tdata) bool {
 	// Fuzzy Lesson 67 答疑 2007-08-02 16:19:25
 	// 缠中说禅：只要有一端相同，那必然是包含，

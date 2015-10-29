@@ -3,17 +3,35 @@ package crawl
 import "log"
 
 type segment_parser struct {
-	Data          []Typing
-	tp            []typing_parser_node
-	r1st_is_case1 bool
-	r2rd_is_case1 bool
+	Data []Typing
+	tp   []typing_parser_node
+
+	unsure_typing Typing
+	need_sure     bool
 }
 
-func (p *segment_parser) add_typing(typing Typing, case1 bool) {
+func (p *segment_parser) add_typing(typing Typing, case1 bool, endprice int) bool {
+	if p.need_sure {
+		p.need_sure = false
+		if p.unsure_typing.Type == BottomTyping && p.unsure_typing.Low > endprice {
+			return false
+		} else if p.unsure_typing.Type == TopTyping && p.unsure_typing.High < endprice {
+			return false
+		} else {
+			p.Data = append(p.Data, p.unsure_typing)
+		}
+	}
+
+	if !case1 {
+		p.need_sure = true
+		p.unsure_typing = typing
+		log.Println("new case2 segment typing", typing.Type, len(p.Data))
+		return true
+	}
+
 	p.Data = append(p.Data, typing)
-	p.r2rd_is_case1 = p.r1st_is_case1
-	p.r1st_is_case1 = case1
-	log.Println("new segment typing", typing.Type, p.r2rd_is_case1, p.r1st_is_case1, len(p.Data))
+	log.Println("new segment typing", typing.Type, case1, len(p.Data))
+	return true
 }
 
 func (p *segment_parser) new_node(i int, ptyping *typing_parser) {
@@ -52,10 +70,14 @@ func (p *Tdatas) IsLineBreakSegment(li int) bool {
 
 	// find segment start
 	si := 0
-	for i := len(p.Segment.Data) - 1; i > -1; i-- {
-		if p.Segment.Data[i].I <= li {
-			si = p.Segment.Data[i].I
-			break
+	if p.Segment.need_sure {
+		si = p.Segment.unsure_typing.End
+	} else {
+		for i := len(p.Segment.Data) - 1; i > -1; i-- {
+			if p.Segment.Data[i].End <= li {
+				si = p.Segment.Data[i].End
+				break
+			}
 		}
 	}
 	if si < 0 {
@@ -79,12 +101,18 @@ func (p *Tdatas) IsLineBreakSegment(li int) bool {
 	if p.Typing.Line[si].Type == UpTyping {
 		for i := li - 2; i > si; i-- {
 			if p.Typing.Line[i].High >= p.Typing.Line[li].Low {
+				if i == li-2 && LineContain(&p.Typing.Line[i], &p.Typing.Line[li]) {
+					return false
+				}
 				return true
 			}
 		}
 	} else if p.Typing.Line[si].Type == DownTyping {
 		for i := li - 2; i > si; i-- {
 			if p.Typing.Line[i].Low <= p.Typing.Line[li].High {
+				if i == li-2 && LineContain(&p.Typing.Line[i], &p.Typing.Line[li]) {
+					return false
+				}
 				return true
 			}
 		}
@@ -92,63 +120,13 @@ func (p *Tdatas) IsLineBreakSegment(li int) bool {
 	return false
 }
 
-func (p *Tdatas) feat_normalized(start, end int) {
-	l := len(p.Typing.Line)
-	if l > 0 && p.Typing.Line[l-1].Type != UpTyping && p.Typing.Line[l-1].Type != DownTyping {
-		l--
-	}
-	if l < end {
-		end = l
-	}
-	if start < 0 {
-		log.Println("start < 0")
-		return
-	}
-
-	p.Segment.tp = []typing_parser_node{}
-	for i := start + 1; i < end; i += 2 {
-
-		if len(p.Segment.tp) < 1 {
-			p.Segment.new_node(i, &p.Typing)
-			continue
-		}
-
-		prev := &p.Segment.tp[len(p.Segment.tp)-1]
-		a := &Tdata{}
-		a.High = p.Typing.Line[i].High
-		a.Low = p.Typing.Line[i].Low
-		a.Time = p.Typing.Line[i].Time
-
-		if Contain(&prev.d, a) {
-			if prev.t.Type == UpTyping {
-				a = DownContainMerge(&prev.d, a)
-				if prev.d.Low != a.Low {
-					prev.t.I = i
-				}
-			} else {
-				if prev.t.Type != DownTyping {
-					log.Panicf("prev should be a DownTyping line %+v", prev)
-				}
-				a = UpContainMerge(&prev.d, a)
-				if prev.d.High != a.High {
-					prev.t.I = i
-				}
-			}
-			prev.d = *a
-			prev.t.End = i
-		} else {
-			p.Segment.new_node(i, &p.Typing)
-		}
-
-		p.Segment.clean()
-	}
-}
-
 func (p *Tdatas) ParseSegment() bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Segment.tp); l > 0 {
 		start = p.Segment.tp[l-1].t.End + 1
+	} else if len(p.Segment.Data) > 0 {
+		start = p.Segment.Data[len(p.Segment.Data)-1].End
 	} else {
 		start = 0
 	}
@@ -174,9 +152,9 @@ func (p *Tdatas) ParseSegment() bool {
 				break
 			}
 		}
-  } else {
-    start = start + 1
-  }
+	} else {
+		start = start + 1
+	}
 
 	log.Println("start", start)
 	for i := start; i < l; i += 2 {
@@ -192,64 +170,13 @@ func (p *Tdatas) ParseSegment() bool {
 
 		prev := &p.Segment.tp[len(p.Segment.tp)-1]
 
-		if dlen := len(p.Segment.Data); dlen > 1 && !p.Segment.r1st_is_case1 {
-			a := p.Segment.Data[dlen-1]
-			b := p.Segment.tp[len(p.Segment.tp)-1].t
-			not_complete := false
-			if a.Type == TopTyping && b.High > a.High {
-				not_complete = true
-			}
-			if a.Type == BottomTyping && b.Low < a.Low {
-				not_complete = true
-				log.Println("found a V VV")
-			}
-
-			if not_complete {
-				start := 0
-				if dlen > 1 {
-					start = p.Segment.Data[dlen-2].I
-				} else {
-					start = p.Segment.Data[dlen-1].I - 3
-				}
-				p.feat_normalized(start, i)
-				p.Segment.Data = p.Segment.Data[:dlen-1]
-				i--
-				hasnew = true
-				continue
-			}
-		}
-
-		if dlen := len(p.Segment.Data); dlen > 1 && !p.Segment.r2rd_is_case1 {
-			a := p.Segment.Data[dlen-2]
-			b := p.Segment.tp[len(p.Segment.tp)-1].t
-			not_complete := false
-			if a.Type == TopTyping && b.High > a.High {
-				not_complete = true
-			}
-			if a.Type == BottomTyping && b.Low < a.Low {
-				not_complete = true
-			}
-
-			if not_complete {
-				start := 0
-				if dlen > 1 {
-					start = p.Segment.Data[dlen-2].I
-				} else {
-					start = p.Segment.Data[dlen-1].I - 3
-				}
-				p.feat_normalized(start, i)
-				p.Segment.Data = p.Segment.Data[:dlen-2]
-				continue
-			}
-		}
-
 		a := &Tdata{}
 		a.High = p.Typing.Line[i].High
 		a.Low = p.Typing.Line[i].Low
 		a.Time = p.Typing.Line[i].Time
 
 		if Contain(&prev.d, a) {
-			if len(p.Segment.tp) > 1 {
+			if !p.Segment.need_sure && len(p.Segment.tp) > 1 {
 				firstIsBreak := false
 				if len(p.Segment.tp) > 2 {
 					pprev := &p.Segment.tp[len(p.Segment.tp)-2]
@@ -289,11 +216,12 @@ func (p *Tdatas) ParseSegment() bool {
 		} else {
 			if len(p.Segment.tp) > 2 {
 				pprev := &p.Segment.tp[len(p.Segment.tp)-2]
-				typing := pprev.t
 				if p.IsLineBreakSegment(pprev.t.I) && !hasGap(&pprev.d, &p.Segment.tp[len(p.Segment.tp)-3].d) {
+					typing := pprev.t
 					if Contain(&pprev.d, &prev.d) {
 						need_wait := true
 						case1_seg_ok := false
+						endprice := 0
 						for j := i; j < l; j += 2 {
 							high := p.Typing.Line[j].High
 							low := p.Typing.Line[j].Low
@@ -307,14 +235,8 @@ func (p *Tdatas) ParseSegment() bool {
 									need_wait = false
 
 									typing.Type = TopTyping
-									typing.High = pprev.d.High
-									typing.Low = pprev.d.Low
 									typing.Price = typing.High
-									typing.Time = pprev.d.Time
-									p.Segment.add_typing(typing, true)
-									i = pprev.t.I - 1
-									p.Segment.clear()
-									hasnew = true
+									endprice = low
 									case1_seg_ok = true
 									break
 								}
@@ -328,14 +250,8 @@ func (p *Tdatas) ParseSegment() bool {
 									need_wait = false
 
 									typing.Type = BottomTyping
-									typing.High = pprev.d.High
-									typing.Low = pprev.d.Low
 									typing.Price = pprev.d.Low
-									typing.Time = pprev.d.Time
-									p.Segment.add_typing(typing, true)
-									i = pprev.t.I - 1
-									p.Segment.clear()
-									hasnew = true
+									endprice = high
 									case1_seg_ok = true
 									break
 								}
@@ -346,6 +262,13 @@ func (p *Tdatas) ParseSegment() bool {
 							return hasnew
 						}
 						if case1_seg_ok {
+							typing.High = pprev.d.High
+							typing.Low = pprev.d.Low
+							typing.Time = pprev.d.Time
+							p.Segment.add_typing(typing, true, endprice)
+							p.Segment.clear()
+							i = pprev.t.End - 1
+							hasnew = true
 							continue
 						}
 					}
@@ -366,7 +289,7 @@ func (p *Tdatas) ParseSegment() bool {
 		p.Segment.clean()
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
-			i = p.Segment.tp[len(p.Segment.tp)-2].t.I - 1
+			i = p.Segment.tp[len(p.Segment.tp)-2].t.End - 1
 			p.Segment.clear()
 		}
 	}
@@ -381,6 +304,7 @@ func (p *segment_parser) parse_top_bottom() bool {
 	if len(p.tp) < 3 {
 		return false
 	}
+	endprice := 0
 	typing := p.tp[len(p.tp)-2].t
 	a := &p.tp[len(p.tp)-3].d
 	b := &p.tp[len(p.tp)-2].d
@@ -388,9 +312,11 @@ func (p *segment_parser) parse_top_bottom() bool {
 	if typing.Type == UpTyping && IsBottomTyping(a, b, c) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
+		endprice = c.High
 	} else if typing.Type == DownTyping && IsTopTyping(a, b, c) {
 		typing.Price = b.High
 		typing.Type = TopTyping
+		endprice = c.Low
 	} else {
 		return false
 	}
@@ -407,6 +333,7 @@ func (p *segment_parser) parse_top_bottom() bool {
 			}
 		}
 	}
-	p.add_typing(typing, !hasGap(a, b))
+
+	p.add_typing(typing, !hasGap(a, b), endprice)
 	return true
 }
