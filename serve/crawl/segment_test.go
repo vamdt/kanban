@@ -312,7 +312,7 @@ d1
 	test_tdatas_pair{
 		Desc: "Lesson 71 Study Case 2 - 2",
 		Text: `
-            *4
+             4
             /\      6
            /  \    /\        8
           /    \  /  \      /\
