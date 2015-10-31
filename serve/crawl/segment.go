@@ -9,6 +9,7 @@ type segment_parser struct {
 	break_index   int
 	unsure_typing Typing
 	need_sure     bool
+	wait_3end     bool
 }
 
 func (p *segment_parser) add_typing(typing Typing, case1 bool, endprice int) bool {
@@ -24,6 +25,7 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool, endprice int) boo
 	}
 
 	if !case1 {
+		p.wait_3end = true
 		p.need_sure = true
 		p.unsure_typing = typing
 		log.Println("new case2 segment typing", typing.Type, len(p.Data))
@@ -31,6 +33,7 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool, endprice int) boo
 	}
 
 	p.Data = append(p.Data, typing)
+  p.wait_3end = true
 	log.Println("new segment typing", typing.Type, case1, len(p.Data))
 	return true
 }
