@@ -266,7 +266,7 @@ d1
     `,
 	},
 	test_tdatas_pair{
-		Desc: "Lesson 67 Study Case 2 Fig 3, Case 2 standard extend",
+		Desc: "Lesson 67 Study Case 2 Fig 3, A(Case 2) + B + C fail",
 		Text: `
                                       /g5
              g2                      /
