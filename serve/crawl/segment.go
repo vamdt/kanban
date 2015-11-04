@@ -38,6 +38,30 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool, endprice int) boo
 	return true
 }
 
+func (p *segment_parser) is_unsure_typing_fail(a *Tdata) bool {
+	if !p.need_sure {
+		return false
+	}
+
+	switch p.unsure_typing.Type {
+	case BottomTyping:
+		if p.unsure_typing.Low > a.Low {
+			return true
+		}
+	case TopTyping:
+		if p.unsure_typing.High < a.High {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (p *segment_parser) clean_fail_unsure_typing() int {
+	p.need_sure = false
+	return p.unsure_typing.End
+}
+
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.End = i - 2
@@ -249,6 +273,12 @@ func (p *Tdatas) ParseSegment() bool {
 		a.Low = p.Typing.Line[i].Low
 		a.Time = p.Typing.Line[i].Time
 
+		if p.Segment.need_sure && p.Segment.is_unsure_typing_fail(a) {
+			i = p.Segment.clean_fail_unsure_typing()
+			p.Segment.clear()
+			continue
+		}
+
 		//if ok, j := p.need_wait_3end(i, a); ok {
 		//i = j
 		//continue
@@ -299,6 +329,8 @@ func (p *Tdatas) ParseSegment() bool {
 				}
 			}
 			prev.d = *a
+			prev.t.High = prev.d.High
+			prev.t.Low = prev.d.Low
 			prev.t.End = i
 		} else {
 			if ltp > 1 {
