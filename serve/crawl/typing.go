@@ -20,6 +20,7 @@ type Typing struct {
 	Low   int
 	begin int
 	End   int
+  Case1 bool
 }
 
 type TypingSlice []Typing
