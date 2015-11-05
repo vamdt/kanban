@@ -41,6 +41,7 @@ class KLineSegment
         dataset.push d
       last = d
 
+    color = (d, i) -> colors[d.Type] || colors[0]
     g.selectAll('circle')
       .data(dataset)
       .enter()
@@ -48,8 +49,8 @@ class KLineSegment
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
       .attr('r', 6)
-      .style("stroke", (d,i) -> colors[d.Type] || colors[0])
-      .style("fill", '#fff')
+      .style("stroke", color)
+      .style("fill", (d,i) -> if d.Case1 then color(d,i) else '#fff')
       .on('mouseover', (d,i) -> console.log(d,i))
 
 KLine.register_plugin 'segment', KLineSegment
