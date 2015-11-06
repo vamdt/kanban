@@ -35,7 +35,7 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool) bool {
 
 	p.Data = append(p.Data, typing)
 	p.wait_3end = true
-  p.need_sure = false
+	p.need_sure = false
 	log.Println("new case1 segment typing", typing.Type, len(p.Data))
 	return true
 }
@@ -64,6 +64,7 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 	if l := len(p.Data); l > 0 && !p.Data[l-1].Case1 {
 		p.unsure_typing = p.Data[l-1]
 		p.need_sure = true
+		p.Data = p.Data[:l-1]
 	} else {
 		p.need_sure = false
 	}
@@ -280,7 +281,7 @@ func (p *Tdatas) ParseSegment() bool {
 
 		if p.Segment.need_sure && p.Segment.is_unsure_typing_fail(a) {
 			log.Println("found unsure typing fail", i, p.Segment.unsure_typing, a)
-			i = p.Segment.clean_fail_unsure_typing()
+			i = p.Segment.clean_fail_unsure_typing() - 2
 			log.Println("new start", i, "need_sure", p.Segment.need_sure)
 			p.Segment.clear()
 			continue
