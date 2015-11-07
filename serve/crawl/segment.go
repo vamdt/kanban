@@ -112,26 +112,12 @@ func (p *segment_parser) isLineBreak(line, nline *Typing) bool {
 	}
 
 	if p.tp[0].t.Type == UpTyping {
-		if p.tp[ltp-1].d.Low < line.High {
-			if LineContain(&p.tp[ltp-1].t, line) {
-				if p.break_index != ltp-1 {
-					if nline.Low < line.Low {
-						return false
-					}
-				}
-			}
-			return true
+		if line.High > p.tp[ltp-1].d.Low {
+			return line.Low < p.tp[ltp-1].d.Low && line.Low < nline.Low
 		}
 	} else if p.tp[0].t.Type == DownTyping {
-		if p.tp[ltp-1].d.High > line.Low {
-			if LineContain(&p.tp[ltp-1].t, line) {
-				if p.break_index != ltp-1 {
-					if nline.High > line.High {
-						return false
-					}
-				}
-			}
-			return true
+		if line.Low < p.tp[ltp-1].d.High {
+			return line.High > nline.High && line.High > p.tp[ltp-1].d.High
 		}
 	}
 	return false
@@ -356,7 +342,11 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 			isbreak := false
 			if p.Segment.break_index < 0 {
-				isbreak = p.Segment.isLineBreak(&p.Typing.Line[i], nil)
+				if i+1 < l {
+					isbreak = p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
+				} else {
+					return hasnew
+				}
 			}
 			p.Segment.new_node(i, &p.Typing, isbreak)
 		}
