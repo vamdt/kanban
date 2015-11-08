@@ -198,3 +198,8 @@ func TestMinute30end(t *testing.T) {
 		}
 	}
 }
+
+func load_test_desc_text_files() []test_tdatas_pair {
+	var tests = []test_tdatas_pair{}
+	return tests
+}

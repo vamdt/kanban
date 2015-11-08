@@ -2,11 +2,14 @@ package crawl
 
 import (
 	"bytes"
+	"flag"
 	"log"
 	"sort"
 	"strings"
 	"testing"
 )
+
+var segment_files_flag = flag.String("segments", "", "the segment test files")
 
 func text2Segment(text []byte) (tline, segment []Typing) {
 	base := 5
