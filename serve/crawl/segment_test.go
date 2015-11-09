@@ -220,6 +220,7 @@ func TestParseSegment(t *testing.T) {
 	if tests_segments == nil {
 		t.Fatal("load test files fail, pattern:", pattern)
 	}
+	t.Logf("load %d test files, pattern: %s", len(tests_segments), pattern)
 	for i, d := range tests_segments {
 		lines, segments := text2Segment([]byte(d.Text))
 		td := Tdatas{}

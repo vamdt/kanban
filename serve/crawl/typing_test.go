@@ -2,9 +2,13 @@ package crawl
 
 import (
 	"bytes"
+	"flag"
 	"sort"
 	"testing"
 )
+
+var line_files_flag = flag.String("lines", "", "the line test files")
+var typing_files_flag = flag.String("typings", "", "the typing test files")
 
 func text2Tdatas(text []byte) Tdatas {
 	tds := Tdatas{}
@@ -13,8 +17,10 @@ func text2Tdatas(text []byte) Tdatas {
 	typing := []Typing{}
 	tline := []Typing{}
 	lines := bytes.Split(text, []byte("\n"))
-	lines = lines[1 : len(lines)-1]
 	for _, l := range lines {
+    if bytes.Count(l, []byte(" ")) == len(l) {
+      continue
+    }
 		if bytes.IndexAny(l, "|-_") > -1 {
 			for i, c := 0, len(td); i < c; i++ {
 				if td[i].High > 0 {
@@ -333,176 +339,6 @@ func TestContain(t *testing.T) {
 	}
 }
 
-type test_tdatas_pair struct {
-	Desc string
-	Text string
-}
-
-var tests_tdatas = []test_tdatas_pair{
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 1, in the 3 k lines, the High of the k is the highest, and also the Low",
-		Text: `
- ^
- |
- ||
-|||
-| |
-|
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 2, in the 3 k line, the Low of the k is the lowest, and also the High",
-		Text: `
-|
-| |
-|||
- ||
- |
- .
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 3, the k line of the typing should not contain in another typing",
-		Text: `
- ^
- |
- |
- ||
-||| |
-| |||
-|  ||
-   |
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 6, the contain-ship of TopTyping",
-		Text: `
- ^
- |
- ||
- |||
-|| |
-|  ||
-|   |
-    |
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 6, the contain-ship of BottomTyping",
-		Text: `
-|
-|  |
-|| |
- |||
- ||
- |
- .
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 4, there should be 3 k lines between the TopTyping and the BottomTyping",
-		Text: `
- ^
- |
- ||
-|||| |
-| ||||
-|  |||
-|   |
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 62 Fig 5, there should be 3 k lines between the TopTyping and the BottomTyping",
-		Text: `
- ^
- |
- ||
-||||  |
-| |||||
-|  ||||
-|   ||
-     |
-     .
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
-		Text: `
-         ^
-         |
-     |   |
-     ||  ||
-    ||| |||||
-    ||||| |||||       |
-   ||||||  ||||||    ||
-   |||||     | |||||||
- ||| | |        ||||||
-|||  | |         |
-||               .
-|
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
-		Text: `
-     ^
-     |   ^
-     |   |
-     ||  ||
-    ||| |||||
-    ||||| |||||       |
-   ||||||  ||||||    ||
-   |||||     | |||||||
- ||| | |        ||||||
-|||  | |         |
-||               .
-|
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 77 Study Case 1, Top should have a part higher then Bottom",
-		Text: `
-   |
-| ||
-||||
-||||  |
-|||| |||
-||| ||||
- |  || |
- |  |
- .
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 65 Fig 4, case TopTop, should skip the first Top",
-		Text: `
-       ^
-       |
-      |||
-   | || |
-  ||||
- || |
-||
-|
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 77 划分笔的步骤二, case BottomBottom the first Bottom should not higher then the second Bottom",
-		Text: `
-          ^
-          |
-         |||
-        |||||
-       |||||||
-| | | |||  ||| |
-|||||||     ||||
-||||||      ||||
- |   |        |
- v   v        v
-    `,
-	},
-}
-
 func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
 	if len(a) != len(b) {
 		return false
@@ -519,6 +355,15 @@ func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
 }
 
 func TestParseTyping(t *testing.T) {
+	pattern := *typing_files_flag
+	if len(pattern) < 1 {
+		pattern = "**/*.typing"
+	}
+	tests_tdatas := load_test_desc_text_files(pattern)
+	if tests_tdatas == nil {
+		t.Fatal("load test files fail, pattern:", pattern)
+	}
+	t.Logf("load %d test files, pattern: %s", len(tests_tdatas), pattern)
 	for i, d := range tests_tdatas {
 		exp := text2Tdatas([]byte(d.Text))
 		td := Tdatas{Data: exp.Data}
@@ -527,7 +372,7 @@ func TestParseTyping(t *testing.T) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", d.Desc,
-				"\nText", d.Text,
+				"\nText", "\n"+d.Text,
 				"\nexpected", exp.Typing,
 				"\ngot", td.Typing,
 			)
@@ -535,45 +380,16 @@ func TestParseTyping(t *testing.T) {
 	}
 }
 
-var tests_lines = []test_tdatas_pair{
-	test_tdatas_pair{
-		Desc: "Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top",
-		Text: `
-     L
-     ^
-     |   ^
-     |   |
-     ||  ||
-    ||| |||||
-    ||||| |||||       |
-   ||||||  ||||||    |||
-   |||||     | ||||||| |
- ||| | |        ||||||
-|||  | |         |
-||               v
-|                l
-    `,
-	},
-	test_tdatas_pair{
-		Desc: "Lesson 77 划分笔的步骤二, case BottomBottom the first Bottom should not higher then the second Bottom",
-		Text: `
-          L
-          ^
-          |
-         |||
-        |||||
-       |||||||
-| | | |||  ||| |
-|||||||     ||||
-||||||       |||
- |   |        |
- v   v        v
- l
-    `,
-	},
-}
-
 func TestLinkTyping(t *testing.T) {
+	pattern := *line_files_flag
+	if len(pattern) < 1 {
+		pattern = "**/*.line"
+	}
+	tests_lines := load_test_desc_text_files(pattern)
+	if tests_lines == nil {
+		t.Fatal("load test files fail, pattern:", pattern)
+	}
+	t.Logf("load %d test files, pattern: %s", len(tests_lines), pattern)
 	for i, d := range tests_lines {
 		exp := text2Tdatas([]byte(d.Text))
 		td := Tdatas{Data: exp.Data}
@@ -583,7 +399,7 @@ func TestLinkTyping(t *testing.T) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", d.Desc,
-				"\nText", d.Text,
+				"\nText", "\n"+d.Text,
 				"\nexpected", exp.Typing.Line,
 				"\ngot", td.Typing.Line,
 			)
