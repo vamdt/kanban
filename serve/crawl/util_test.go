@@ -1,6 +1,9 @@
 package crawl
 
 import (
+	"bytes"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -199,7 +202,37 @@ func TestMinute30end(t *testing.T) {
 	}
 }
 
-func load_test_desc_text_files() []test_tdatas_pair {
-	var tests = []test_tdatas_pair{}
-	return tests
+type desc_text_pair struct {
+	Desc string
+	Text string
+}
+
+func load_test_desc_text_files(pattern string) []desc_text_pair {
+	if len(pattern) < 1 {
+		return nil
+	}
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil
+	}
+
+	var sets = []desc_text_pair{}
+	for _, f := range files {
+		content, err := ioutil.ReadFile(f)
+		if err != nil {
+			continue
+		}
+		content = bytes.TrimSpace(content)
+		infos := bytes.SplitN(content, []byte("\n\n"), 3)
+		if infos == nil || len(infos) < 2 {
+			continue
+		}
+		t := desc_text_pair{Desc: string(infos[0]), Text: string(infos[1])}
+		sets = append(sets, t)
+	}
+
+	if len(sets) < 1 {
+		return nil
+	}
+	return sets
 }

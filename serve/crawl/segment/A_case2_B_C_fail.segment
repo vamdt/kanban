@@ -1,0 +1,14 @@
+Lesson 67 Study Case 2 Fig 3, A(Case 2) + B + C fail
+
+                                      /g5
+             g2                      /
+            /\                      /
+           /  \      g3            /
+          /    \    /\            /
+         /      \  /  \      g4  /
+        /        \/    \    /\  /
+   g1  /          d3    \  /  \/
+  /\  /                  \/    d5
+ /  \/                   d4
+/    d2
+d1

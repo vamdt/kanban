@@ -1,0 +1,13 @@
+Lesson 67 Study Case 2 Fig 2, Case 2 standard ensure
+
+            *g2
+            /\                      g5
+           /  \      g3            /
+          /    \    /\            /
+         /      \  /  \      g4  /
+        /        \/    \    /\  /
+   g1  /          d3    \  /  \/
+  /\  /                  \/    d5
+ /  \/                   *d4
+/    d2
+d1
