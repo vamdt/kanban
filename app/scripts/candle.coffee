@@ -1,3 +1,4 @@
+css = require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 KLineMas = require './mas'
@@ -36,19 +37,19 @@ class KLineCandle
     tips = @_ui.tips
     show = (d, i) ->
       tips.html("#{formatDate(d.date)}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
-    svg.selectAll("rect.candle").remove()
-    svg.selectAll("line.candle").remove()
+    svg.selectAll("rect."+css.candle).remove()
+    svg.selectAll("line."+css.candle).remove()
 
     nc = @root.param 'nc'
     if nc
       return
     ocl = @root.param 'ocl'
     if not ocl
-      svg.selectAll("rect.candle")
+      svg.selectAll("rect."+css.candle)
         .data(data)
         .enter()
         .append("rect")
-        .attr("class", "candle")
+        .attr("class", css.candle)
         .attr("x", (d, i) -> x(i) - candleWidth / 2)
         .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
         .attr("width", (d, i) -> candleWidth)
@@ -57,11 +58,11 @@ class KLineCandle
         .attr("fill", kColor)
         .on('mouseover', (d, i) -> show d, i)
 
-    svg.selectAll("line.candle")
+    svg.selectAll("line."+css.candle)
       .data(data)
       .enter()
       .append("line")
-      .attr("class", "candle")
+      .attr("class", css.candle)
       .style("stroke", kColor)
       .style("stroke-width", "1")
       .attr("x1", (d, i) -> x(i))
@@ -71,6 +72,6 @@ class KLineCandle
       .on('mouseover', (d, i) -> show d, i)
     opacity = @root.param 'opacity'
     if opacity
-      svg.selectAll('.candle').style('opacity', opacity)
+      svg.selectAll('.'+css.candle).style('opacity', opacity)
 
 KLine.register_plugin 'candle', KLineCandle

@@ -1,3 +1,4 @@
+css = require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 defaults =
@@ -20,10 +21,10 @@ class KLineMas
     for n,ma of @options
       interval = +ma.interval
 
-      line = svg.select("path.line.mas.ma#{interval}")
+      line = svg.select("path.#{css.line}.mas.ma#{interval}")
       if line.empty()
         line = svg.append("path")
-          .attr("class", "line mas ma#{interval}")
+          .attr("class", "#{css.line} mas ma#{interval}")
       line.attr("clip-path", "url(#clip)")
         .style("stroke", ma.color)
         .style("stroke-width", "1")
@@ -32,7 +33,7 @@ class KLineMas
     svg = @svg
     for n,ma of @options
       interval = +ma.interval
-      e = svg.select("path.line.mas.ma#{interval}")
+      e = svg.select("path.#{css.line}.mas.ma#{interval}")
       e.data([data])
       @drawMA(data, interval, e)
 

@@ -1,3 +1,4 @@
+css = require 'main.css'
 d3 = require 'd3'
 defaults =
   container: 'body'
@@ -152,12 +153,12 @@ class KLine
       .tickFormat(fmtCent)
 
     svg.append("g")
-      .attr("class", "x axis")
+      .attr("class", "x " + css.axis)
       .attr("transform", "translate(0, #{height})")
       .call(xAxis)
 
     svg.append("g")
-      .attr("class", "y axis")
+      .attr("class", "y " + css.axis)
       .call(yAxis)
 
     dragmove = =>
@@ -180,7 +181,7 @@ class KLine
     drag = d3.behavior.drag().on("drag", dragmove)
 
     svg.append("rect")
-      .attr("class", "pane")
+      .attr("class", css.pane)
       .attr("width", width)
       .attr("height", height)
       .call(drag)
@@ -196,8 +197,8 @@ class KLine
     @update data, @_datasel, @_dataset
 
   updateAxis: ->
-    @_ui.svg.select(".x.axis").call(@_ui.xAxis)
-    @_ui.svg.select(".y.axis").call(@_ui.yAxis)
+    @_ui.svg.select(".x.#{css.axis}").call(@_ui.xAxis)
+    @_ui.svg.select(".y.#{css.axis}").call(@_ui.yAxis)
 
   update: (data, datasel, dataset) ->
     @updateAxis()
