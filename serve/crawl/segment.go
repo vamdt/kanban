@@ -167,6 +167,27 @@ func (p *segment_parser) handle_special_case1(i int, a *Tdata) (bool, int) {
 	return case1_seg_ok, typing.End - 1
 }
 
+func merge_contain_node(prev *typing_parser_node, a *Tdata, i int) {
+	if prev.t.Type == UpTyping {
+		a = DownContainMerge(&prev.d, a)
+		if prev.d.Low != a.Low {
+			prev.t.I = i
+		}
+	} else {
+		if prev.t.Type != DownTyping {
+			log.Panicf("prev should be a DownTyping line %+v", prev)
+		}
+		a = UpContainMerge(&prev.d, a)
+		if prev.d.High != a.High {
+			prev.t.I = i
+		}
+	}
+	prev.d = *a
+	prev.t.High = prev.d.High
+	prev.t.Low = prev.d.Low
+	prev.t.End = i
+}
+
 func need_skip_line(prev *typing_parser_node, a *Tdata) bool {
 	if prev.t.Type == DownTyping && a.High < prev.d.High && a.Low < prev.d.Low {
 		return true
@@ -308,24 +329,8 @@ func (p *Tdatas) ParseSegment() bool {
 				}
 			}
 
-			if prev.t.Type == UpTyping {
-				a = DownContainMerge(&prev.d, a)
-				if prev.d.Low != a.Low {
-					prev.t.I = i
-				}
-			} else {
-				if prev.t.Type != DownTyping {
-					log.Panicf("prev should be a DownTyping line %+v", prev)
-				}
-				a = UpContainMerge(&prev.d, a)
-				if prev.d.High != a.High {
-					prev.t.I = i
-				}
-			}
-			prev.d = *a
-			prev.t.High = prev.d.High
-			prev.t.Low = prev.d.Low
-			prev.t.End = i
+			merge_contain_node(prev, a, i)
+			continue
 		} else {
 			if ltp > 1 {
 				if ok, j := p.Segment.handle_special_case1(i, a); ok {
