@@ -23,12 +23,12 @@ func init() {
 
 type Stock struct {
 	Id        string `json:"id"`
-	M1s       M1s    `json:"m1s"`
-	M5s       M5s    `json:"m5s"`
-	M30s      M30s   `json:"m30s"`
-	Days      Days   `json:"days"`
-	Weeks     Weeks  `json:"weeks"`
-	Months    Months `json:"months"`
+	M1s       Tdatas `json:"m1s"`
+	M5s       Tdatas `json:"m5s"`
+	M30s      Tdatas `json:"m30s"`
+	Days      Tdatas `json:"days"`
+	Weeks     Tdatas `json:"weeks"`
+	Months    Tdatas `json:"months"`
 	Ticks     Ticks  `json:"-"`
 	last_tick RealtimeTick
 	hash      int
@@ -213,9 +213,9 @@ func (p *Stock) Merge() {
 		p.M1s.Macd()
 		p.M5s.Macd()
 		p.M30s.Macd()
-		p.M1s.ParseChan()
-		//p.M5s.ParseChan()
-		//p.M30s.ParseChan()
+		p.M1s.ParseChan(nil)
+		p.M5s.ParseChan(&p.M1s)
+		p.M30s.ParseChan(&p.M5s)
 	}()
 
 	wg.Add(1)
@@ -226,22 +226,28 @@ func (p *Stock) Merge() {
 		p.Days.Macd()
 		p.Weeks.Macd()
 		p.Months.Macd()
-		//p.Days.ParseChan()
-		//p.Weeks.ParseChan()
-		//p.Months.ParseChan()
 	}()
 
 	wg.Wait()
+	p.Days.ParseChan(&p.M30s)
+	p.Weeks.ParseChan(&p.Days)
+	p.Months.ParseChan(&p.Weeks)
 }
 
-func (p *Tdatas) ParseChan() {
+func (p *Tdatas) ParseChan(base *Tdatas) {
 	if !p.ParseTyping() {
+		return
+	}
+	if base != nil {
 		return
 	}
 	if !p.Typing.LinkTyping() {
 		return
 	}
 	if !p.ParseSegment() {
+		return
+	}
+	if !p.Segment.LinkTyping() {
 		return
 	}
 }
@@ -357,7 +363,7 @@ func (p *Stock) Ticks_update(db *mgo.Database) int {
 }
 
 func (p *Stock) get_latest_time_from_db(c *mgo.Collection) time.Time {
-	d := Day{}
+	d := Tdata{}
 	err := c.Find(nil).Sort("-_id").Limit(1).One(&d)
 	if err != nil {
 		log.Println("find fail", err)

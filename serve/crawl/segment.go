@@ -3,8 +3,7 @@ package crawl
 import "log"
 
 type segment_parser struct {
-	Data []Typing
-	tp   []typing_parser_node
+	typing_parser
 
 	break_index   int
 	unsure_typing Typing

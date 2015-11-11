@@ -7,30 +7,6 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-type Day struct {
-	Tdata
-}
-
-type Week struct {
-	Tdata
-}
-
-type Month struct {
-	Tdata
-}
-
-type Days struct {
-	Tdatas
-}
-
-type Weeks struct {
-	Tdatas
-}
-
-type Months struct {
-	Tdatas
-}
-
 func Day_collection_name(id string) string {
 	return fmt.Sprintf("%s.tdata.kday", id)
 }

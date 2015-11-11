@@ -6,30 +6,6 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-type M1 struct {
-	Tdata
-}
-
-type M5 struct {
-	Tdata
-}
-
-type M30 struct {
-	Tdata
-}
-
-type M1s struct {
-	Tdatas
-}
-
-type M5s struct {
-	Tdatas
-}
-
-type M30s struct {
-	Tdatas
-}
-
 func M_sina_url(id, mins string) string {
 	return fmt.Sprintf("http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=%s&scale=%s&ma=no&datalen=1000",
 		id, mins)
