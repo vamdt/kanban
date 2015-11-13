@@ -37,6 +37,8 @@ type Tdatas struct {
 	Segment segment_parser
 	Hub     []Typing
 	EndTime time.Time
+
+	min_hub_height int
 }
 
 func (p *Tdatas) Load(c *mgo.Collection) {

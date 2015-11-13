@@ -42,9 +42,19 @@ type Stocks struct {
 	rwmutex sync.RWMutex
 	db      *mgo.Database
 	ch      chan *Stock
+
+	min_hub_height int
+}
+
+func (p *Stocks) Init() {
+	log.Println("stocks init")
+	p.min_hub_height = 10
 }
 
 func (p *Stocks) Run() {
+	if p.min_hub_height < 1 {
+		p.min_hub_height = 1
+	}
 	go p.update()
 	for {
 		if !IsTradeTime(time.Now()) {
@@ -96,6 +106,7 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 		return i, p.stocks[i], false
 	}
 
+	s.set_min_hub_height(p.min_hub_height)
 	if i < 1 {
 		p.stocks = append(PStockSlice{s}, p.stocks...)
 		return 0, s, true
@@ -546,4 +557,13 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		return true
 	}
 	return false
+}
+
+func (p *Stock) set_min_hub_height(h int) {
+	p.M1s.min_hub_height = h
+	p.M5s.min_hub_height = h
+	p.M30s.min_hub_height = h
+	p.Days.min_hub_height = h
+	p.Weeks.min_hub_height = h
+	p.Months.min_hub_height = h
 }
