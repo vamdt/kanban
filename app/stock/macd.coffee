@@ -1,4 +1,4 @@
-css = require 'main.css'
+require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 
@@ -40,21 +40,21 @@ class KLineMacd
       .tickFormat(fmtMacd)
 
     svg.append("g")
-      .attr("class", "y " + css.axis)
+      .attr("class", "y axis")
       .call(yAxis)
 
-    ldiff = svg.select("path.diff."+css.line)
+    ldiff = svg.select("path.diff.line")
     if ldiff.empty()
       ldiff = svg.append("path")
-        .attr("class", css.line + " diff")
+        .attr("class", "line diff")
     ldiff.attr("clip-path", "url(#clip)")
       .style("stroke", 'silver')
       .style("stroke-width", "1")
 
-    ldea = svg.select("path.dea."+css.line)
+    ldea = svg.select("path.dea.line")
     if ldea.empty()
       ldea = svg.append("path")
-        .attr("class", css.line+ " dea")
+        .attr("class", "line dea")
     ldea.attr("clip-path", "url(#clip)")
       .style("stroke", 'gold')
       .style("stroke-width", "1")
@@ -63,7 +63,7 @@ class KLineMacd
     min = d3.min data, (d) -> Math.min(d.DIFF, d.DEA, d.MACD)
     max = d3.max data, (d) -> Math.max(d.DIFF, d.DEA, d.MACD)
     @y.domain([min, max])
-    @svg.select(".y."+css.axis).call(@yAxis)
+    @svg.select(".y.axis").call(@yAxis)
 
   update: (data) ->
     x = @root._ui.x
@@ -84,7 +84,7 @@ class KLineMacd
       .attr("stroke", bColor)
       .attr("fill", bColor)
 
-    ldiff = svg.select("path.diff."+css.line)
+    ldiff = svg.select("path.diff.line")
     ldiff.data([data])
     line = d3.svg.line()
       .x((d, i) -> x i)
@@ -92,7 +92,7 @@ class KLineMacd
 
     ldiff.attr("d", line)
 
-    ldea = svg.select("path.dea."+css.line)
+    ldea = svg.select("path.dea.line")
     ldea.data([data])
     line = d3.svg.line()
       .x((d, i) -> x i)

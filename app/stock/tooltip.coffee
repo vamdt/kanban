@@ -1,4 +1,4 @@
-css = require 'main.css'
+require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 defaults =
@@ -44,7 +44,7 @@ class KLineToolTip
     svg = @root._ui.svg
     container = @root._ui.container
     @root._ui.tips = container.append("div")
-      .attr("class", css.tooltip)
+      .attr("class", "tooltip")
       .attr("id", "tooltip")
     for k,v of @options.style
       @root._ui.tips.style k, v

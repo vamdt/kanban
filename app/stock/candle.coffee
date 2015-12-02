@@ -1,4 +1,4 @@
-css = require 'main.css'
+require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 KLineMas = require './mas'
@@ -20,7 +20,7 @@ class KLineCandle
     container = @root._ui.container
     @options.width = +@options.width || 4
     @root.options.size = Math.floor @root.options.width / (1 + @options.width)
-    nmas = @root.getQuery 'nmas'
+    nmas = @root.param 'nmas'
     if nmas
       return
     mas = new KLineMas @root, svg, @root._ui.y, (d) -> d.close
@@ -37,19 +37,19 @@ class KLineCandle
     tips = @_ui.tips
     show = (d, i) ->
       tips.html("#{formatDate(d.date)}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
-    svg.selectAll("rect."+css.candle).remove()
-    svg.selectAll("line."+css.candle).remove()
+    svg.selectAll("rect.candle").remove()
+    svg.selectAll("line.candle").remove()
 
     nc = @root.param 'nc'
     if nc
       return
     ocl = @root.param 'ocl'
     if not ocl
-      svg.selectAll("rect."+css.candle)
+      svg.selectAll("rect.candle")
         .data(data)
         .enter()
         .append("rect")
-        .attr("class", css.candle)
+        .attr("class", "candle")
         .attr("x", (d, i) -> x(i) - candleWidth / 2)
         .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
         .attr("width", (d, i) -> candleWidth)
@@ -58,11 +58,11 @@ class KLineCandle
         .attr("fill", kColor)
         .on('mouseover', (d, i) -> show d, i)
 
-    svg.selectAll("line."+css.candle)
+    svg.selectAll("line.candle")
       .data(data)
       .enter()
       .append("line")
-      .attr("class", css.candle)
+      .attr("class", "candle")
       .style("stroke", kColor)
       .style("stroke-width", "1")
       .attr("x1", (d, i) -> x(i))
@@ -72,6 +72,6 @@ class KLineCandle
       .on('mouseover', (d, i) -> show d, i)
     opacity = @root.param 'opacity'
     if opacity
-      svg.selectAll('.'+css.candle).style('opacity', opacity)
+      svg.selectAll('.candle').style('opacity', opacity)
 
 KLine.register_plugin 'candle', KLineCandle

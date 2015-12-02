@@ -1,7 +1,10 @@
 {
   "scripts": {
     "s": "webpack-dev-server --progress --colors --content-base dist/static",
-    "build": "rm -rf dist;mkdir -p dist/bin; cp -r conf dist; go build -o dist/bin/kanpan ./serve && webpack -p"
+    "copy-static": "mkdir -p dist/static; cp app/index.html app/apple-touch-icon.png app/*.ico app/robots.txt dist/static",
+    "build-bin": "go build -o dist/bin/kanpan ./serve",
+    "build-static": "webpack -p",
+    "build": "rm -rf dist;mkdir -p dist/bin; cp -r conf dist; npm run copy-static; npm run build-bin && npm run build-static "
   },
   "engines": {
     "node": ">=0.12.0"
@@ -18,6 +21,7 @@
     "file-loader": "^0.8.4",
     "postcss-color-rebeccapurple": "^2.0.0",
     "postcss-loader": "^0.7.0",
+    "purecss": "^0.6.0",
     "style-loader": "^0.13.0",
     "url-loader": "^0.5.6",
     "vue": "^1.0.4",

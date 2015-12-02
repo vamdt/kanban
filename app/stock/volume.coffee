@@ -1,4 +1,4 @@
-css = require 'main.css'
+require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 KLineMas = require './mas'
@@ -41,12 +41,12 @@ class KLineVolume
       .tickFormat(fmtVolume)
 
     svg.append("g")
-      .attr("class", "y #{css.axis}")
+      .attr("class", "y axis")
       .call(yAxis)
 
   updateAxis: (data) ->
     @y.domain([0, d3.max(data, (d)->d.volume)])
-    @svg.select(".y.#{css.axis}").call(@yAxis)
+    @svg.select(".y.axis").call(@yAxis)
 
   update: (data) ->
     kColor = (d, i) -> KLine.kColor d, i, data

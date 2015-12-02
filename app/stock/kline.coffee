@@ -1,4 +1,4 @@
-css = require 'main.css'
+require 'main.css'
 d3 = require 'd3'
 defaults =
   container: 'body'
@@ -81,6 +81,7 @@ class KLine
         return @_param
 
   init: ->
+    @stop()
     @initUI()
     @initPlugins()
 
@@ -92,6 +93,7 @@ class KLine
     @plugins.push plugin
 
   initPlugins: ->
+    @plugins = []
     for n,c of Plugins
       plugin = new c @
       plugin.init()
@@ -99,6 +101,7 @@ class KLine
 
   initUI: ->
     container = @_ui.container = d3.select @options.container || 'body'
+    container.html('')
     width = parseInt container.style('width')
     if width < 1
       width = window.screen.availWidth
@@ -153,12 +156,12 @@ class KLine
       .tickFormat(fmtCent)
 
     svg.append("g")
-      .attr("class", "x " + css.axis)
+      .attr("class", "x axis")
       .attr("transform", "translate(0, #{height})")
       .call(xAxis)
 
     svg.append("g")
-      .attr("class", "y " + css.axis)
+      .attr("class", "y axis")
       .call(yAxis)
 
     dragmove = =>
@@ -181,7 +184,7 @@ class KLine
     drag = d3.behavior.drag().on("drag", dragmove)
 
     svg.append("rect")
-      .attr("class", css.pane)
+      .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
       .call(drag)
@@ -197,8 +200,8 @@ class KLine
     @update data, @_datasel, @_dataset
 
   updateAxis: ->
-    @_ui.svg.select(".x.#{css.axis}").call(@_ui.xAxis)
-    @_ui.svg.select(".y.#{css.axis}").call(@_ui.yAxis)
+    @_ui.svg.select(".x.axis").call(@_ui.xAxis)
+    @_ui.svg.select(".y.axis").call(@_ui.yAxis)
 
   update: (data, datasel, dataset) ->
     @updateAxis()
@@ -217,6 +220,11 @@ class KLine
     io = {}
     handles = {}
     @io = io
+
+    ev =
+      s: @param 's'
+      k: @param 'k'
+      fq: @param 'fq'
 
     connect = ->
       ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
@@ -237,14 +245,11 @@ class KLine
       ws.onerror = (evt) ->
         io.trigger('error', evt)
 
-    ev =
-      s: @param 's'
-      k: @param 'k'
-      fq: @param 'fq'
-
     io.on = (event, cb) ->
       handles[event] = handles[event] || []
-      handles[event].push(cb)
+      i = handles[event].indexOf(cb)
+      if i < 0
+        handles[event].push(cb)
 
     io.off = (event, cb) ->
       return unless handles[event]
@@ -268,9 +273,17 @@ class KLine
 
     if done
       @io.on 'ready', done
-    io.on 'close', (evt) ->
+    onclose = (evt) ->
+      console.log evt
       setTimeout((->connect()), 1000)
-    connect()
+
+    io.on 'close', onclose
+
+    io.close = ->
+      io.off 'close', onclose
+      io.ws.close()
+
+    io.connect = connect
 
   on_event: (event, cb) ->
     @init_websocket =>
@@ -280,12 +293,12 @@ class KLine
       ename = [s,k,fq,event].join('.')
       @io.on(ename, cb)
 
-  getQuery: (key) ->
-    for i in location.search.slice(1).split "&"
-      ar = i.split "="
-      if ar[0] == key
-        return ar[1]
-    ''
+  start: ->
+    @io.connect()
+  stop: ->
+    if @io
+      @io.close()
+      @io = off
 
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
