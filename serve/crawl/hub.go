@@ -22,7 +22,13 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Hub); l > 0 {
-		start = p.Hub[l-1].I + 1
+		end := p.Hub[l-1].End
+		for i := len(line) - 1; i > -1; i-- {
+			if end == line[i].End {
+				start = i
+				break
+			}
+		}
 	}
 
 	for i, l := start, len(line); i+2 < l; i++ {
@@ -37,9 +43,9 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		if minHigh-maxLow < p.min_hub_height {
 			continue
 		}
-		hub := Typing{High: minHigh, Low: maxLow}
-		hub.I = i + 2
-		hub.begin = a.begin
+		hub := *a
+		hub.High = minHigh
+		hub.Low = maxLow
 		hub.End = c.End
 		p.Hub = append(p.Hub, hub)
 	}

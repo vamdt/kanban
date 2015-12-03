@@ -138,9 +138,15 @@ class KLine
         return d3.time.format("%Y-%m-%d")(data[i].date)
       if data[i].date == data[prevTick].date
         return ''
-      if (+data[i].date) - (+data[prevTick].date) < 86400000
+      if data[i].date.getYear() isnt data[prevTick].date.getYear()
+        return d3.time.format("%Y-%m-%d")(data[i].date)
+      if data[i].date.getMonth() isnt data[prevTick].date.getMonth()
+        return d3.time.format("%m-%d")(data[i].date)
+      if data[i].date.getDay() isnt data[prevTick].date.getDay()
+        return d3.time.format("%d %H:%M")(data[i].date)
+      if data[i].date.getHours() isnt data[prevTick].date.getHours()
         return d3.time.format("%H:%M")(data[i].date)
-      d3.time.format("%Y-%m-%d")(data[i].date)
+      d3.time.format(":%M")(data[i].date)
 
     xAxis = @_ui.xAxis = d3.svg.axis()
       .scale(x)

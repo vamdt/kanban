@@ -261,6 +261,7 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 	if !p.Segment.LinkTyping() {
 		return
 	}
+	p.ParseHub(base)
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
