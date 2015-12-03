@@ -300,6 +300,16 @@ class KLine
       @io.close()
       @io = off
 
+  notification: (id, msg) ->
+    unless window.Notification
+      console.log('bro, your browser is not support notification')
+      return
+    Notification.requestPermission (permission) ->
+      config =
+        body: msg
+        dir:'auto'
+      notification = new Notification(id, config)
+
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
