@@ -10,9 +10,12 @@ router = new VueRouter()
 
 App = require('./components/app.vue')
 Stock = require('./components/stock.vue')
+Settings = require('./components/settings.vue')
 
 router.map
   '/s/:sid/:k':
     component: Stock
+  '/settings':
+    component: Settings
 
 router.start(App, '#app')

@@ -39,6 +39,11 @@ module.exports = {
     { test: /\.coffee$/, loader: "coffee-loader?sourceMap" }
     ]
   },
+  vue: {
+    loaders: {
+      js: 'coffee'
+    }
+  },
   postcss: [
     require('autoprefixer'),
     require('postcss-color-rebeccapurple')

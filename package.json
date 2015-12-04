@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "s": "webpack-dev-server --progress --colors --content-base dist/static",
     "copy-static": "mkdir -p dist/static; cp app/index.html app/apple-touch-icon.png app/*.ico app/robots.txt dist/static",
     "build-bin": "go build -o dist/bin/kanpan ./serve",
     "build-static": "webpack -p",
