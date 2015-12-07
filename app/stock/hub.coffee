@@ -56,4 +56,13 @@ class KLineHub
       .attr("fill", 'steelblue')
       .style("fill-opacity", ".1")
 
+    g.selectAll("text")
+      .data(dataset)
+      .enter()
+      .append("text")
+      .attr("x", (d, i) -> x(d.i))
+      .attr("y", (d, i) -> y(d.High)+10)
+      .attr("fill", 'black')
+      .text('1')
+
 KLine.register_plugin 'hub', KLineHub
