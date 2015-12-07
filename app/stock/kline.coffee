@@ -45,6 +45,17 @@ class KLine
     @_param = {}
     @options.size = +@options.size || 100
 
+  update_size: (size, left) ->
+    @options.size = size || @options.size
+    atrightedge = @_left == @_max_left
+    @_max_left = Math.max(0, @_data.length - 1 - @options.size)
+
+    if atrightedge
+      @_left = @_max_left
+    else
+      left = left || @_left
+      @_left = Math.min(@_max_left, Math.max(0, left))
+
   data: (data) ->
     if not arguments.length
       return @_data.slice(@_left, @_left+@options.size+1)
@@ -65,10 +76,7 @@ class KLine
     data.forEach (d) ->
       d.date = parseDate(d.time)
     @_data = data
-    if @_left == @_max_left
-      @_left = -1
-    @_max_left = Math.max(0, data.length - @options.size)
-    @_left = @_max_left if @_left < 0
+    @update_size()
 
   param: (p) ->
     switch typeof p
@@ -170,30 +178,42 @@ class KLine
       .attr("class", "y axis")
       .call(yAxis)
 
-    dragmove = =>
-      if d3.event.dx == 0
-        return
-      @_left = Math.min(@_max_left, Math.max(0, @_left - d3.event.dx))
-      if @defer_draw_t
-        clearTimeout @defer_draw_t
-        @defer_draw_t = undefined
+    zoomed = =>
+      n = zoom.scale()
+      @zs = @zs || n
+      o = @zs
+      @zs = n
 
-      if @defer_ttl
-        @defer_ttl--
-      if @defer_ttl < 1
-        @defer_ttl = 20
-        @draw()
+      x1 = zoom.translate()[0]
+      @zx = @zx || 0
+      x0 = @zx
+      @zx = x1
+
+      nsize = @options.size
+      nleft = @_left
+      if n < o
+        nsize = parseInt nsize * 1.1
+      else if n > o
+        nsize = parseInt nsize * 0.9
       else
-        defer_draw = => @draw()
-        @defer_draw_t = setTimeout defer_draw, 100
-
-    drag = d3.behavior.drag().on("drag", dragmove)
+        if x0 > x1
+          nleft = nleft + 20
+        else if x0 < x1
+          nleft = nleft - 20
+        else
+          return
+      @update_size(nsize, nleft)
+      fn = => @draw()
+      d3.timer fn, 200
+    zoom = d3.behavior.zoom()
+      .on("zoom", zoomed)
 
     svg.append("rect")
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
-      .call(drag)
+    svg
+      .call(zoom)
 
   draw: ->
     x = @_ui.x
