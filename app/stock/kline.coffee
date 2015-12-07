@@ -47,13 +47,13 @@ class KLine
 
   update_size: (size, left) ->
     @options.size = size || @options.size
+    left = left || @_left
     atrightedge = @_left == @_max_left
     @_max_left = Math.max(0, @_data.length - 1 - @options.size)
 
-    if atrightedge
+    if atrightedge and left is @_left
       @_left = @_max_left
     else
-      left = left || @_left
       @_left = Math.min(@_max_left, Math.max(0, left))
 
   data: (data) ->
@@ -203,8 +203,10 @@ class KLine
         else
           return
       @update_size(nsize, nleft)
+
       fn = => @draw()
-      d3.timer fn, 200
+      d3.timer fn
+
     zoom = d3.behavior.zoom()
       .on("zoom", zoomed)
 
@@ -212,7 +214,6 @@ class KLine
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
-    svg
       .call(zoom)
 
   draw: ->

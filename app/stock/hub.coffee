@@ -9,7 +9,6 @@ class KLineHub
   init: ->
 
   update: (data, datasel, dataset) ->
-    console.log 'hub update'
     svg = @_ui.svg
     @_ui.svg.select("g.hub").remove()
     if not datasel.Hub
@@ -46,7 +45,6 @@ class KLineHub
         dataset.push d
       last = d
 
-    console.log dataset
     g.selectAll("rect")
       .data(dataset)
       .enter()
