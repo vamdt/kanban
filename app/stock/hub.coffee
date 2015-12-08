@@ -9,17 +9,31 @@ class KLineHub
   init: ->
 
   update: (data, datasel, dataset) ->
+    ksel = @root.param 'k'
+    ks =
+      '1': 'm1s'
+      '5': 'm5s'
+      '30': 'm30s'
+      'day': 'days'
+      'week': 'weeks'
+      'month': 'months'
+
+    line = dataset.m1s.Segment.Line
+    for k, d of ks when dataset[d]
+      @draw(k, dataset[d].Hub.Data, line)
+      line = dataset[d].Hub.Line
+
+  draw: (k, data, line) ->
     svg = @_ui.svg
-    @_ui.svg.select("g.hub").remove()
-    if not datasel.Hub
-      console.log 'no hub', datasel
+    @_ui.svg.select("g#hub-#{k}").remove()
+    if not data
+      console.log 'no hub level', k
       return
-    if not datasel.Segment.Line
-      console.log 'no hub segment line'
+    if not line
+      console.log 'no hub segment or prev line'
       return
-    data = datasel.Hub
     g = @_ui.svg.append("g")
-      .attr("class", "hub")
+      .attr("id", "hub-#{k}")
 
     x = @_ui.x
     y = @_ui.y
@@ -30,7 +44,7 @@ class KLineHub
     last = {}
     for d in data
       if not d.oI
-        for t in datasel.Segment.Line
+        for t in line
           if t.I == d.I
             d.oI = t.oI
           if t.End == d.End
@@ -63,6 +77,6 @@ class KLineHub
       .attr("x", (d, i) -> x(d.i))
       .attr("y", (d, i) -> y(d.High)+10)
       .attr("fill", 'black')
-      .text('1')
+      .text(k)
 
 KLine.register_plugin 'hub', KLineHub

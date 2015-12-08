@@ -197,9 +197,9 @@ class KLine
         nsize = parseInt nsize * 0.9
       else
         if x0 > x1
-          nleft = nleft + 20
+          nleft = nleft + Math.max(20, parseInt nsize * 0.1)
         else if x0 < x1
-          nleft = nleft - 20
+          nleft = nleft - Math.max(20, parseInt nsize * 0.1)
         else
           return
       @update_size(nsize, nleft)
@@ -210,11 +210,12 @@ class KLine
     zoom = d3.behavior.zoom()
       .on("zoom", zoomed)
 
+    svg
+      .call(zoom)
     svg.append("rect")
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
-      .call(zoom)
 
   draw: ->
     x = @_ui.x

@@ -63,7 +63,7 @@ module.exports = {
     progress: true,
     hot: true,
     quiet: false,
-    noInfo: false,
+    noInfo: true,
     stats: { colors: true },
     historyApiFallback: false,
     contentBase: 'app',

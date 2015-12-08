@@ -2,6 +2,8 @@ package crawl
 
 import "time"
 
+// 走势分为趋势和盘整
+// 趋势分为上涨和下跌
 const (
 	UnknowTyping = iota
 	WaitTyping
@@ -9,6 +11,7 @@ const (
 	BottomTyping
 	UpTyping
 	DownTyping
+	DullTyping
 )
 
 type Typing struct {
@@ -20,7 +23,7 @@ type Typing struct {
 	Low   int
 	begin int
 	End   int
-  Case1 bool
+	Case1 bool
 }
 
 type TypingSlice []Typing

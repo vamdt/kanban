@@ -249,7 +249,12 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 	if !p.ParseTyping() {
 		return
 	}
+
 	if base != nil {
+		if !p.ParseHub(base) {
+			return
+		}
+		p.Hub.Link()
 		return
 	}
 	if !p.Typing.LinkTyping() {
@@ -261,7 +266,10 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 	if !p.Segment.LinkTyping() {
 		return
 	}
-	p.ParseHub(base)
+	if !p.ParseHub(base) {
+		return
+	}
+	p.Hub.Link()
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
