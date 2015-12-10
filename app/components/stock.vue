@@ -16,6 +16,9 @@ KLine = require '../stock'
 
 Vue.directive 'kanpan',
   deep: true
+  bind: ->
+    window.addEventListener 'resize', =>
+      @kl.resize() if @kl
   update: (value, oldValue) ->
     return unless value
     return unless value.s

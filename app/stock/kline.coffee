@@ -36,6 +36,7 @@ kColor = (d, i, data) ->
 
 class KLine
   constructor: (@options) ->
+    @dispatch = d3.dispatch("resize")
     @options = extend {}, @options, defaults
     @_data = []
     @_ui = {}
@@ -107,6 +108,13 @@ class KLine
       plugin.init()
       @add_plugin_obj plugin
 
+  resize: (w, h) ->
+    w = w || @_ui.container[0][0].clientWidth
+    h = h || window.screen.availHeight * 0.618
+    @options.width = w - @options.margin.left - @options.margin.right
+    @options.height = h - @options.margin.top - @options.margin.bottom
+    @dispatch.resize()
+
   initUI: ->
     container = @_ui.container = d3.select @options.container || 'body'
     container.html('')
@@ -125,7 +133,6 @@ class KLine
     svg = @_ui.svg = container.append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
-      .append("g")
       .attr("transform", "translate(#{margin.left},#{margin.top})")
 
     x = @_ui.x = d3.scale.linear()
@@ -216,6 +223,24 @@ class KLine
       .attr("class", "pane")
       .attr("width", width)
       .attr("height", height)
+
+    @dispatch.on 'resize.core', =>
+      width = @options.width
+      height = @options.height
+      margin = @options.margin
+      svg
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      x.range([0, width])
+      y.range([height, 0])
+      xAxis.tickSize(-height, 0)
+      yAxis.tickSize(-width)
+      svg.select('.x.axis').attr("transform", "translate(0, #{height})")
+      svg.select('rect.pane')
+        .attr("width", width)
+        .attr("height", height)
+      fn = => @draw()
+      d3.timer fn
 
   draw: ->
     x = @_ui.x
