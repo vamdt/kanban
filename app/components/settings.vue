@@ -3,21 +3,16 @@
     <fieldset>
       <div class="pure-control-group">
         <label for="nc">candle</label>
-        <input id="nc" type="checkbox"> no candle
+        <input id="nc" v-model="nc" type="checkbox"> no candle
       </div>
 
       <div class="pure-control-group">
         <label for="nmas">mas</label>
-        <input id="nmas" type="checkbox"> no mas
-      </div>
-
-      <div class="pure-control-group">
-        <label for="nmas">mas</label>
-        <input id="nmas" type="checkbox"> no mas
+        <input id="nmas" v-model="nmas" type="checkbox"> no mas
       </div>
 
       <div class="pure-controls">
-        <button type="submit" class="pure-button pure-button-primary">Submit</button>
+        <button type="submit" @click="submit" class="pure-button pure-button-primary">Submit</button>
       </div>
     </fieldset>
   </form>
@@ -25,6 +20,18 @@
 
 <script lang="coffee">
 module.exports =
-  ready: ->
-    localStorage.clear()
+  route:
+    data: ->
+      try
+        JSON.parse localStorage.getItem 'settings'
+      catch
+        nc: true
+        nmas: true
+
+  methods:
+    submit: ->
+      settings =
+        nc: @nc
+        nmas: @nmas
+      localStorage.setItem('settings', JSON.stringify(settings))
 </script>

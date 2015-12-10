@@ -1,4 +1,12 @@
 <template>
+  <div class="pure-menu pure-menu-horizontal">
+    <ul class="pure-menu-list">
+        <li class="pure-menu-item" v-bind:class="{'pure-menu-selected':
+        k==opt.k}" v-for="k in levels">
+          <a class="pure-menu-link" @click="level(k)">{{k}}</a>
+        </li>
+    </ul>
+  </div>
   <div id="container" v-kanpan="opt"></div>
 </template>
 
@@ -10,45 +18,39 @@ Vue.directive 'kanpan',
   deep: true
   update: (value, oldValue) ->
     return unless value
+    return unless value.s
+    settings = try
+      JSON.parse localStorage.getItem 'settings'
+    catch
+      {}
+    params = JSON.parse(JSON.stringify(value))
+    for k,v of params
+      settings[k] = v
+
     if @kl
       @kl.stop()
     else
       @kl = new KLine(container: @el)
     kl = @kl
-    kl.param JSON.parse(JSON.stringify(value))
+    kl.param settings
 
     setTimeout ->
       kl.init()
       kl.start()
     , 500
-  unbind: ->
-    console.log 'unbind'
 
 module.exports =
-  props:
-    opt:
-      s:
-        type: String
-        required: true
-      k: Number
-      fq:
-        type: String
-        default: ''
-      nc:
-        type: Number
-        default: 1
-      nmas:
-        type: Number
-        default: 1
   data: ->
-    opt: @param()
-
+    levels: ['1', '5', '30', 'day', 'week', 'month']
+    opt:{}
   route:
     data: (transition) ->
-      @opt = @param()
+      @opt =
+        s: @$route.params.sid
+        k: @$route.params.k
 
   methods:
-    param: ->
-      s: @$route.params.sid
-      k: @$route.params.k
+    level: (k) ->
+      @opt.k = k
+
 </script>
