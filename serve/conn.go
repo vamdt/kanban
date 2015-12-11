@@ -37,9 +37,10 @@ type watchRequest struct {
 }
 
 func (c *connection) watch(req *watchRequest) {
-	log.Println(req)
+	log.Println("watch", req)
 	req.Conn = c
 	h.register <- req
+	log.Println("watch send", req)
 }
 
 func (c *connection) readPump() {
