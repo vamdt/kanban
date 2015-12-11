@@ -22,10 +22,11 @@ Vue.directive 'kanpan',
   update: (value, oldValue) ->
     return unless value
     return unless value.s
-    settings = try
-      JSON.parse localStorage.getItem 'settings'
+    settings = {}
+    try
+      settings = JSON.parse localStorage.getItem 'settings'
     catch
-      {}
+    settings = settings || {}
     params = JSON.parse(JSON.stringify(value))
     for k,v of params
       settings[k] = v

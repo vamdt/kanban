@@ -14,6 +14,7 @@ Settings = require('./components/settings.vue')
 
 router.map
   '/s/:sid/:k':
+    name: 'stock'
     component: Stock
   '/settings':
     component: Settings

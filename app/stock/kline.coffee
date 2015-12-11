@@ -133,6 +133,7 @@ class KLine
     svg = @_ui.svg = container.append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
+      .append("g")
       .attr("transform", "translate(#{margin.left},#{margin.top})")
 
     x = @_ui.x = d3.scale.linear()
@@ -228,7 +229,7 @@ class KLine
       width = @options.width
       height = @options.height
       margin = @options.margin
-      svg
+      container.select('svg')
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
       x.range([0, width])

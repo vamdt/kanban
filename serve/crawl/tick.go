@@ -195,6 +195,30 @@ func Tick_download_real_from_sina(id string) []byte {
 	return body
 }
 
+func Tick_get_name(id string) (string, error) {
+	body := Tick_download_real_from_sina(id)
+	if body == nil {
+		return "", fmt.Errorf("get realtime info fail")
+	}
+
+	lines := bytes.Split(body, []byte("\";"))
+	if len(lines) < 1 {
+		return "", fmt.Errorf("get realtime info empty")
+	}
+	info := bytes.Split(lines[0], []byte("=\""))
+	if len(info) != 2 {
+		return "", fmt.Errorf("get realtime info format error, donot found =\"")
+	}
+
+	infos := bytes.Split(info[1], []byte(","))
+	if len(infos) < 33 {
+		log.Println("sina hq api, res format changed")
+		return "", fmt.Errorf("sina hq api, res format changed")
+	}
+
+	return string(infos[0]), nil
+}
+
 func Tick_get_today_date(id string) (time.Time, error) {
 	body := Tick_download_real_from_sina(id)
 	if body == nil {

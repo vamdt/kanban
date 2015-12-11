@@ -64,6 +64,7 @@ func main() {
 
 	go h.run()
 	http.HandleFunc("/socket.io/", serveWs)
+  http.HandleFunc("/search", search_handle)
 
 	if opt.debug {
 		http.HandleFunc("/", dev_static_handle)
