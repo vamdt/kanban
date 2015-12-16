@@ -13,8 +13,8 @@ class KLineTypingLine
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
     @_ui.svg.select("g.typing_line").remove()
-    data = datasel.Typing.Line
-    if not data
+    ldata = datasel.Typing.Line
+    if not ldata
       return
     path = @_ui.svg.append("g")
       .attr("class", "typing_line")
@@ -31,7 +31,7 @@ class KLineTypingLine
 
     dataset = []
     last = {}
-    for d in data
+    for d in ldata
       d.i = d.I - left
 
       if d.i >= 0 and d.i <= size
@@ -41,6 +41,8 @@ class KLineTypingLine
       else if last.i >= 0 and last.i <= size
         dataset.push d
       last = d
+
+    dataset = KLine.filter ldata, data
     path.data([dataset])
 
     line = d3.svg.line()

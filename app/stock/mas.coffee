@@ -4,10 +4,10 @@ KLine = require './kline'
 defaults =
   '5d':
     interval: 5
-    color: '#abc'
+    color: 'silver'
   '10d':
     interval: 10
-    color: 'red'
+    color: 'gray'
 
 class KLineMas
   constructor: (@root, @svg, @y, @d) ->
@@ -25,7 +25,7 @@ class KLineMas
       if line.empty()
         line = svg.append("path")
           .attr("class", "line mas ma#{interval}")
-      line.attr("clip-path", "url(#clip)")
+      line
         .style("stroke", ma.color)
         .style("stroke-width", "1")
 

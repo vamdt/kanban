@@ -73,6 +73,7 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.End = i - 2
+		p.tp[len(p.tp)-1].t.ETime = ptyping.Line[i - 2].ETime
 	}
 	tp := typing_parser_node{}
 	tp.t = ptyping.Line[i]
@@ -185,6 +186,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int) {
 	prev.t.High = prev.d.High
 	prev.t.Low = prev.d.Low
 	prev.t.End = i
+	prev.t.ETime = (*a).Time
 }
 
 func need_skip_line(prev *typing_parser_node, a *Tdata) bool {
@@ -213,6 +215,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 				}
 				prev.d = *a
 				prev.t.End = i
+				prev.t.ETime = (*a).Time
 				return true, i
 			}
 		} else if prev.t.Type == DownTyping {
@@ -223,6 +226,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 				}
 				prev.d = *a
 				prev.t.End = i
+				prev.t.ETime = (*a).Time
 				return true, i
 			}
 		}

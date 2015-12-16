@@ -17,7 +17,6 @@ class KLineSegment
       return
     if not datasel.Segment.Data
       return
-    data = datasel.Segment.Data
     g = @_ui.svg.append("g")
       .attr("class", "segment")
 
@@ -26,9 +25,10 @@ class KLineSegment
     left = @root._left
     size = @root.options.size
 
+    sdata = datasel.Segment.Data
     dataset = []
     last = {}
-    for d in data
+    for d in sdata
       if not d.oI
         d.oI = t.I for t in datasel.Typing.Line when t.Time == d.Time
       d.i = d.oI - left
@@ -41,6 +41,7 @@ class KLineSegment
         dataset.push d
       last = d
 
+    dataset = KLine.filter sdata, data
     color = (d, i) -> colors[d.Type] || colors[0]
     g.selectAll('circle')
       .data(dataset)

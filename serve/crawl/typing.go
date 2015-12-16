@@ -23,6 +23,7 @@ type Typing struct {
 	Low   int
 	begin int
 	End   int
+	ETime time.Time
 	Case1 bool
 }
 
@@ -82,11 +83,13 @@ func (p *typing_parser) clean() {
 func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.End = i - 1
+		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.End = i
+	tp.t.ETime = td.Data[i].Time
 	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
 }
@@ -210,6 +213,7 @@ func (p *Tdatas) ParseTyping() bool {
 			}
 			prev.d = *a
 			prev.t.End = i
+			prev.t.ETime = (*a).Time
 		} else {
 			p.Typing.new_node(i, p)
 		}
@@ -324,6 +328,7 @@ func (p *typing_parser) LinkTyping() bool {
 		}
 
 		typing.End = t.End
+		typing.ETime = t.ETime
 		if typing.Type == TopTyping {
 			typing.Low = t.Low
 			typing.Type = DownTyping

@@ -20,10 +20,10 @@ class KLineHub
 
     line = dataset.m1s.Segment.Line
     for k, d of ks when dataset[d]
-      @draw(k, dataset[d].Hub.Data, line)
+      @draw(k, dataset[d].Hub.Data, line, data)
       line = dataset[d].Hub.Line
 
-  draw: (k, data, line) ->
+  draw: (k, data, line, kdata) ->
     svg = @_ui.svg
     @_ui.svg.select("g#hub-#{k}").remove()
     if not data
@@ -59,13 +59,14 @@ class KLineHub
         dataset.push d
       last = d
 
+    dataset = KLine.filter data, kdata
     g.selectAll("rect")
       .data(dataset)
       .enter()
       .append("rect")
       .attr("x", (d, i) -> x(d.i))
       .attr("y", (d, i) -> y(d.High))
-      .attr("width", (d, i) -> x(d.eI) - x(d.oI))
+      .attr("width", (d, i) -> x(d.ei) - x(d.i))
       .attr("height", (d, i) -> y(d.Low) - y(d.High))
       .attr("fill", 'steelblue')
       .style("fill-opacity", ".1")

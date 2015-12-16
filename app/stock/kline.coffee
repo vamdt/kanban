@@ -370,4 +370,42 @@ KLine.register_plugin = (name, clazz) ->
 KLine.extend = extend
 KLine.kColor = kColor
 
+filter = (src, range) ->
+  if (src||[]).length < 1
+    return []
+  if (range||[]).length < 2
+    return []
+
+  start = range[0].date
+  end = range[range.length-1].date
+
+  hash = {}
+  hash[+d.date] = i for d, i in range
+
+  indexOf = (date) ->
+    hash[+date] || -1
+
+  for d in src
+    console.log d
+    d.date = d.date || parseDate(d.Time)
+    d.edate = d.edate || parseDate(d.ETime)
+    d.i = indexOf d.date
+    d.ei = indexOf d.edate
+
+  rv = []
+  for d in src
+    if d.i != -1
+      rv.push d
+      continue
+
+    if rv.length < 2
+      rv = [d]
+      continue
+
+    if rv[rv.length-1].i != -1
+      rv.push d
+      continue
+  rv
+KLine.filter = filter
+
 module.exports = KLine

@@ -17,7 +17,6 @@ class KLineSegmentLine
       return
     if not datasel.Segment.Line
       return
-    data = datasel.Segment.Line
     path = @_ui.svg.append("g")
       .attr("class", "segment_line")
       .append("path")
@@ -30,9 +29,10 @@ class KLineSegmentLine
     left = @root._left
     size = @root.options.size
 
+    ldata = datasel.Segment.Line
     dataset = []
     last = {}
-    for d in data
+    for d in ldata
       if not d.oI
         d.oI = t.I for t in datasel.Typing.Line when t.Time == d.Time
       d.i = d.oI - left
@@ -44,6 +44,7 @@ class KLineSegmentLine
       else if last.i >= 0 and last.i <= size
         dataset.push d
       last = d
+    dataset = KLine.filter ldata, data
     path.data([dataset])
 
     line = d3.svg.line()

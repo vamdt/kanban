@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	//_ "net/http/pprof"
 	"os"
 	"path"
 	"strings"
@@ -64,7 +65,7 @@ func main() {
 
 	go h.run()
 	http.HandleFunc("/socket.io/", serveWs)
-  http.HandleFunc("/search", search_handle)
+	http.HandleFunc("/search", search_handle)
 
 	if opt.debug {
 		http.HandleFunc("/", dev_static_handle)

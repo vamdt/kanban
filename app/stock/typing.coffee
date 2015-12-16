@@ -12,7 +12,6 @@ class KLineTyping
 
   update: (data, datasel, dataset) ->
     svg = @_ui.svg
-    data = datasel.Typing.Data
     @_ui.svg.select("g.typing").remove()
     g = @_ui.svg.append("g")
       .attr("class", "typing")
@@ -22,9 +21,10 @@ class KLineTyping
     left = @root._left
     size = @root.options.size
 
+    tdata = datasel.Typing.Data
     dataset = []
     last = {}
-    for d in data
+    for d in tdata
       d.i = d.I - left
 
       if d.i >= 0 and d.i <= size
@@ -34,6 +34,7 @@ class KLineTyping
       else if last.i >= 0 and last.i <= size
         dataset.push d
       last = d
+    dataset = KLine.filter tdata, data
 
     g.selectAll('circle')
       .data(dataset)

@@ -47,7 +47,7 @@ class KLineMacd
     if ldiff.empty()
       ldiff = svg.append("path")
         .attr("class", "line diff")
-    ldiff.attr("clip-path", "url(#clip)")
+    ldiff
       .style("stroke", 'silver')
       .style("stroke-width", "1")
 
@@ -55,7 +55,7 @@ class KLineMacd
     if ldea.empty()
       ldea = svg.append("path")
         .attr("class", "line dea")
-    ldea.attr("clip-path", "url(#clip)")
+    ldea
       .style("stroke", 'gold')
       .style("stroke-width", "1")
 

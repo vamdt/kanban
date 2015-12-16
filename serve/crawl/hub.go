@@ -53,6 +53,7 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		hub.High = minHigh
 		hub.Low = maxLow
 		hub.End = c.End
+		hub.ETime = c.ETime
 		p.Hub.Data = append(p.Hub.Data, hub)
 		hasnew = true
 	}
@@ -97,6 +98,7 @@ func (p *hub_parser) Link() bool {
 		}
 
 		typing.End = t.End
+		typing.ETime = t.ETime
 		if l := len(p.Line); l > 0 && p.Line[l-1].Type == typing.Type {
 			if typing.Type == DullTyping {
 				p.Line[l-1].High = maxInt(typing.High, p.Line[l-1].High)
