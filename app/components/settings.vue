@@ -2,17 +2,15 @@
   <form class="pure-form pure-form-aligned">
     <fieldset>
       <div class="pure-control-group">
-        <label for="nc">candle</label>
-        <input id="nc" v-model="nc" type="checkbox"> no candle
+        <label for="nc" class="pure-checkbox">
+          <input id="nc" v-model="nc" @click="submit" type="checkbox"> no candle
+        </label>
       </div>
 
       <div class="pure-control-group">
-        <label for="nmas">mas</label>
-        <input id="nmas" v-model="nmas" type="checkbox"> no mas
-      </div>
-
-      <div class="pure-controls">
-        <button type="submit" @click="submit" class="pure-button pure-button-primary">Submit</button>
+        <label for="nmas" class="pure-checkbox">
+          <input id="nmas" v-model="nmas" @click="submit" type="checkbox"> no mas
+        </label>
       </div>
     </fieldset>
   </form>
