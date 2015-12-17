@@ -28,12 +28,13 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Hub.Data); l > 0 {
-		end := p.Hub.Data[l-1].End
+		end := p.Hub.Data[l-1].ETime
 		for i := len(line) - 1; i > -1; i-- {
-			if end == line[i].End {
-				start = i
-				break
+			if end.Before(line[i].ETime) {
+				continue
 			}
+			start = i
+			break
 		}
 	}
 
@@ -52,7 +53,7 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		hub := *a
 		hub.High = minHigh
 		hub.Low = maxLow
-		hub.End = c.End
+		hub.end = c.end
 		hub.ETime = c.ETime
 		p.Hub.Data = append(p.Hub.Data, hub)
 		hasnew = true
@@ -68,7 +69,7 @@ func (p *hub_parser) Link() bool {
 	if l := len(p.Line); l > 0 {
 		t := p.Line[l-1]
 		for i := ldata - 1; i > -1; i-- {
-			if p.Data[i].End == t.End {
+			if p.Data[i].ETime.Equal(t.ETime) {
 				start = i
 				break
 			}
@@ -97,7 +98,7 @@ func (p *hub_parser) Link() bool {
 			log.Println("found unkonw typing of hub", typing, t)
 		}
 
-		typing.End = t.End
+		typing.end = t.end
 		typing.ETime = t.ETime
 		if l := len(p.Line); l > 0 && p.Line[l-1].Type == typing.Type {
 			if typing.Type == DullTyping {

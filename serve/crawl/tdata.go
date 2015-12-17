@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"log"
+	"sort"
 	"strconv"
 	"time"
 
@@ -29,6 +30,27 @@ type Tdata struct {
 	DIFF   int
 	DEA    int
 	MACD   int
+}
+
+type TdataSlice []Tdata
+
+func (p TdataSlice) Len() int           { return len(p) }
+func (p TdataSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p TdataSlice) Less(i, j int) bool { return p[i].Time.Before(p[j].Time) }
+
+func SearchTdataSliceByTime(a TdataSlice, t time.Time) int {
+	return sort.Search(len(a), func(i int) bool {
+		// a[i].Time >= t
+		return a[i].Time.After(t) || a[i].Time.Equal(t)
+	})
+}
+
+func (p TdataSlice) SearchByTime(t time.Time) (int, bool) {
+	i := SearchTdataSliceByTime(p, t)
+	if i < p.Len() {
+		return i, t.Equal(p[i].Time)
+	}
+	return i, false
 }
 
 type Tdatas struct {

@@ -1,6 +1,10 @@
 package crawl
 
-import "time"
+import (
+	"log"
+	"sort"
+	"time"
+)
 
 // 走势分为趋势和盘整
 // 趋势分为上涨和下跌
@@ -22,7 +26,7 @@ type Typing struct {
 	High  int
 	Low   int
 	begin int
-	End   int
+	end   int
 	ETime time.Time
 	Case1 bool
 }
@@ -57,6 +61,34 @@ func (p TypingSlice) MergeTyping(t Typing) (int, bool) {
 	return pos, ok
 }
 
+func SearchTypingSliceByTime(a TypingSlice, t time.Time) int {
+	return sort.Search(len(a), func(i int) bool {
+		return a[i].Time.After(t) || a[i].Time.Equal(t)
+	})
+}
+
+func (p TypingSlice) SearchByTime(t time.Time) (int, bool) {
+	i := SearchTypingSliceByTime(p, t)
+	if i < p.Len() {
+		return i, t.Equal(p[i].Time)
+	}
+	return i, false
+}
+
+func SearchTypingSliceByETime(a TypingSlice, t time.Time) int {
+	return sort.Search(len(a), func(i int) bool {
+		return a[i].ETime.After(t) || a[i].ETime.Equal(t)
+	})
+}
+
+func (p TypingSlice) SearchByETime(t time.Time) (int, bool) {
+	i := SearchTypingSliceByETime(p, t)
+	if i < p.Len() {
+		return i, t.Equal(p[i].ETime)
+	}
+	return i, false
+}
+
 type typing_parser_node struct {
 	d Tdata
 	t Typing
@@ -82,13 +114,13 @@ func (p *typing_parser) clean() {
 
 func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
-		p.tp[len(p.tp)-1].t.End = i - 1
+		p.tp[len(p.tp)-1].t.end = i - 1
 		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
-	tp.t.End = i
+	tp.t.end = i
 	tp.t.ETime = td.Data[i].Time
 	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
@@ -180,7 +212,13 @@ func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Typing.tp); l > 0 {
-		start = p.Typing.tp[l-1].t.End + 1
+		start = p.Typing.tp[l-1].t.end + 1
+		t := p.Typing.tp[l-1].t.ETime
+		if i, ok := (TdataSlice(p.Data)).SearchByTime(t); ok {
+			start = i + 1
+		} else {
+			log.Fatalln("not found with time", t, p.Data[len(p.Data)-20:])
+		}
 	} else {
 		start = p.findChanTypingStart()
 	}
@@ -212,7 +250,7 @@ func (p *Tdatas) ParseTyping() bool {
 				}
 			}
 			prev.d = *a
-			prev.t.End = i
+			prev.t.end = i
 			prev.t.ETime = (*a).Time
 		} else {
 			p.Typing.new_node(i, p)
@@ -327,7 +365,7 @@ func (p *typing_parser) LinkTyping() bool {
 			continue
 		}
 
-		typing.End = t.End
+		typing.end = t.end
 		typing.ETime = t.ETime
 		if typing.Type == TopTyping {
 			typing.Low = t.Low

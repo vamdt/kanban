@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	//_ "net/http/pprof"
 	"os"
-	"path"
-	"strings"
 
+	"./dev"
 	"gopkg.in/mgo.v2"
 )
 
@@ -21,37 +21,12 @@ var opt Opt
 var db *mgo.Database
 
 func init() {
-	flag.BoolVar(&opt.debug, "debug", true, "debug")
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	flag.BoolVar(&opt.debug, "debug", false, "debug")
 	flag.StringVar(&opt.mongo, "mongo", "127.0.0.1", "mongo uri")
 }
 
-func dev_static_handle(w http.ResponseWriter, r *http.Request) {
-	upath := r.URL.Path
-	if strings.HasPrefix(upath, "/bower_components") {
-		http.ServeFile(w, r, upath[1:])
-		return
-	}
-
-	if strings.HasSuffix(upath, "/") {
-		upath = upath + "index.html"
-	}
-
-	rpath := path.Join("app", upath)
-	if _, err := os.Stat(rpath); err == nil {
-		http.ServeFile(w, r, rpath)
-		return
-	}
-
-	rpath = path.Join(".tmp", upath)
-	if _, err := os.Stat(rpath); err == nil {
-		http.ServeFile(w, r, rpath)
-		return
-	}
-	http.NotFound(w, r)
-}
-
-func main() {
-	flag.Parse()
+func serve() {
 	if opt.debug {
 		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	}
@@ -67,8 +42,9 @@ func main() {
 	http.HandleFunc("/socket.io/", serveWs)
 	http.HandleFunc("/search", search_handle)
 
+	dev_helper := dev.NewDev()
 	if opt.debug {
-		http.HandleFunc("/", dev_static_handle)
+		http.Handle("/", dev_helper)
 	} else {
 		http.Handle("/", http.FileServer(http.Dir("static")))
 	}
@@ -80,4 +56,16 @@ func main() {
 	addr := ":" + port
 	log.Println("serve on", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+func main() {
+	flag.Parse()
+
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	serve()
 }

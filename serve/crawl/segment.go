@@ -72,14 +72,14 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if len(p.tp) > 0 {
-		p.tp[len(p.tp)-1].t.End = i - 2
-		p.tp[len(p.tp)-1].t.ETime = ptyping.Line[i - 2].ETime
+		p.tp[len(p.tp)-1].t.end = i - 2
+		p.tp[len(p.tp)-1].t.ETime = ptyping.Line[i-2].ETime
 	}
 	tp := typing_parser_node{}
 	tp.t = ptyping.Line[i]
 	tp.t.begin = i
 	tp.t.I = i
-	tp.t.End = i
+	tp.t.end = i
 	tp.d.Time = tp.t.Time
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
@@ -123,22 +123,22 @@ func (p *segment_parser) isLineBreak(line, nline *Typing) bool {
 	return false
 }
 
-func (p *segment_parser) handle_special_case1(i int, a *Tdata) (bool, int) {
+func (p *segment_parser) handle_special_case1(i int, a *Tdata) bool {
 	ltp := len(p.tp)
 	if ltp < 2 {
-		return false, i
+		return false
 	}
 	//        |       |
 	// check ||| or |||
 	//        ||     ||
 	//         |     |
 	if p.break_index != ltp-1 {
-		return false, i
+		return false
 	}
 	pprev := &p.tp[ltp-2]
 	prev := &p.tp[ltp-1]
 	if !Contain(&pprev.d, &prev.d) {
-		return false, i
+		return false
 	}
 
 	typing := prev.t
@@ -159,12 +159,10 @@ func (p *segment_parser) handle_special_case1(i int, a *Tdata) (bool, int) {
 	}
 
 	if case1_seg_ok {
-		typing.End = i - 2
-		prev.t.End = typing.End
 		p.add_typing(typing, true)
 		p.clear()
 	}
-	return case1_seg_ok, typing.End - 1
+	return case1_seg_ok
 }
 
 func merge_contain_node(prev *typing_parser_node, a *Tdata, i int) {
@@ -185,7 +183,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int) {
 	prev.d = *a
 	prev.t.High = prev.d.High
 	prev.t.Low = prev.d.Low
-	prev.t.End = i
+	prev.t.end = i
 	prev.t.ETime = (*a).Time
 }
 
@@ -214,7 +212,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 					prev.t.I = i
 				}
 				prev.d = *a
-				prev.t.End = i
+				prev.t.end = i
 				prev.t.ETime = (*a).Time
 				return true, i
 			}
@@ -225,16 +223,28 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 					prev.t.I = i
 				}
 				prev.d = *a
-				prev.t.End = i
+				prev.t.end = i
 				prev.t.ETime = (*a).Time
 				return true, i
 			}
 		}
 	}
 	p.Segment.clear()
-	i = pprev.t.End + 1
+
+	i = pprev.t.end + 1
+	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(pprev.t.ETime); ok {
+		i = j + 1
+	} else {
+		log.Fatalln("not found by etime", pprev.t.ETime)
+	}
 	p.Segment.new_node(i, &p.Typing, false)
-	i = prev.t.End - 1
+
+	i = prev.t.end - 1
+	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(prev.t.ETime); ok {
+		i = j - 1
+	} else {
+		log.Fatalln("not found by etime", prev.t.ETime)
+	}
 	p.Segment.wait_3end = false
 	return false, i
 }
@@ -249,9 +259,29 @@ func (p *Tdatas) ParseSegment() bool {
 	}
 
 	if x := len(p.Segment.tp); x > 0 {
-		start = p.Segment.tp[x-1].t.End + 1
+		start = p.Segment.tp[x-1].t.end + 1
+		etime := p.Segment.tp[x-1].t.ETime
+		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
+      // assert
+      if start != j + 1 {
+        log.Fatal("start should be", start, "!=", j+1)
+      }
+			start = j + 1
+		} else {
+			log.Fatalln("not found by etime", etime)
+		}
 	} else if y := len(p.Segment.Data); y > 0 {
-		start = p.Segment.Data[y-1].End + 1
+		start = p.Segment.Data[y-1].end + 1
+		etime := p.Segment.Data[y-1].ETime
+		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
+      // assert
+      if start != j + 1 {
+        log.Fatal("start should be", start, "!=", j+1)
+      }
+			start = j + 1
+		} else {
+			log.Fatalln("not found by etime", etime)
+		}
 	} else if l > 100 {
 		for i := 0; i < l; i++ {
 			if i+2 > l {
@@ -336,8 +366,8 @@ func (p *Tdatas) ParseSegment() bool {
 			continue
 		} else {
 			if ltp > 1 {
-				if ok, j := p.Segment.handle_special_case1(i, a); ok {
-					i = j
+				if ok := p.Segment.handle_special_case1(i, a); ok {
+					i = i - 2 - 1
 					hasnew = true
 					continue
 				}
@@ -362,7 +392,17 @@ func (p *Tdatas) ParseSegment() bool {
 		p.Segment.clean()
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
-			i = p.Segment.tp[len(p.Segment.tp)-2].t.End - 1
+			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
+			etime := p.Segment.tp[len(p.Segment.tp)-2].t.ETime
+			if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
+        // assert
+        if i != j - 1 {
+          log.Fatal("i should be", i, "!=", j-1)
+        }
+				i = j - 1
+			} else {
+				log.Fatalln("not found by etime", etime)
+			}
 			p.Segment.clear()
 		}
 	}
