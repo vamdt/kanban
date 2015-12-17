@@ -18,22 +18,8 @@ class KLineTyping
 
     x = @_ui.x
     y = @_ui.y
-    left = @root._left
-    size = @root.options.size
 
     tdata = datasel.Typing.Data
-    dataset = []
-    last = {}
-    for d in tdata
-      d.i = d.I - left
-
-      if d.i >= 0 and d.i <= size
-        if last.i < 0 or last.i > size
-          dataset.push last
-        dataset.push d
-      else if last.i >= 0 and last.i <= size
-        dataset.push d
-      last = d
     dataset = KLine.filter tdata, data
 
     g.selectAll('circle')

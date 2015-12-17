@@ -37,27 +37,6 @@ class KLineHub
 
     x = @_ui.x
     y = @_ui.y
-    left = @root._left
-    size = @root.options.size
-
-    dataset = []
-    last = {}
-    for d in data
-      if not d.oI
-        for t in line
-          if t.I == d.I
-            d.oI = t.oI
-          if t.End == d.End
-            d.eI = t.oI
-      d.i = d.oI - left
-
-      if d.i >= 0 and d.i <= size
-        if last.i < 0 or last.i > size
-          dataset.push last
-        dataset.push d
-      else if last.i >= 0 and last.i <= size
-        dataset.push d
-      last = d
 
     dataset = KLine.filter data, kdata
     g.selectAll("rect")
@@ -69,7 +48,11 @@ class KLineHub
       .attr("width", (d, i) -> x(d.ei) - x(d.i))
       .attr("height", (d, i) -> y(d.Low) - y(d.High))
       .attr("fill", 'steelblue')
+      .style("stroke", 'green')
+      .style("stroke-width", '0')
       .style("fill-opacity", ".1")
+      .on("mouseover", -> d3.select(@).style("stroke-width", "1"))
+      .on("mouseout", -> d3.select(@).style("stroke-width", "0"))
 
     g.selectAll("text")
       .data(dataset)

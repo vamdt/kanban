@@ -22,25 +22,8 @@ class KLineSegment
 
     x = @_ui.x
     y = @_ui.y
-    left = @root._left
-    size = @root.options.size
 
     sdata = datasel.Segment.Data
-    dataset = []
-    last = {}
-    for d in sdata
-      if not d.oI
-        d.oI = t.I for t in datasel.Typing.Line when t.Time == d.Time
-      d.i = d.oI - left
-
-      if d.i >= 0 and d.i <= size
-        if last.i < 0 or last.i > size
-          dataset.push last
-        dataset.push d
-      else if last.i >= 0 and last.i <= size
-        dataset.push d
-      last = d
-
     dataset = KLine.filter sdata, data
     color = (d, i) -> colors[d.Type] || colors[0]
     g.selectAll('circle')
