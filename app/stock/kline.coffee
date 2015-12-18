@@ -382,11 +382,21 @@ filter = (src, range) ->
   hash = {}
   hash[+d.date] = i for d, i in range
 
+  closeIndexOf = (date) ->
+    date = +date
+    j = 0
+    j = i for d, i in range when date >= +d.date
+    j
+
   indexOf = (date) ->
-    hash[+date] || -1
+    date = +date
+    if +range[0].date > date
+      return -1
+    if +range[range.length-1].date < date
+      return -1
+    hash[+date] || closeIndexOf(date)
 
   for d in src
-    console.log d
     d.date = d.date || parseDate(d.Time)
     d.edate = d.edate || parseDate(d.ETime)
     d.i = indexOf d.date

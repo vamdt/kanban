@@ -1,5 +1,11 @@
+<style>
+#level li.pure-menu-selected {
+  background: #fcebbd;
+}
+</style>
+
 <template>
-  <div class="pure-menu pure-menu-horizontal">
+  <div id="level" class="pure-menu pure-menu-horizontal">
     <ul class="pure-menu-list">
         <li class="pure-menu-item" v-bind:class="{'pure-menu-selected':
         k==opt.k}" v-for="k in levels">

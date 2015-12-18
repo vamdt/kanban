@@ -5,6 +5,10 @@
 [v-cloak] {
   display: none;
 }
+#menu li.pure-menu-selected a:hover,
+#menu li.pure-menu-selected a:focus {
+  background: #1f8dd6;
+}
 </style>
 
 <template>
