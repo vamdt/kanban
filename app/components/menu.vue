@@ -17,7 +17,9 @@
                 <li class="pure-menu-item">
                   <form class="pure-form">
                     <input type="text" @keyup.enter="submit" v-model="sid"
-                    placeholder="Search" class="pure-input-rounded" autocomplete="off" autocorrect="off" autocapitalize="off">
+                    placeholder="Search" class="pure-input-rounded"
+                    autocomplete="off" autocorrect="off" autocapitalize="off"
+                    spellcheck="false">
                   </form>
                 </li>
                 <li v-for="s in stocks" class="pure-menu-item">
