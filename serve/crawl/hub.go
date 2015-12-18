@@ -67,12 +67,13 @@ func (p *hub_parser) Link() bool {
 	start := 0
 	ldata := len(p.Data)
 	if l := len(p.Line); l > 0 {
-		t := p.Line[l-1]
+		end := p.Line[l-1].ETime
 		for i := ldata - 1; i > -1; i-- {
-			if p.Data[i].ETime.Equal(t.ETime) {
-				start = i
-				break
+			if end.Before(p.Data[i].ETime) {
+				continue
 			}
+			start = i
+			break
 		}
 	}
 
@@ -100,6 +101,7 @@ func (p *hub_parser) Link() bool {
 
 		typing.end = t.end
 		typing.ETime = t.ETime
+		// TODO should keep every line?
 		if l := len(p.Line); l > 0 && p.Line[l-1].Type == typing.Type {
 			if typing.Type == DullTyping {
 				p.Line[l-1].High = maxInt(typing.High, p.Line[l-1].High)

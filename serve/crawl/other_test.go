@@ -33,3 +33,31 @@ func TestTimeNowHour(t *testing.T) {
 	now := time.Now().UTC()
 	t.Logf("now utc hour %d", now.Hour())
 }
+
+func TestTimeBefore(t *testing.T) {
+	now := time.Now()
+	before := now.Add(-1 * time.Second)
+	if now.Before(now) {
+		t.Error(
+			"For", "now Before now",
+			"expected", false,
+			"got", true,
+		)
+	}
+
+	if now.Before(now) {
+		t.Error(
+			"For", "now Before now",
+			"expected", true,
+			"got", false,
+		)
+	}
+
+	if now.Before(before) {
+		t.Error(
+			"For", "now Before before",
+			"expected", true,
+			"got", false,
+		)
+	}
+}

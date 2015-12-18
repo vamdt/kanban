@@ -71,27 +71,22 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 }
 
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
+	line := ptyping.Line
 	if l := len(p.tp); l > 0 {
 		p.tp[l-1].t.end = i - 2
-		p.tp[l-1].t.ETime = ptyping.Line[i-2].ETime
-		t := ptyping.Line[i-2].ETime
-		if j, ok := (TypingSlice(ptyping.Line)).SearchByETime(t); ok {
-			if i-2 != j {
-				glog.Fatalln("new node i-2 != j", i-2, j)
-			}
-		} else {
-			glog.Fatalln("not found by etime", t)
-		}
+		p.tp[l-1].t.ETime = line[i-2].ETime
+		p.tp[l-1].t.assertETimeMatchEndLine(line)
 	}
 	tp := typing_parser_node{}
-	tp.t = ptyping.Line[i]
+	tp.t = line[i]
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.end = i
 	tp.d.Time = tp.t.Time
-	if !tp.t.ETime.Equal(ptyping.Line[i].ETime) {
+	if !tp.t.ETime.Equal(line[i].ETime) {
 		glog.Fatalln("found tp t.ETime not eq Line[i].ETime")
 	}
+	tp.t.assertETimeMatchEndLine(line)
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
 	p.tp = append(p.tp, tp)
@@ -208,7 +203,7 @@ func need_skip_line(prev *typing_parser_node, a *Tdata) bool {
 	return false
 }
 
-func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
+func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 	ltp := len(p.Segment.tp)
 	if ltp < 3 || !p.Segment.wait_3end {
 		return false, i
@@ -224,7 +219,8 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 				}
 				prev.d = *a
 				prev.t.end = i
-				prev.t.ETime = (*a).Time
+				prev.t.ETime = line[i].ETime
+				prev.t.assertETimeMatchEndLine(line)
 				return true, i
 			}
 		} else if prev.t.Type == DownTyping {
@@ -235,7 +231,8 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 				}
 				prev.d = *a
 				prev.t.end = i
-				prev.t.ETime = (*a).Time
+				prev.t.ETime = line[i].ETime
+				prev.t.assertETimeMatchEndLine(line)
 				return true, i
 			}
 		}
@@ -243,25 +240,10 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 	p.Segment.clear()
 
 	i = pprev.t.end + 1
-	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(pprev.t.ETime); ok {
-		if i != j+1 {
-			glog.Fatalln("assert i==j+1", i, j+1)
-		}
-		i = j + 1
-	} else {
-		glog.Fatalln("not found by etime", pprev.t.ETime)
-	}
+	i = 1 + pprev.t.assertETimeMatchEndLine(line)
 	p.Segment.new_node(i, &p.Typing, false)
 
 	i = prev.t.end - 1
-	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(prev.t.ETime); ok {
-		if i != j-1 {
-			glog.Fatalln("assert i==j-1", i, j-1)
-		}
-		i = j - 1
-	} else {
-		glog.Fatalln("not found by etime", prev.t.ETime)
-	}
 	p.Segment.wait_3end = false
 	return false, i
 }
@@ -277,28 +259,10 @@ func (p *Tdatas) ParseSegment() bool {
 
 	if x := len(p.Segment.tp); x > 0 {
 		start = p.Segment.tp[x-1].t.end + 1
-		etime := p.Segment.tp[x-1].t.ETime
-		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
-			// assert
-			if start != j+1 {
-				glog.Fatalln("start should be", start, "!=", j+1)
-			}
-			start = j + 1
-		} else {
-			glog.Fatalln("not found by etime", etime)
-		}
+		start = 1 + p.Segment.tp[x-1].t.assertETimeMatchEndLine(p.Typing.Line)
 	} else if y := len(p.Segment.Data); y > 0 {
 		start = p.Segment.Data[y-1].end + 1
-		etime := p.Segment.Data[y-1].ETime
-		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
-			// assert
-			if start != j+1 {
-				glog.Fatal("start should be", start, "!=", j+1)
-			}
-			start = j + 1
-		} else {
-			glog.Fatalln("not found by etime", etime)
-		}
+		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line)
 	} else if l > 100 {
 		for i := 0; i < l; i++ {
 			if i+2 > l {
@@ -344,7 +308,7 @@ func (p *Tdatas) ParseSegment() bool {
 			continue
 		}
 
-		//if ok, j := p.need_wait_3end(i, a); ok {
+		//if ok, j := p.need_wait_3end(i, a, p.Typing.Line); ok {
 		//i = j
 		//continue
 		//}
@@ -380,6 +344,7 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 
 			merge_contain_node(prev, a, i, &p.Typing.Line[i])
+			prev.t.assertETimeMatchEndLine(p.Typing.Line)
 			continue
 		} else {
 			if ltp > 1 {
@@ -410,16 +375,7 @@ func (p *Tdatas) ParseSegment() bool {
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
 			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
-			etime := p.Segment.tp[len(p.Segment.tp)-2].t.ETime
-			if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
-				// assert
-				if i != j-1 {
-					glog.Fatalln("i should be", i, "!=", j-1)
-				}
-				i = j - 1
-			} else {
-				glog.Fatalln("not found by etime", etime)
-			}
+			i = -1 + p.Segment.tp[len(p.Segment.tp)-2].t.assertETimeMatchEndLine(p.Typing.Line)
 			p.Segment.clear()
 		}
 	}

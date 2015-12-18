@@ -117,12 +117,14 @@ func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.end = i - 1
 		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
+		p.tp[len(p.tp)-1].t.assertETimeMatchEnd(td.Data)
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.end = i
 	tp.t.ETime = td.Data[i].Time
+	tp.t.assertETimeMatchEnd(td.Data)
 	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
 }
@@ -209,20 +211,37 @@ func (p *Tdatas) findChanTypingStart() int {
 	return hi
 }
 
+func (p *Typing) assertETimeMatchEnd(data TdataSlice) int {
+	i, ok := data.SearchByTime(p.ETime)
+	if ok {
+		if p.end != i {
+			glog.Fatalf("assert end/%d eq SearchByTime/%d", p.end, i)
+		}
+	} else {
+		glog.Fatalln("not found with time", p.ETime, data[len(data)-20:])
+	}
+	return i
+}
+
+func (p *Typing) assertETimeMatchEndLine(data TypingSlice) int {
+	i, ok := data.SearchByETime(p.ETime)
+	if ok {
+		if p.end != i {
+			glog.Fatalf("assert end/%d eq SearchByETime/%d", p.end, i)
+		}
+	} else {
+		glog.Fatalln("not found with etime", p.ETime, data[len(data)-20:])
+	}
+	return i
+}
+
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Typing.tp); l > 0 {
 		start = p.Typing.tp[l-1].t.end + 1
-		t := p.Typing.tp[l-1].t.ETime
-		if i, ok := (TdataSlice(p.Data)).SearchByTime(t); ok {
-			if start != i+1 {
-				glog.Fatalln("assert start == i+1", start, i+1)
-			}
-			start = i + 1
-		} else {
-			glog.Fatalln("not found with time", t, p.Data[len(p.Data)-20:])
-		}
+		i := p.Typing.tp[l-1].t.assertETimeMatchEnd(p.Data)
+		start = i + 1
 	} else {
 		start = p.findChanTypingStart()
 	}
@@ -256,6 +275,7 @@ func (p *Tdatas) ParseTyping() bool {
 			prev.d = *a
 			prev.t.end = i
 			prev.t.ETime = p.Data[i].Time
+			prev.t.assertETimeMatchEnd(p.Data)
 		} else {
 			p.Typing.new_node(i, p)
 		}
@@ -264,6 +284,9 @@ func (p *Tdatas) ParseTyping() bool {
 		if p.Typing.parse_top_bottom() {
 			hasnew = true
 		}
+	}
+	for i, l := 0, len(p.Typing.Data); i < l; i++ {
+		p.Typing.Data[i].assertETimeMatchEnd(p.Data)
 	}
 	return hasnew
 }
