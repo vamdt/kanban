@@ -15,6 +15,8 @@ class KLineMacd
     @options = KLine.extend {}, @root.options.macd
 
   init: ->
+    if @root.param 'nmacd'
+      return off
     margin = @root.options.margin
     width = @root.options.width
     @height = height = 50

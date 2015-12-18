@@ -19,6 +19,20 @@
           only candle line
         </label>
       </div>
+
+      <div class="pure-control-group">
+        <label for="nvolume" class="pure-checkbox">
+          <input id="nvolume" v-model="settings.nvolume" @click="submit" type="checkbox">
+          no volume
+        </label>
+      </div>
+
+      <div class="pure-control-group">
+        <label for="nmacd" class="pure-checkbox">
+          <input id="nmacd" v-model="settings.nmacd" @click="submit" type="checkbox">
+          no macd
+        </label>
+      </div>
     </fieldset>
   </form>
 </template>
@@ -33,6 +47,8 @@ module.exports =
           nc: true
           nmas: true
           ocl: true
+          nvolume: false
+          nmacd: false
 
   methods:
     submit: ->

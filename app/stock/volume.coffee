@@ -11,6 +11,8 @@ class KLineVolume
     @options = KLine.extend {}, @root.options.volume
 
   init: ->
+    if @root.param 'nvolume'
+      return off
     margin = @root.options.margin
     width = @root.options.width
     height = 50

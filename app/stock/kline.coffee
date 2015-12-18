@@ -105,7 +105,7 @@ class KLine
     @plugins = []
     for n,c of Plugins
       plugin = new c @
-      plugin.init()
+      continue if plugin.init() is off
       @add_plugin_obj plugin
 
   resize: (w, h) ->
