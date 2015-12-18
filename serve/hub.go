@@ -73,9 +73,7 @@ func (h *hub) do_unregister(c *connection) {
 	}
 	for name, conns := range holder {
 		h.connections[name] = conns
-		log.Println("pre unwatch", name)
 		stocks.UnWatch(name)
-		log.Println("done unwatch", name)
 	}
 	close(c.send)
 }
@@ -95,15 +93,11 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 		wg.Add(1)
 		go func(c *connection) {
 			defer wg.Done()
-			log.Println("wait send")
 			select {
 			case c.send <- data:
 			default:
-				log.Println("send fail")
 				h.do_unregister(c)
-				log.Println("do unreg ok")
 			}
-			log.Println("send ok")
 		}(conns[i])
 	}
 	wg.Wait()
@@ -128,20 +122,13 @@ func (h *hub) run() {
 	go stocks.Run()
 
 	for {
-		log.Println("wait reg unreg broadcast")
 		select {
 		case req := <-h.register:
-			log.Println("pre do register")
 			h.do_register(req)
-			log.Println("done register")
 		case c := <-h.unregister:
-			log.Println("pre do unregister")
 			h.do_unregister(c)
-			log.Println("done unregister")
 		case m := <-h.broadcast:
-			log.Println("pre do broadcast")
 			h.do_broadcast(m)
-			log.Println("done broadcast")
 		}
 	}
 }
