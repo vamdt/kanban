@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	//_ "net/http/pprof"
 	"os"
 
 	"./dev"
+	"github.com/golang/glog"
 	"gopkg.in/mgo.v2"
 )
 
@@ -54,16 +54,19 @@ func serve() {
 		port = "3000"
 	}
 	addr := ":" + port
-	log.Println("serve on", addr)
+	glog.Infoln("serve on", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func main() {
 	flag.Parse()
+	if opt.debug {
+		flag.Lookup("logtostderr").Value.Set("true")
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			glog.Warningln(err)
 		}
 	}()
 

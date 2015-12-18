@@ -1,6 +1,6 @@
 package crawl
 
-import "log"
+import "github.com/golang/glog"
 
 type hub_parser struct {
 	typing_parser
@@ -58,7 +58,7 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		p.Hub.Data = append(p.Hub.Data, hub)
 		hasnew = true
 	}
-	log.Println("hub len(line)=", len(line), hasnew)
+	glog.Infoln("hub len(line)=", len(line), hasnew)
 	return hasnew
 }
 
@@ -95,7 +95,7 @@ func (p *hub_parser) Link() bool {
 			typing.Type = DownTyping
 			typing.Low = t.Low
 		} else {
-			log.Println("found unkonw typing of hub", typing, t)
+			glog.Infoln("found unkonw typing of hub", typing, t)
 		}
 
 		typing.end = t.end
@@ -116,6 +116,6 @@ func (p *hub_parser) Link() bool {
 		hasnew = true
 	}
 
-	log.Println("hub link len(line)=", len(p.Line), hasnew)
+	glog.Infoln("hub link len(line)=", len(p.Line), hasnew)
 	return hasnew
 }

@@ -1,15 +1,16 @@
 package crawl
 
 import (
-	"log"
 	"sort"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // 走势分为趋势和盘整
 // 趋势分为上涨和下跌
 const (
-	UnknowTyping = iota
+	UnknowTyping int = iota
 	WaitTyping
 	TopTyping
 	BottomTyping
@@ -215,9 +216,12 @@ func (p *Tdatas) ParseTyping() bool {
 		start = p.Typing.tp[l-1].t.end + 1
 		t := p.Typing.tp[l-1].t.ETime
 		if i, ok := (TdataSlice(p.Data)).SearchByTime(t); ok {
+			if start != i+1 {
+				glog.Fatalln("assert start == i+1", start, i+1)
+			}
 			start = i + 1
 		} else {
-			log.Fatalln("not found with time", t, p.Data[len(p.Data)-20:])
+			glog.Fatalln("not found with time", t, p.Data[len(p.Data)-20:])
 		}
 	} else {
 		start = p.findChanTypingStart()
@@ -251,7 +255,7 @@ func (p *Tdatas) ParseTyping() bool {
 			}
 			prev.d = *a
 			prev.t.end = i
-			prev.t.ETime = (*a).Time
+			prev.t.ETime = p.Data[i].Time
 		} else {
 			p.Typing.new_node(i, p)
 		}

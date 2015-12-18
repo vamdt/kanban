@@ -1,6 +1,6 @@
 package crawl
 
-import "log"
+import "github.com/golang/glog"
 
 type segment_parser struct {
 	typing_parser
@@ -16,10 +16,10 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool) bool {
 	if p.need_sure {
 		p.need_sure = false
 		if l := len(p.Data); l > 0 && p.unsure_typing.I == p.Data[l-1].I {
-			log.Println("overwrite prev case2 segment", p.unsure_typing, len(p.Data))
+			glog.V(SegmentI).Infoln("overwrite prev case2 segment", p.unsure_typing, len(p.Data))
 			p.Data[l-1] = p.unsure_typing
 		} else {
-			log.Println("new ensure case2 segment", p.unsure_typing, len(p.Data))
+			glog.V(SegmentD).Infoln("new ensure case2 segment", p.unsure_typing, len(p.Data))
 			p.Data = append(p.Data, p.unsure_typing)
 		}
 	}
@@ -28,14 +28,14 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool) bool {
 		p.wait_3end = true
 		p.need_sure = true
 		p.unsure_typing = typing
-		log.Println("new unsure case2 segment", typing, len(p.Data))
+		glog.V(SegmentD).Infoln("new unsure case2 segment", typing, len(p.Data))
 		return true
 	}
 
 	p.Data = append(p.Data, typing)
 	p.wait_3end = true
 	p.need_sure = false
-	log.Println("new case1 segment typing", typing.Type, len(p.Data))
+	glog.V(SegmentD).Infoln("new case1 segment typing", typing.Type, len(p.Data))
 	return true
 }
 
@@ -73,19 +73,15 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if l := len(p.tp); l > 0 {
 		p.tp[l-1].t.end = i - 2
-		t0 := p.tp[l-1].t.ETime
+		p.tp[l-1].t.ETime = ptyping.Line[i-2].ETime
 		t := ptyping.Line[i-2].ETime
-		if !t.Equal(t0) {
-			log.Println("new node found a diff etime", t, t0)
-		}
 		if j, ok := (TypingSlice(ptyping.Line)).SearchByETime(t); ok {
 			if i-2 != j {
-				log.Fatalln("new node i-2 != j", i-2, j)
+				glog.Fatalln("new node i-2 != j", i-2, j)
 			}
 		} else {
-			log.Fatalln("not found by etime", t)
+			glog.Fatalln("not found by etime", t)
 		}
-		p.tp[l-1].t.ETime = ptyping.Line[i-2].ETime
 	}
 	tp := typing_parser_node{}
 	tp.t = ptyping.Line[i]
@@ -94,7 +90,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	tp.t.end = i
 	tp.d.Time = tp.t.Time
 	if !tp.t.ETime.Equal(ptyping.Line[i].ETime) {
-		log.Fatalln("found tp t.ETime not eq Line[i].ETime")
+		glog.Fatalln("found tp t.ETime not eq Line[i].ETime")
 	}
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
@@ -104,7 +100,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	} else {
 		p.break_index--
 	}
-	log.Println("new node len(tp)", len(p.tp), "line:", i, "len(data):", len(p.Data), "bindex", p.break_index, isbreak)
+	glog.V(SegmentD).Infoln("new node len(tp)", len(p.tp), "line:", i, "len(data):", len(p.Data), "bindex", p.break_index, isbreak)
 }
 
 func (p *segment_parser) clear() {
@@ -188,7 +184,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int, line *Typing)
 		}
 	} else {
 		if prev.t.Type != DownTyping {
-			log.Panicf("prev should be a DownTyping line %+v", prev)
+			glog.Fatalln("prev should be a DownTyping line %+v", prev)
 		}
 		a = UpContainMerge(&prev.d, a)
 		if prev.d.High != a.High {
@@ -248,17 +244,23 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata) (bool, int) {
 
 	i = pprev.t.end + 1
 	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(pprev.t.ETime); ok {
+		if i != j+1 {
+			glog.Fatalln("assert i==j+1", i, j+1)
+		}
 		i = j + 1
 	} else {
-		log.Fatalln("not found by etime", pprev.t.ETime)
+		glog.Fatalln("not found by etime", pprev.t.ETime)
 	}
 	p.Segment.new_node(i, &p.Typing, false)
 
 	i = prev.t.end - 1
 	if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(prev.t.ETime); ok {
+		if i != j-1 {
+			glog.Fatalln("assert i==j-1", i, j-1)
+		}
 		i = j - 1
 	} else {
-		log.Fatalln("not found by etime", prev.t.ETime)
+		glog.Fatalln("not found by etime", prev.t.ETime)
 	}
 	p.Segment.wait_3end = false
 	return false, i
@@ -279,11 +281,11 @@ func (p *Tdatas) ParseSegment() bool {
 		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
 			// assert
 			if start != j+1 {
-				log.Panicln("start should be", start, "!=", j+1)
+				glog.Fatalln("start should be", start, "!=", j+1)
 			}
 			start = j + 1
 		} else {
-			log.Fatalln("not found by etime", etime)
+			glog.Fatalln("not found by etime", etime)
 		}
 	} else if y := len(p.Segment.Data); y > 0 {
 		start = p.Segment.Data[y-1].end + 1
@@ -291,11 +293,11 @@ func (p *Tdatas) ParseSegment() bool {
 		if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
 			// assert
 			if start != j+1 {
-				log.Fatal("start should be", start, "!=", j+1)
+				glog.Fatal("start should be", start, "!=", j+1)
 			}
 			start = j + 1
 		} else {
-			log.Fatalln("not found by etime", etime)
+			glog.Fatalln("not found by etime", etime)
 		}
 	} else if l > 100 {
 		for i := 0; i < l; i++ {
@@ -317,7 +319,7 @@ func (p *Tdatas) ParseSegment() bool {
 		start = 1
 	}
 
-	log.Println("start", start)
+	glog.V(SegmentV).Infoln("start", start)
 	ltp := len(p.Segment.tp)
 	for i := start; i < l; i += 2 {
 
@@ -335,9 +337,9 @@ func (p *Tdatas) ParseSegment() bool {
 		a.Time = p.Typing.Line[i].Time
 
 		if p.Segment.need_sure && p.Segment.is_unsure_typing_fail(a) {
-			log.Println("found unsure typing fail", i, p.Segment.unsure_typing, a)
+			glog.V(SegmentV).Infoln("found unsure typing fail", i, p.Segment.unsure_typing, a)
 			i = p.Segment.clean_fail_unsure_typing() - 2
-			log.Println("new start", i, "need_sure", p.Segment.need_sure)
+			glog.V(SegmentV).Infoln("new start", i, "need_sure", p.Segment.need_sure)
 			p.Segment.clear()
 			continue
 		}
@@ -412,11 +414,11 @@ func (p *Tdatas) ParseSegment() bool {
 			if j, ok := (TypingSlice(p.Typing.Line)).SearchByETime(etime); ok {
 				// assert
 				if i != j-1 {
-					log.Fatal("i should be", i, "!=", j-1)
+					glog.Fatalln("i should be", i, "!=", j-1)
 				}
 				i = j - 1
 			} else {
-				log.Fatalln("not found by etime", etime)
+				glog.Fatalln("not found by etime", etime)
 			}
 			p.Segment.clear()
 		}
@@ -454,7 +456,7 @@ func (p *segment_parser) parse_top_bottom() bool {
 	if dlen > 0 {
 		if typing.Type == TopTyping && p.Data[dlen-1].Type == BottomTyping {
 			if typing.High <= p.Data[dlen-1].High {
-				log.Println("find a bottom high then top")
+				glog.Infoln("find a bottom high then top")
 			}
 		}
 	}

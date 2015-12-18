@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	buy_tick  = 1
-	sell_tick = 2
-	eq_tick   = 3
+	_ int = iota
+	buy_tick
+	sell_tick
+	eq_tick
 )
 
 type Tick struct {
