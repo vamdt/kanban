@@ -281,7 +281,8 @@ class KLine
       fq: @param 'fq'
 
     connect = ->
-      ws = new WebSocket("wss://#{location.host}/socket.io/")
+      protocol = if location.protocol.toLowerCase() == 'https:' then 'wss:' else 'ws:'
+      ws = new WebSocket("#{protocol}//#{location.host}/socket.io/")
       io.ws = ws
       ws.onopen = (evt) ->
         io.connected = true
