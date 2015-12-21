@@ -4,9 +4,7 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 module.exports = {
   cache: true,
   context: __dirname + "/app",
-  entry: {
-    main: "./main.coffee"
-  },
+  entry: "./main.coffee",
   output: {
     path: path.join(__dirname, "dist", "static"),
     filename: "[name].js",
@@ -61,8 +59,6 @@ module.exports = {
   devServer: {
     https: true,
     port: 9001,
-    progress: true,
-    hot: true,
     quiet: false,
     noInfo: true,
     stats: { colors: true },
