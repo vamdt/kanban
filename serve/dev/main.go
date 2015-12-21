@@ -36,8 +36,7 @@ func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  http.FileServer(http.Dir("dist/static")).ServeHTTP(w, r)
-	http.NotFound(w, r)
+	http.FileServer(http.Dir("dist/static")).ServeHTTP(w, r)
 }
 
 func (p *Dev) ServeHTTP(w http.ResponseWriter, req *http.Request) {
