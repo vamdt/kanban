@@ -63,13 +63,5 @@ module.exports = {
     noInfo: true,
     stats: { colors: true },
     historyApiFallback: false,
-    contentBase: 'app',
-    proxy: {
-      '*': {
-        target: 'https://127.0.0.1:3002',
-        secure: false,
-        ws: true,
-      },
-    },
   }
 };

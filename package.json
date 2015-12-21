@@ -3,6 +3,7 @@
   "private": true,
   "license": "",
   "scripts": {
+    "webpack-dev-server": "webpack-dev-server --hot --output-public-path='https://localhost:3000/' --content-base='https://localhost:3000/' --inline",
     "browser-sync": "browser-sync start --proxy='https://localhost:3002' --ws --files='dist/static/*.*'",
     "build-dev-ca": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout conf/key.pem -out conf/cert.pem",
     "copy-static": "mkdir -p dist/static; cp app/index.html app/apple-touch-icon.png app/*.ico app/robots.txt dist/static",

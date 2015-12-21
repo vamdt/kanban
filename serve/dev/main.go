@@ -15,6 +15,12 @@ func NewDev() *Dev { return &Dev{} }
 
 func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 	upath := r.URL.Path
+
+	if strings.HasPrefix(upath, "/main.js") {
+		http.Redirect(w, r, "https://localhost:9001/main.js", 307)
+		return
+	}
+
 	if strings.HasPrefix(upath, "/bower_components") {
 		http.ServeFile(w, r, upath[1:])
 		return
