@@ -281,7 +281,7 @@ class KLine
       fq: @param 'fq'
 
     connect = ->
-      ws = new WebSocket("ws://#{location.hostname}:3002/socket.io/")
+      ws = new WebSocket("wss://#{location.host}/socket.io/")
       io.ws = ws
       ws.onopen = (evt) ->
         io.connected = true

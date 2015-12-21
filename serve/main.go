@@ -55,7 +55,7 @@ func serve() {
 	}
 	addr := ":" + port
 	glog.Infoln("serve on", addr)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	http.ListenAndServeTLS(addr, "conf/cert.pem", "conf/key.pem", nil)
 }
 
 func main() {

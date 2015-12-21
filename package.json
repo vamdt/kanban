@@ -1,5 +1,7 @@
 {
   "scripts": {
+    "serve": "browser-sync start --proxy='https://localhost:3002' --ws",
+    "build-dev-ca": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout conf/key.pem -out conf/cert.pem",
     "copy-static": "mkdir -p dist/static; cp app/index.html app/apple-touch-icon.png app/*.ico app/robots.txt dist/static",
     "build-bin": "go build -o dist/bin/kanpan ./serve",
     "build-static": "webpack -p",
@@ -12,6 +14,7 @@
     "autoprefixer": "^6.1.0",
     "babel-loader": "^5.4.0",
     "babel-runtime": "^5.8.25",
+    "browser-sync": "^2.10.1",
     "coffee-loader": "^0.7.2",
     "coffee-script": "^1.10.0",
     "css-loader": "^0.21.0",

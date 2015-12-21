@@ -59,6 +59,7 @@ module.exports = {
     //})
   //],
   devServer: {
+    https: true,
     port: 9001,
     progress: true,
     hot: true,
@@ -68,7 +69,11 @@ module.exports = {
     historyApiFallback: false,
     contentBase: 'app',
     proxy: {
-      '*': 'http://127.0.0.1:3002'
+      '*': {
+        target: 'https://127.0.0.1:3002',
+        secure: false,
+        ws: true,
+      },
     },
   }
 };
