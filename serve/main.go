@@ -42,9 +42,10 @@ func serve() {
 	http.HandleFunc("/socket.io/", serveWs)
 	http.HandleFunc("/search", search_handle)
 
-	dev_helper := dev.NewDev()
 	if opt.debug {
-		http.Handle("/", dev_helper)
+		dev.Start()
+		defer dev.Exit()
+		http.Handle("/", dev.Dev)
 	} else {
 		http.Handle("/", http.FileServer(http.Dir("static")))
 	}

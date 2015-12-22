@@ -191,6 +191,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int, line *Typing)
 	prev.t.Low = prev.d.Low
 	prev.t.end = i
 	prev.t.ETime = line.ETime
+	glog.V(SegmentD).Infof("merge prev t %+v with line[%d] %+v", prev.t, i, line)
 }
 
 func need_skip_line(prev *typing_parser_node, a *Tdata) bool {
