@@ -7,14 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
 )
 
 type dev struct {
+	https      bool
 	webpack    bool
 	webpackCmd *exec.Cmd
+	port       int
 }
 
 var Dev *dev = &dev{}
@@ -26,8 +29,13 @@ func init() {
 func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 	upath := r.URL.Path
 
-	if strings.HasPrefix(upath, "/main.js") {
-		http.Redirect(w, r, "https://localhost:9001/main.js", 307)
+	if Dev.webpack && strings.HasPrefix(upath, "/main.js") {
+		uri := "http://localhost:"
+		if Dev.https {
+			uri = "https://localhost:"
+		}
+		uri = uri + strconv.Itoa(Dev.port) + "/main.js"
+		http.Redirect(w, r, uri, 307)
 		return
 	}
 
@@ -55,9 +63,28 @@ func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir("dist/static")).ServeHTTP(w, r)
 }
 
-func (p *dev) Start() {
+func (p *dev) Start(https bool, port string) {
 	if p.webpack && p.webpackCmd == nil {
-		p.webpackCmd = exec.Command("webpack-dev-server", "--hot --inline", "--output-public-path=https://localhost:3000/", "--content-base=https://localhost:3000/")
+		if iport, err := strconv.Atoi(port[1:]); err == nil {
+			p.port = iport + 1
+		} else {
+			p.port = 31234
+		}
+		p.https = https
+		args := []string{
+			"--hot",
+			"--inline",
+		}
+		prot := "http"
+		if https {
+			args = append(args, "--https")
+			prot = "https"
+		}
+		args = append(args, "--port="+strconv.Itoa(p.port))
+		args = append(args, "--output-public-path="+prot+"://localhost"+port+"/")
+		args = append(args, "--content-base="+prot+"://localhost"+port+"/")
+
+		p.webpackCmd = exec.Command("webpack-dev-server", args...)
 		p.webpackCmd.Stdout = os.Stdout
 		p.webpackCmd.Stderr = os.Stderr
 		err := p.webpackCmd.Start()
@@ -74,8 +101,8 @@ func (p *dev) Exit() {
 	}
 }
 
-func Start() {
-	Dev.Start()
+func Start(https bool, port string) {
+	Dev.Start(https, port)
 }
 
 func Exit() {

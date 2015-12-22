@@ -14,6 +14,7 @@ import (
 
 type Opt struct {
 	debug bool
+	https bool
 	mongo string
 }
 
@@ -23,6 +24,7 @@ var db *mgo.Database
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
+	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.mongo, "mongo", "127.0.0.1", "mongo uri")
 }
 
@@ -42,21 +44,25 @@ func serve() {
 	http.HandleFunc("/socket.io/", serveWs)
 	http.HandleFunc("/search", search_handle)
 
+	port := os.Getenv("PORT")
+
 	if opt.debug {
-		dev.Start()
+    if len(port) == 0 {
+      port = ":3000"
+    }
+		dev.Start(opt.https, port)
 		defer dev.Exit()
 		http.Handle("/", dev.Dev)
 	} else {
 		http.Handle("/", http.FileServer(http.Dir("static")))
 	}
 
-	port := os.Getenv("PORT")
-	if len(port) == 0 {
-		port = "3000"
+	glog.Infoln("serve on", port)
+	if opt.https {
+		http.ListenAndServeTLS(port, "conf/cert.pem", "conf/key.pem", nil)
+	} else {
+		http.ListenAndServe(port, nil)
 	}
-	addr := ":" + port
-	glog.Infoln("serve on", addr)
-	http.ListenAndServeTLS(addr, "conf/cert.pem", "conf/key.pem", nil)
 }
 
 func main() {

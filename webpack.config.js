@@ -57,8 +57,6 @@ module.exports = {
     //})
   //],
   devServer: {
-    https: true,
-    port: 9001,
     quiet: false,
     noInfo: true,
     stats: { colors: true },
