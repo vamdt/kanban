@@ -11,8 +11,8 @@ class KLineTyping
   init: ->
 
   update: (data, datasel, dataset) ->
-    svg = @_ui.svg
     @_ui.svg.select("g.typing").remove()
+    return unless datasel.Typing.Data
     g = @_ui.svg.append("g")
       .attr("class", "typing")
 

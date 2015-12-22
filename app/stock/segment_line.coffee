@@ -11,7 +11,6 @@ class KLineSegmentLine
   init: ->
 
   update: (data, datasel, dataset) ->
-    svg = @_ui.svg
     @_ui.svg.select("g.segment_line").remove()
     if not datasel.Segment
       return

@@ -9,6 +9,7 @@ class KLineHub
   init: ->
 
   update: (data, datasel, dataset) ->
+    @_ui.svg.selectAll("g.hub").remove()
     ksel = @root.param 'k'
     levels = [
       {level: '1', name: 'm1s'}
@@ -19,23 +20,16 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
+    kselIndex = i for level, i in levels when level.level is ksel
     line = dataset.m1s.Segment.Line
-    for level in levels when dataset[level.name]
+    for level,i in levels when dataset[level.name] and Math.abs(i-kselIndex) < 3
       k = level.level
       d = level.name
       iscur = ksel is k
-      if iscur
-        ssel = line
       @draw(k, dataset[d].Hub.Data, line, data, iscur)
-      if should_return
-        return
-      if iscur
-        should_return = on
       line = dataset[d].Hub.Line
 
   draw: (k, data, line, kdata, issel) ->
-    svg = @_ui.svg
-    @_ui.svg.select("g#hub-#{k}").remove()
     if not data
       console.log 'no hub level', k
       return
@@ -44,6 +38,7 @@ class KLineHub
       return
     g = @_ui.svg.append("g")
       .attr("id", "hub-#{k}")
+      .attr("class", "hub")
 
     x = @_ui.x
     y = @_ui.y
@@ -77,7 +72,6 @@ class KLineHub
       @link(g, line, kdata)
 
   link: (g, ldata, kdata) ->
-    svg = @_ui.svg
     path = g.append("path")
       .style("fill", "none")
       .style("stroke", '#abc')

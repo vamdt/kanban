@@ -38,6 +38,8 @@ Vue.directive 'kanpan',
       settings[k] = v
 
     if @kl
+      if value.s is @kl.param 's'
+        return @kl.param settings
       @kl.stop()
     else
       @kl = new KLine(container: @el)

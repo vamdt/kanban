@@ -1,4 +1,3 @@
-require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 defaults =
@@ -16,6 +15,8 @@ defaults =
     'box-shadow': '0px 0px 3px 3px rgba(0, 0, 0, 0.3)'
     'opacity': '0.8'
     #'visibility': 'hidden'
+    'top': 0
+    'display': 'none'
   width : 120
   height : 82
   x:
@@ -36,6 +37,9 @@ defaults =
       'background' : '#FFF'
       'border' : '1px solid #E3F4FF'
 
+formatValue = d3.format(",.2f")
+fmtCent = (d) -> formatValue d/100
+
 class KLineToolTip
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.tooltip, defaults
@@ -43,14 +47,21 @@ class KLineToolTip
   init: ->
     svg = @root._ui.svg
     container = @root._ui.container
-    @root._ui.tips = container.append("div")
-      .attr("class", "tooltip")
+    tips = container.append("div")
       .attr("id", "tooltip")
     for k,v of @options.style
-      @root._ui.tips.style k, v
+      tips.style k, v
+    @tips = tips
 
+    @root.dispatch.on 'tip', (d) ->
+      tips
+        .style('display', '')
+        .html("#{d.date}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
+        .transition()
+        .duration(2000)
+        .transition()
+        .style('display', 'none')
 
   update: (data) ->
-    svg = @root._ui.svg
 
 KLine.register_plugin 'tooltip', KLineToolTip

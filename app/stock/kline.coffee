@@ -36,7 +36,7 @@ kColor = (d, i, data) ->
 
 class KLine
   constructor: (@options) ->
-    @dispatch = d3.dispatch("resize")
+    @dispatch = d3.dispatch('resize', 'param', 'tip')
     @options = extend {}, @options, defaults
     @_data = []
     @_ui = {}
@@ -62,7 +62,7 @@ class KLine
       return @_data.slice(@_left, @_left+@options.size+1)
 
     s = data.id
-    k = data.param.k
+    k = @param 'k'
     dataset = switch k
       when '1' then data.m1s
       when '5' then data.m5s
@@ -84,6 +84,7 @@ class KLine
       when 'object'
         for k,v of p
           @_param[k] = v
+        @dispatch.param()
       when 'string'
         return @_param[p]
       else
@@ -97,6 +98,10 @@ class KLine
     @on_event 'kdata', (data) =>
       @data data
       @draw()
+    @dispatch.on 'param.core', =>
+      d3.timer =>
+        @data @_dataset
+        @draw()
 
   add_plugin_obj: (plugin) ->
     @plugins.push plugin

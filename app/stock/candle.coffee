@@ -5,10 +5,6 @@ KLineMas = require './mas'
 defaults =
   width: 2
 
-formatDate = d3.time.format("%Y-%m-%d %X")
-formatValue = d3.format(",.2f")
-fmtCent = (d) -> formatValue d/100
-
 class KLineCandle
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.candle, defaults
@@ -34,15 +30,12 @@ class KLineCandle
     y = @_ui.y
     candleWidth = @options.width
 
-    tips = @_ui.tips
-    show = (d, i) ->
-      tips.html("#{formatDate(d.date)}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
-    svg.selectAll("rect.candle").remove()
-    svg.selectAll("line.candle").remove()
+    svg.selectAll(".candle").remove()
 
     nc = @root.param 'nc'
     if nc
       return
+    dispatch = @root.dispatch
     ocl = @root.param 'ocl'
     if not ocl
       svg.selectAll("rect.candle")
@@ -56,7 +49,7 @@ class KLineCandle
         .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
         .attr("stroke", kColor)
         .attr("fill", kColor)
-        .on('mouseover', (d, i) -> show d, i)
+        .on('mouseover', (d, i) -> dispatch.tip d, i)
 
     svg.selectAll("line.candle")
       .data(data)
@@ -69,7 +62,7 @@ class KLineCandle
       .attr("y1", (d, i) -> y(d.high))
       .attr("x2", (d, i) -> x(i))
       .attr("y2", (d, i) -> y(d.low - Math.max(1, Math.min(d.high - d.low, 0))))
-      .on('mouseover', (d, i) -> show d, i)
+      .on('mouseover', (d, i) -> dispatch.tip d, i)
     opacity = @root.param 'opacity'
     if opacity
       svg.selectAll('.candle').style('opacity', opacity)
