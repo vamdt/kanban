@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -32,8 +33,8 @@ type Stock struct {
 	Ticks     Ticks  `json:"-"`
 	last_tick RealtimeTick
 	hash      int
-	count     int
-	loaded    int
+	count     int32
+	loaded    int32
 	lst_trade time.Time
 }
 
@@ -99,9 +100,8 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	s := &Stock{Id: id, hash: StockHash(id), count: 1}
 	i, ok := p.stocks.Search(id)
 	if ok {
-		p.stocks[i].count++
-		if p.stocks[i].count < 1 {
-			p.stocks[i].count = 1
+		if atomic.AddInt32(&p.stocks[i].count, 1) < 1 {
+			atomic.StoreInt32(&p.stocks[i].count, 1)
 		}
 		return i, p.stocks[i], false
 	}
@@ -124,7 +124,7 @@ func (p *Stocks) Remove(id string) {
 	p.rwmutex.Lock()
 	defer p.rwmutex.Unlock()
 	if i, ok := p.stocks.Search(id); ok {
-		p.stocks[i].count--
+		atomic.AddInt32(&p.stocks[i].count, -1)
 	}
 }
 
@@ -156,10 +156,10 @@ func (p *Stocks) Ticks_update_real() {
 			pstocks = p.stocks[i:l]
 		}
 		for j := 0; j < 50 && i < l; i, j = i+1, j+1 {
-			if p.stocks[i].loaded < 2 {
+			if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
 				continue
 			}
-			if p.stocks[i].count < 1 {
+			if atomic.LoadInt32(&p.stocks[i].count) < 1 {
 				continue
 			}
 			if b.Len() > 0 {
@@ -273,10 +273,10 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 }
 
 func (p *Stock) Update(db *mgo.Database) bool {
-	if p.loaded > 0 {
+	if atomic.LoadInt32(&p.loaded) > 0 {
 		return false
 	}
-	p.loaded = 1
+	atomic.StoreInt32(&p.loaded, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -293,7 +293,7 @@ func (p *Stock) Update(db *mgo.Database) bool {
 
 	wg.Wait()
 	p.Merge()
-	p.loaded = 2
+	atomic.StoreInt32(&p.loaded, 2)
 	return true
 }
 
@@ -493,14 +493,11 @@ func (p *Stock) ticks_get_today() bool {
 	}
 	body = bytes.TrimSpace(body)
 	lines := bytes.Split(body, []byte("\n"))
-	count := len(lines) - 2
-	if count < 1 {
-		return false
-	}
 
-	ticks := make([]Tick, count)
+	ticks := []Tick{}
+	tick := Tick{}
 	nul := []byte("")
-	for i, j := len(lines)-1, 0; i > 0 && j < count; i-- {
+	for i := len(lines) - 1; i > 0; i-- {
 		line := bytes.TrimSpace(lines[i])
 		line = bytes.Trim(line, ");")
 		infos := bytes.Split(line, []byte("] = new Array("))
@@ -514,8 +511,11 @@ func (p *Stock) ticks_get_today() bool {
 			continue
 		}
 
-		ticks[j].FromString(t, infos[0], infos[2], nul, infos[1], nul, infos[3])
-		j++
+		tick.FromString(t, infos[0], infos[2], nul, infos[1], nul, infos[3])
+		if tick.Volume == 0 && tick.Price == 0 {
+			continue
+		}
+		ticks = append(ticks, tick)
 	}
 	FixTickTime(ticks)
 	FixTickData(ticks)

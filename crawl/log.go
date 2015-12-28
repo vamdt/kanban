@@ -5,12 +5,15 @@ import "github.com/golang/glog"
 const (
 	_ glog.Level = iota
 	SegmentI
-	SegmentD
-	SegmentV
 	LineI
-	LineD
-	LineV
 	TypingI
+	HttpI
+	SegmentD
+	LineD
 	TypingD
+	HttpD
+	SegmentV
+	LineV
 	TypingV
+	HttpV
 )

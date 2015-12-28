@@ -2,19 +2,21 @@ package crawl
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/golang/glog"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
 
 func Http_get(url string, referer *string) (*http.Response, error) {
+	glog.V(HttpV).Infoln("http get", url)
 	client := &http.Client{Timeout: time.Duration(3 * time.Second)}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		glog.Warningln("http get fail", err)
 		return nil, err
 	}
 
@@ -58,7 +60,7 @@ func Http_get_gbk(url string, referer *string) ([]byte, error) {
 func Download(url string) []byte {
 	body, err := Http_get_raw(url, nil)
 	if err != nil {
-		log.Println(err)
+		glog.Warningln("Download fail", err)
 		return nil
 	}
 	return body
