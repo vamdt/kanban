@@ -59,7 +59,9 @@ module.exports =
     catch
 
     stocks: stocks || []
-    cur_stock_name: @stock_name @$route.params.sid, stocks
+  route:
+    data: ->
+      cur_stock_name: @stock_name @$route.params.sid
 
   methods:
     tips: (msg, type) ->
