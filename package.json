@@ -7,7 +7,7 @@
     "browser-sync": "browser-sync start --proxy='https://localhost:3002' --ws --files='dist/static/*.*'",
     "build-dev-ca": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout conf/key.pem -out conf/cert.pem",
     "copy-static": "mkdir -p dist/static; cp app/index.html app/apple-touch-icon.png app/*.ico app/robots.txt dist/static",
-    "build-bin": "go build -o dist/bin/kanpan ./serve",
+    "build-bin": "go build -o dist/bin/kanpan",
     "build-static": "webpack -p",
     "build": "rm -rf dist;mkdir -p dist/bin; cp -r conf dist; npm run copy-static; npm run build-bin && npm run build-static "
   },
