@@ -52,6 +52,7 @@
 
 <script lang="coffee">
 d3 = require 'd3'
+param = (hash, key) -> (hash||{})[key]
 module.exports =
   data: ->
     try
@@ -59,9 +60,7 @@ module.exports =
     catch
 
     stocks: stocks || []
-  route:
-    data: ->
-      cur_stock_name: @stock_name @$route.params.sid
+    cur_stock_name: @stock_name param(@$route.params, 'sid'), stocks
 
   methods:
     tips: (msg, type) ->
