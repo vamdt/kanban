@@ -1,5 +1,5 @@
 <style>
-#level li.pure-menu-selected {
+#level a.v-link-active {
   background: #fcebbd;
 }
 </style>
@@ -7,9 +7,9 @@
 <template>
   <div id="level" class="pure-menu pure-menu-horizontal">
     <ul class="pure-menu-list">
-        <li class="pure-menu-item" v-bind:class="{'pure-menu-selected':
-        k==opt.k}" v-for="k in levels">
-          <a class="pure-menu-link" @click="level(k)">{{k}}</a>
+        <li class="pure-menu-item" v-for="k in levels">
+          <a class="pure-menu-link" v-link="{name:'stock', params: {sid:
+          opt.s, k: k}, replace: true}">{{k}}</a>
         </li>
     </ul>
   </div>
@@ -38,10 +38,12 @@ Vue.directive 'kanpan',
       settings[k] = v
 
     if @kl
+      console.log 'has kl'
       if value.s is @kl.param 's'
         return @kl.param settings
       @kl.stop()
     else
+      console.log 'new kl'
       @kl = new KLine(container: @el)
     kl = @kl
     kl.param settings
@@ -60,9 +62,4 @@ module.exports =
       @opt =
         s: @$route.params.sid
         k: @$route.params.k
-
-  methods:
-    level: (k) ->
-      @opt.k = k
-
 </script>
