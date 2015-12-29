@@ -47,9 +47,8 @@ type Stocks struct {
 	min_hub_height int
 }
 
-func (p *Stocks) Init() {
-	log.Println("stocks init")
-	p.min_hub_height = 10
+func NewStocks() *Stocks {
+	return &Stocks{min_hub_height: 10}
 }
 
 func (p *Stocks) Run() {
