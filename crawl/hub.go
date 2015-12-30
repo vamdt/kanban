@@ -111,6 +111,8 @@ func (p *hub_parser) Link() bool {
 			} else {
 				p.Line[l-1].Low = typing.Low
 			}
+      p.Line[l-1].end = typing.end
+      p.Line[l-1].ETime = typing.ETime
 		} else {
 			p.Line = append(p.Line, typing)
 		}

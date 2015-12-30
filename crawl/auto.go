@@ -55,13 +55,11 @@ func (p *Stocks) Run() {
 	if p.min_hub_height < 1 {
 		p.min_hub_height = 1
 	}
-	go p.update()
+
 	for {
-		if !IsTradeTime(time.Now()) {
-			time.Sleep(tickPeriod)
-			continue
+		if IsTradeTime(time.Now()) {
+			p.Ticks_update_real()
 		}
-		p.Ticks_update_real()
 		time.Sleep(tickPeriod)
 	}
 }
@@ -80,25 +78,20 @@ func (p *Stocks) res(stock *Stock) {
 	}
 }
 
-func (p *Stocks) update() {
-	for {
-		p.rwmutex.RLock()
-		for i, c := 0, len(p.stocks); i < c; i++ {
-			if p.stocks[i].Update(p.db) {
-				p.res(p.stocks[i])
-			}
-		}
-		p.rwmutex.RUnlock()
-		time.Sleep(time.Second)
+func (p *Stocks) update(s *Stock) {
+	if s.Update(p.db) {
+		p.res(s)
 	}
 }
 
 func (p *Stocks) Insert(id string) (int, *Stock, bool) {
-	p.rwmutex.Lock()
-	defer p.rwmutex.Unlock()
 	s := &Stock{Id: id, hash: StockHash(id), count: 1}
+	go p.update(s)
+
+	p.rwmutex.RLock()
 	i, ok := p.stocks.Search(id)
 	if ok {
+		defer p.rwmutex.RUnlock()
 		if atomic.AddInt32(&p.stocks[i].count, 1) < 1 {
 			atomic.StoreInt32(&p.stocks[i].count, 1)
 		}
@@ -106,6 +99,11 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	}
 
 	s.set_min_hub_height(p.min_hub_height)
+
+	p.rwmutex.RUnlock()
+	p.rwmutex.Lock()
+	defer p.rwmutex.Unlock()
+
 	if i < 1 {
 		p.stocks = append(PStockSlice{s}, p.stocks...)
 		return 0, s, true
@@ -120,8 +118,8 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 }
 
 func (p *Stocks) Remove(id string) {
-	p.rwmutex.Lock()
-	defer p.rwmutex.Unlock()
+	p.rwmutex.RLock()
+	defer p.rwmutex.RUnlock()
 	if i, ok := p.stocks.Search(id); ok {
 		atomic.AddInt32(&p.stocks[i].count, -1)
 	}
@@ -141,30 +139,39 @@ func (p *Stocks) UnWatch(id string) {
 	p.Remove(id)
 }
 
-func (p *Stocks) Ticks_update_real() {
+func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 	p.rwmutex.RLock()
 	defer p.rwmutex.RUnlock()
+	for i, l := 0, len(p.stocks); i < l; {
+		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
+			continue
+		}
+		if atomic.LoadInt32(&p.stocks[i].count) < 1 {
+			continue
+		}
+		pstocks = append(pstocks, p.stocks[i])
+	}
+	return
+}
+
+func (p *Stocks) Ticks_update_real() {
 	var wg sync.WaitGroup
 
-	for i, l := 0, len(p.stocks); i < l; {
+  stocks := p.Find_need_update_tick_ids()
+	for i, l := 0, len(stocks); i < l; {
 		var b bytes.Buffer
 		var pstocks PStockSlice
-		if i+10 < l {
-			pstocks = p.stocks[i : i+10]
+		step := 50
+		if i+step < l {
+			pstocks = stocks[i : i+step]
 		} else {
-			pstocks = p.stocks[i:l]
+			pstocks = stocks[i:l]
 		}
-		for j := 0; j < 50 && i < l; i, j = i+1, j+1 {
-			if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
-				continue
-			}
-			if atomic.LoadInt32(&p.stocks[i].count) < 1 {
-				continue
-			}
+		for j := 0; j < step && i < l; i, j = i+1, j+1 {
 			if b.Len() > 0 {
 				b.WriteString(",")
 			}
-			b.WriteString(p.stocks[i].Id)
+			b.WriteString(stocks[i].Id)
 		}
 		if b.Len() < 1 {
 			continue
@@ -276,21 +283,12 @@ func (p *Stock) Update(db *mgo.Database) bool {
 		return false
 	}
 	atomic.StoreInt32(&p.loaded, 1)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		p.Days_update(db)
-		wg.Done()
-	}()
 
-	wg.Add(1)
-	go func() {
-		p.Ticks_update(db)
-		p.Ticks_today_update()
-		wg.Done()
-	}()
+	p.Days_update(db)
 
-	wg.Wait()
+	p.Ticks_update(db)
+	p.Ticks_today_update()
+
 	p.Merge()
 	atomic.StoreInt32(&p.loaded, 2)
 	return true
