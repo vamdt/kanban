@@ -19,26 +19,18 @@ type Opt struct {
 }
 
 var opt Opt
-var db *mgo.Database
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
 	flag.BoolVar(&opt.https, "https", false, "https")
-	flag.StringVar(&opt.mongo, "mongo", "127.0.0.1", "mongo uri")
+	flag.StringVar(&opt.mongo, "mongo", "mongodb://127.0.0.1/stock", "mongo uri")
 }
 
 func serve() {
 	if opt.debug {
 		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	}
-
-	session, err := mgo.Dial(opt.mongo)
-	if err != nil {
-		panic(err)
-	}
-	defer session.Close()
-	db = session.DB("stock")
 
 	go h.run()
 	http.HandleFunc("/socket.io/", serveWs)
@@ -47,9 +39,9 @@ func serve() {
 	port := os.Getenv("PORT")
 
 	if opt.debug {
-    if len(port) == 0 {
-      port = ":3000"
-    }
+		if len(port) == 0 {
+			port = ":3000"
+		}
 		dev.Start(opt.https, port)
 		defer dev.Exit()
 		http.Handle("/", dev.Dev)

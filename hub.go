@@ -117,7 +117,7 @@ func (h *hub) send(m *crawl.Stock, c *connection) {
 }
 
 func (h *hub) run() {
-	stocks.DB(db)
+	stocks.DB(opt.mongo)
 	stocks.Chan(h.broadcast)
 	go stocks.Run()
 

@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/golang/glog"
+
 	"gopkg.in/mgo.v2"
 )
 
@@ -42,6 +44,7 @@ type Stocks struct {
 	stocks  PStockSlice
 	rwmutex sync.RWMutex
 	db      *mgo.Database
+	store   Store
 	ch      chan *Stock
 
 	min_hub_height int
@@ -64,8 +67,13 @@ func (p *Stocks) Run() {
 	}
 }
 
-func (p *Stocks) DB(db *mgo.Database) {
-	p.db = db
+func (p *Stocks) DB(dsn string) {
+	store, err := NewMongoStore(dsn)
+	if err != nil {
+		glog.Fatalln(err)
+	}
+	p.store = store
+	p.db = store.session.DB("")
 }
 
 func (p *Stocks) Chan(ch chan *Stock) {
@@ -157,7 +165,7 @@ func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 func (p *Stocks) Ticks_update_real() {
 	var wg sync.WaitGroup
 
-  stocks := p.Find_need_update_tick_ids()
+	stocks := p.Find_need_update_tick_ids()
 	for i, l := 0, len(stocks); i < l; {
 		var b bytes.Buffer
 		var pstocks PStockSlice
