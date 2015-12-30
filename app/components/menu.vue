@@ -29,6 +29,7 @@
             <ul class="pure-menu-children">
               <li v-for="s in stocks" class="pure-menu-item">
                 <a v-link="{ path: '/s/'+s.sid+'/1' }"
+                @click.prevent="show_stock(s)"
                 class="pure-menu-link">{{s.name ? s.name : s.sid}}</a>
               </li>
             </ul>
@@ -87,7 +88,10 @@ module.exports =
     show_stock: (to) ->
       @cur_stock_name = to.name || to.sid
       @lru to
-      @$route.router.go(name: 'stock', params: { sid: to.sid, k: 1})
+      @$route.router.go
+        name: 'stock'
+        params: { sid: to.sid, k: 1}
+        replace: @$route.name is 'stock'
 
     submit: (event) ->
       sid = @sid
