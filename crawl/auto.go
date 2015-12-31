@@ -85,23 +85,29 @@ func (p *Stocks) update(s *Stock) {
 }
 
 func (p *Stocks) Insert(id string) (int, *Stock, bool) {
+	p.rwmutex.RLock()
+	glog.V(LogV).Infoln("RLock in stocks insert", id)
+	i, ok := p.stocks.Search(id)
+	if ok {
+		s := p.stocks[i]
+		p.rwmutex.RUnlock()
+		glog.V(LogV).Infoln("RUnLock in stocks insert search ok", id)
+		if atomic.AddInt32(&s.count, 1) < 1 {
+			atomic.StoreInt32(&s.count, 1)
+		}
+		return i, s, false
+	}
+
 	s := &Stock{Id: id, hash: StockHash(id), count: 1}
 	go p.update(s)
 
-	p.rwmutex.RLock()
-	i, ok := p.stocks.Search(id)
-	if ok {
-		defer p.rwmutex.RUnlock()
-		if atomic.AddInt32(&p.stocks[i].count, 1) < 1 {
-			atomic.StoreInt32(&p.stocks[i].count, 1)
-		}
-		return i, p.stocks[i], false
-	}
-
 	s.set_min_hub_height(p.min_hub_height)
 
+	glog.V(LogV).Infoln("RUnLock in stocks pre insert", id)
 	p.rwmutex.RUnlock()
+	glog.V(LogV).Infoln("Lock in stocks pre insert", id)
 	p.rwmutex.Lock()
+	defer glog.V(LogV).Infoln("defer UnLock in stocks pre insert", id)
 	defer p.rwmutex.Unlock()
 
 	if i < 1 {
@@ -119,6 +125,8 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 
 func (p *Stocks) Remove(id string) {
 	p.rwmutex.RLock()
+	glog.V(LogV).Infoln("RLock in stocks remove", id)
+	defer glog.V(LogV).Infoln("defer RUnLock in stocks remove", id)
 	defer p.rwmutex.RUnlock()
 	if i, ok := p.stocks.Search(id); ok {
 		atomic.AddInt32(&p.stocks[i].count, -1)
@@ -128,9 +136,9 @@ func (p *Stocks) Remove(id string) {
 func (p *Stocks) Watch(id string) (*Stock, bool) {
 	i, s, isnew := p.Insert(id)
 	if isnew {
-		log.Println("watch new stock", id, i)
+		glog.V(LogV).Infof("watch new stock id=%s index=%d", id, i)
 	} else {
-		log.Println("watch stock", id, i, s.count)
+		glog.V(LogV).Infoln("watch stock id=%s index=%d count=%d", id, i, s.count)
 	}
 	return s, isnew
 }
@@ -141,7 +149,9 @@ func (p *Stocks) UnWatch(id string) {
 
 func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 	p.rwmutex.RLock()
+	glog.V(LogV).Infoln("RLock in find update tick ids")
 	defer p.rwmutex.RUnlock()
+	glog.V(LogV).Infoln("defer RUnLock in find update tick ids")
 	for i, l := 0, len(p.stocks); i < l; {
 		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
 			continue
@@ -198,14 +208,18 @@ func (p *Stocks) Ticks_update_real() {
 				if idx, ok := pstocks.Search(string(id)); ok {
 					if pstocks[idx].tick_get_real(info[1]) {
 						pstocks[idx].Merge()
+						glog.V(LogV).Infoln("pre send stocks", pstocks[idx].Id)
 						p.res(pstocks[idx])
+						glog.V(LogV).Infoln("send done stocks", pstocks[idx].Id)
 					}
 				}
 			}
 		}(b.String(), pstocks)
 
 	}
+	glog.V(LogV).Infoln("wait Ticks_update_real")
 	wg.Wait()
+	glog.V(LogV).Infoln("Ticks_update_real done")
 }
 
 func StockHash(id string) int {
