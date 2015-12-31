@@ -8,12 +8,15 @@ const (
 	LineI
 	TypingI
 	HttpI
+  LogI
 	SegmentD
 	LineD
 	TypingD
 	HttpD
+  LogD
 	SegmentV
 	LineV
 	TypingV
 	HttpV
+  LogV
 )

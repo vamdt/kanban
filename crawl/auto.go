@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-
-	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -43,7 +41,6 @@ type Stock struct {
 type Stocks struct {
 	stocks  PStockSlice
 	rwmutex sync.RWMutex
-	db      *mgo.Database
 	store   Store
 	ch      chan *Stock
 
@@ -51,7 +48,11 @@ type Stocks struct {
 }
 
 func NewStocks() *Stocks {
-	return &Stocks{min_hub_height: 10}
+	store, err := NewMongoStore()
+	if err != nil {
+		glog.Fatalln(err)
+	}
+	return &Stocks{min_hub_height: 10, store: store}
 }
 
 func (p *Stocks) Run() {
@@ -67,15 +68,6 @@ func (p *Stocks) Run() {
 	}
 }
 
-func (p *Stocks) DB(dsn string) {
-	store, err := NewMongoStore(dsn)
-	if err != nil {
-		glog.Fatalln(err)
-	}
-	p.store = store
-	p.db = store.session.DB("")
-}
-
 func (p *Stocks) Chan(ch chan *Stock) {
 	p.ch = ch
 }
@@ -87,7 +79,7 @@ func (p *Stocks) res(stock *Stock) {
 }
 
 func (p *Stocks) update(s *Stock) {
-	if s.Update(p.db) {
+	if s.Update(p.store) {
 		p.res(s)
 	}
 }
@@ -286,15 +278,15 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 	p.Hub.Link()
 }
 
-func (p *Stock) Update(db *mgo.Database) bool {
+func (p *Stock) Update(store Store) bool {
 	if atomic.LoadInt32(&p.loaded) > 0 {
 		return false
 	}
 	atomic.StoreInt32(&p.loaded, 1)
 
-	p.Days_update(db)
+	p.Days_update(store)
 
-	p.Ticks_update(db)
+	p.Ticks_update(store)
 	p.Ticks_today_update()
 
 	p.Merge()
@@ -326,24 +318,24 @@ func (p *Stock) days_download(t time.Time) (bool, error) {
 	return true, nil
 }
 
-func (p *Stock) Days_update(db *mgo.Database) int {
-	c := Day_collection(db, p.Id)
-	p.Days.Load(c)
+func (p *Stock) Days_update(store Store) int {
+	c := Day_collection_name(p.Id)
+	p.Days.Data, _ = store.LoadTDatas(c)
 	t := p.Days.latest_time()
 	l := len(p.Days.Data)
 	p.days_download(t)
 	count := len(p.Days.Data)
 	if count > l {
 		for i, j := l, count; i < j; i++ {
-			p.Days.Data[i].Save(c)
+			store.SaveTData(c, &p.Days.Data[i])
 		}
 	}
 	return count - l
 }
 
-func (p *Stock) Ticks_update(db *mgo.Database) int {
-	c := Tick_collection(db, p.Id)
-	p.Ticks.Load(c)
+func (p *Stock) Ticks_update(store Store) int {
+	c := Tick_collection_name(p.Id)
+	p.Ticks.Data, _ = store.LoadTicks(c)
 	begin_time := p.Ticks.latest_time()
 	l := len(p.Ticks.Data)
 
@@ -360,41 +352,31 @@ func (p *Stock) Ticks_update(db *mgo.Database) int {
 
 	for t := begin_time; t.Before(end_time); t = t.AddDate(0, 0, 1) {
 		if !IsTradeDay(t) {
-			log.Println(t, "skip non trading day")
+			glog.V(LogV).Infoln(t, "skip non trading day")
 			continue
 		}
 
-		if TickHasInDB(t, c) {
-			log.Println(t, "already in db, skip")
+		if store.TickHasTimeData(c, t) {
+			glog.V(LogV).Infoln(t, "already in db, skip")
 			continue
 		}
 
-		log.Println("prepare download ticks", t)
+		glog.V(LogV).Infoln("prepare download ticks", t)
 		if ok, err := p.ticks_download(t); ok {
-			log.Println("download ticks succ", t)
+			glog.V(LogV).Infoln("download ticks succ", t)
 		} else if err != nil {
-			log.Println("download ticks err", err)
+			glog.V(LogD).Infoln("download ticks err", err)
 		}
 	}
 
 	count := len(p.Ticks.Data)
 	if count > l {
 		for i, j := l, count; i < j; i++ {
-			p.Ticks.Data[i].Save(c)
+			store.SaveTick(c, &p.Ticks.Data[i])
 		}
 	}
-	log.Println("download ticks", count-l)
+	glog.V(LogV).Infoln("download ticks", count-l)
 	return count - l
-}
-
-func (p *Stock) get_latest_time_from_db(c *mgo.Collection) time.Time {
-	d := Tdata{}
-	err := c.Find(nil).Sort("-_id").Limit(1).One(&d)
-	if err != nil {
-		log.Println("find fail", err)
-		return market_begin_day
-	}
-	return ObjectId2Time(d.Id)
 }
 
 func (p *Tdata) parse_mins_from_sina(line []byte) error {

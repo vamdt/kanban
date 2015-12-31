@@ -9,13 +9,11 @@ import (
 
 	"./dev"
 	"github.com/golang/glog"
-	"gopkg.in/mgo.v2"
 )
 
 type Opt struct {
 	debug bool
 	https bool
-	mongo string
 }
 
 var opt Opt
@@ -24,7 +22,6 @@ func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
 	flag.BoolVar(&opt.https, "https", false, "https")
-	flag.StringVar(&opt.mongo, "mongo", "mongodb://127.0.0.1/stock", "mongo uri")
 }
 
 func serve() {

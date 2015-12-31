@@ -1,12 +1,10 @@
 package crawl
 
 import (
-	"log"
 	"sort"
 	"strconv"
 	"time"
 
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -58,27 +56,8 @@ type Tdatas struct {
 	Typing  typing_parser
 	Segment segment_parser
 	Hub     hub_parser
-	EndTime time.Time
 
 	min_hub_height int
-}
-
-func (p *Tdatas) Load(c *mgo.Collection) {
-	var data []Tdata
-	d := Tdata{}
-	iter := c.Find(nil).Sort("_id").Iter()
-	for iter.Next(&d) {
-		d.Time = ObjectId2Time(d.Id)
-		data = append(data, d)
-	}
-	if err := iter.Close(); err != nil {
-		log.Println(err)
-	}
-	p.Data = data
-	nnum := len(p.Data)
-	if nnum > 0 {
-		p.EndTime = p.Data[nnum-1].Time
-	}
 }
 
 func (p *Tdatas) Add(data Tdata) {
@@ -112,7 +91,6 @@ func (p *Tdatas) Add(data Tdata) {
 			}
 		}
 	}
-	p.EndTime = p.Data[len(p.Data)-1].Time
 }
 
 func (p *Tdatas) latest_time() time.Time {
@@ -120,13 +98,6 @@ func (p *Tdatas) latest_time() time.Time {
 		return market_begin_day
 	}
 	return p.Data[len(p.Data)-1].Time
-}
-
-func (p *Tdata) Save(c *mgo.Collection) {
-	_, err := c.Upsert(bson.M{"_id": p.Id}, p)
-	if err != nil {
-		log.Println("insert tdata error", err, *p)
-	}
 }
 
 func (p *Tdata) FromBytes(timestr, open, high, cloze, low, volume []byte) {

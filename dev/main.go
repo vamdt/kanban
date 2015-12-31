@@ -25,8 +25,8 @@ type dev struct {
 var Dev *dev = &dev{}
 
 func init() {
-	flag.BoolVar(&Dev.webpack, "webpack", true, "start webpack")
-	flag.BoolVar(&Dev.open, "open", false, "open browser")
+	flag.BoolVar(&Dev.webpack, "webpack", true, "start webpack in dev mode")
+	flag.BoolVar(&Dev.open, "open", false, "open browser in dev mode")
 }
 
 func dev_static_handle(w http.ResponseWriter, r *http.Request) {

@@ -3,16 +3,10 @@ package crawl
 import (
 	"fmt"
 	"time"
-
-	"gopkg.in/mgo.v2"
 )
 
 func Day_collection_name(id string) string {
 	return fmt.Sprintf("%s.tdata.kday", id)
-}
-
-func Day_collection(db *mgo.Database, id string) *mgo.Collection {
-	return db.C(Day_collection_name(id))
 }
 
 func Day_sina_url(id string, t time.Time) string {

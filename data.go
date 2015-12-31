@@ -5,6 +5,8 @@ import (
 	"html"
 	"net/http"
 
+	"github.com/golang/glog"
+
 	"./crawl"
 )
 
@@ -17,8 +19,9 @@ func search_handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, _ := crawl.Tick_get_name(sid)
+	name, err := crawl.Tick_get_name(sid)
 	if len(name) < 1 {
+		glog.V(100).Infoln(err)
 		http.NotFound(w, r)
 		return
 	}

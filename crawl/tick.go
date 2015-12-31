@@ -32,8 +32,7 @@ type Tick struct {
 }
 
 type Ticks struct {
-	Data    []Tick `json:"data"`
-	EndTime time.Time
+	Data []Tick `json:"data"`
 }
 
 type RealtimeTick struct {
@@ -96,17 +95,6 @@ func tick_write_raw_cache(c []byte, id string, t time.Time) {
 
 func TheSeconds(t time.Time) int {
 	return t.Hour()*60*60 + t.Minute()*60 + t.Second()
-}
-
-func TickHasInDB(t time.Time, c *mgo.Collection) bool {
-	begin_id := Time2ObjectId(t)
-	end_id := Time2ObjectId(t.AddDate(0, 0, 1))
-	n, err := c.Find(bson.M{"_id": bson.M{"$gt": begin_id, "$lt": end_id}}).Count()
-	if err != nil {
-		log.Println("count fail", err)
-		return false
-	}
-	return n > 0
 }
 
 func FixTickTime(ticks []Tick) {
@@ -257,36 +245,11 @@ func Tick_sina_url(id string, t time.Time) string {
 		t.Format("2006-01-02"), id)
 }
 
-func (p *Ticks) Load(c *mgo.Collection) {
-	var data []Tick
-	d := Tick{}
-	iter := c.Find(nil).Sort("_id").Iter()
-	for iter.Next(&d) {
-		d.Time = ObjectId2Time(d.Id)
-		data = append(data, d)
-	}
-	if err := iter.Close(); err != nil {
-		log.Println(err)
-	}
-	p.Data = data
-	nnum := len(p.Data)
-	if nnum > 0 {
-		p.EndTime = p.Data[nnum-1].Time
-	}
-}
-
 func (p *Ticks) latest_time() time.Time {
 	if len(p.Data) < 1 {
 		return market_begin_day
 	}
 	return p.Data[len(p.Data)-1].Time
-}
-
-func (p *Tick) Save(c *mgo.Collection) {
-	_, err := c.Upsert(bson.M{"_id": p.Id}, p)
-	if err != nil {
-		log.Println("insert tick error", err, *p)
-	}
 }
 
 func (p *Ticks) Add(data Tick) {
@@ -320,5 +283,4 @@ func (p *Ticks) Add(data Tick) {
 			}
 		}
 	}
-	p.EndTime = p.Data[len(p.Data)-1].Time
 }
