@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -22,7 +21,6 @@ const (
 )
 
 type Tick struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"-"`
 	Time     time.Time
 	Price    int
 	Change   int
@@ -114,23 +112,12 @@ func FixTickTime(ticks []Tick) {
 	}
 }
 
-func FixTickId(ticks []Tick) {
-	if ticks == nil {
-		return
-	}
-	c := len(ticks)
-	for i := 0; i < c; i++ {
-		ticks[i].Id = Time2ObjectId(ticks[i].Time)
-	}
-}
-
 func FixTickData(ticks []Tick) {
 	if ticks == nil {
 		return
 	}
 	c := len(ticks)
 	for i := 0; i < c; i++ {
-		ticks[i].Id = Time2ObjectId(ticks[i].Time)
 		if i == 0 {
 			ticks[i].Change = ticks[i].Price
 		} else {

@@ -4,8 +4,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -16,13 +14,12 @@ const (
 )
 
 type Tdata struct {
-	Id     bson.ObjectId `bson:"_id,omitempty" json:"-"`
-	Time   time.Time     `json:"time"`
-	Open   int           `json:"open"`
-	Close  int           `json:"close"`
-	High   int           `json:"high"`
-	Low    int           `json:"low"`
-	Volume int           `json:"volume"`
+	Time   time.Time `json:"time"`
+	Open   int       `json:"open"`
+	Close  int       `json:"close"`
+	High   int       `json:"high"`
+	Low    int       `json:"low"`
+	Volume int       `json:"volume"`
 	emas   int
 	emal   int
 	DIFF   int
@@ -111,7 +108,6 @@ func (p *Tdata) FromString(timestr, open, high, cloze, low, volume string) {
 	} else {
 		p.Time, _ = time.Parse(smt, timestr)
 	}
-	p.Id = Time2ObjectId(p.Time)
 	p.Open = ParseCent(open)
 	p.High = ParseCent(high)
 	p.Low = ParseCent(low)

@@ -40,7 +40,6 @@ func (p *MongoStore) LoadTDatas(table string) (res []Tdata, err error) {
 	d := Tdata{}
 	iter := c.Find(nil).Sort("_id").Iter()
 	for iter.Next(&d) {
-		d.Time = ObjectId2Time(d.Id)
 		res = append(res, d)
 	}
 	if err := iter.Close(); err != nil {
@@ -49,9 +48,26 @@ func (p *MongoStore) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
+func data2BsonM(data interface{}) (m bson.M, err error) {
+	m = make(bson.M)
+	buf, err := bson.Marshal(data)
+	if err != nil {
+		return
+	}
+	err = bson.Unmarshal(buf, m)
+	return
+}
+
 func (p *MongoStore) SaveTData(table string, data *Tdata) (err error) {
 	c := p.session.DB("").C(table)
-	_, err = c.Upsert(bson.M{"_id": data.Id}, data)
+	id := Time2ObjectId(data.Time)
+	m, err := data2BsonM(*data)
+	if err != nil {
+		glog.Warningln("convert tdata error", err, *data)
+		return
+	}
+	m["_id"] = id
+	_, err = c.Upsert(bson.M{"_id": id}, m)
 	if err != nil {
 		glog.Warningln("insert tdata error", err, *data)
 	}
@@ -63,7 +79,6 @@ func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
 	d := Tick{}
 	iter := c.Find(nil).Sort("_id").Iter()
 	for iter.Next(&d) {
-		d.Time = ObjectId2Time(d.Id)
 		res = append(res, d)
 	}
 	if err := iter.Close(); err != nil {
@@ -74,7 +89,14 @@ func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
 
 func (p *MongoStore) SaveTick(table string, tick *Tick) (err error) {
 	c := p.session.DB("").C(table)
-	_, err = c.Upsert(bson.M{"_id": tick.Id}, tick)
+	id := Time2ObjectId(tick.Time)
+	m, err := data2BsonM(*tick)
+	if err != nil {
+		glog.Warningln("convert tick error", err, *tick)
+		return
+	}
+	m["_id"] = id
+	_, err = c.Upsert(bson.M{"_id": id}, m)
 	if err != nil {
 		glog.Warningln("insert tick error", err, *tick)
 	}

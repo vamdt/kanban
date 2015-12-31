@@ -169,7 +169,6 @@ func (p *Stocks) Ticks_update_real() {
 
 	stocks := p.Find_need_update_tick_ids()
 	l := len(stocks)
-	glog.V(LogV).Infoln("find update tick ids len=", l)
 	if l < 1 {
 		return
 	}
@@ -456,7 +455,6 @@ func (p *Stock) ticks_download(t time.Time) (bool, error) {
 			infos[3], infos[4], infos[5])
 	}
 	FixTickTime(ticks)
-	FixTickId(ticks)
 
 	for _, tick := range ticks {
 		p.Ticks.Add(tick)
