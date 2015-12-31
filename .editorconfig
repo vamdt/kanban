@@ -26,3 +26,6 @@ indent_size = 2
 
 [*.tsv]
 indent_style = tab
+
+[*.go]
+indent_style = tab

@@ -138,7 +138,7 @@ func (p *Stocks) Watch(id string) (*Stock, bool) {
 	if isnew {
 		glog.V(LogV).Infof("watch new stock id=%s index=%d", id, i)
 	} else {
-		glog.V(LogV).Infoln("watch stock id=%s index=%d count=%d", id, i, s.count)
+		glog.V(LogV).Infof("watch stock id=%s index=%d count=%d", id, i, s.count)
 	}
 	return s, isnew
 }
@@ -150,9 +150,9 @@ func (p *Stocks) UnWatch(id string) {
 func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 	p.rwmutex.RLock()
 	glog.V(LogV).Infoln("RLock in find update tick ids")
+	defer glog.V(LogV).Infoln("defer RUnLock in find update tick ids")
 	defer p.rwmutex.RUnlock()
-	glog.V(LogV).Infoln("defer RUnLock in find update tick ids")
-	for i, l := 0, len(p.stocks); i < l; {
+	for i, l := 0, len(p.stocks); i < l; i++ {
 		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
 			continue
 		}
@@ -168,7 +168,13 @@ func (p *Stocks) Ticks_update_real() {
 	var wg sync.WaitGroup
 
 	stocks := p.Find_need_update_tick_ids()
-	for i, l := 0, len(stocks); i < l; {
+	l := len(stocks)
+	glog.V(LogV).Infoln("find update tick ids len=", l)
+	if l < 1 {
+		return
+	}
+
+	for i := 0; i < l; {
 		var b bytes.Buffer
 		var pstocks PStockSlice
 		step := 50
