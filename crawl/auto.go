@@ -47,11 +47,21 @@ type Stocks struct {
 	min_hub_height int
 }
 
-func NewStocks() *Stocks {
-	store, err := NewMongoStore()
-	if err != nil {
-		glog.Fatalln(err)
+func getStore(s string) Store {
+	var store Store
+	var err error
+	if s == "mongo" {
+		store, err = NewMongoStore()
+	} else {
+		store, err = NewMysqlStore()
 	}
+	if err != nil {
+		glog.Fatalln("new [", s, "] store", err)
+	}
+	return store
+}
+func NewStocks(storestr string) *Stocks {
+	store := getStore(storestr)
 	return &Stocks{min_hub_height: 10, store: store}
 }
 
@@ -375,7 +385,7 @@ func (p *Stock) Ticks_update(store Store) int {
 			continue
 		}
 
-		if store.TickHasTimeData(c, t) {
+		if p.Ticks.hasTimeData(t) {
 			glog.V(LogV).Infoln(t, "already in db, skip")
 			continue
 		}

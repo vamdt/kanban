@@ -239,6 +239,18 @@ func (p *Ticks) latest_time() time.Time {
 	return p.Data[len(p.Data)-1].Time
 }
 
+func (p *Ticks) hasTimeData(t time.Time) bool {
+	end := t.AddDate(0, 0, 1)
+	for i := len(p.Data) - 1; i > -1; i-- {
+		if p.Data[i].Time.Equal(t) {
+			return true
+		} else if p.Data[i].Time.After(t) && p.Data[i].Time.Before(end) {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *Ticks) Add(data Tick) {
 	if len(p.Data) < 1 {
 		p.Data = []Tick{data}

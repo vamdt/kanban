@@ -33,11 +33,17 @@ func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 	upath := r.URL.Path
 
 	if Dev.webpack && strings.HasPrefix(upath, "/main.js") {
-		uri := "http://localhost:"
-		if Dev.https {
-			uri = "https://localhost:"
+		host := r.Host
+		if i := strings.LastIndex(host, ":"); i > 0 {
+			host = host[:i]
 		}
-		uri = uri + strconv.Itoa(Dev.port) + "/main.js"
+		host = host + ":" + strconv.Itoa(Dev.port)
+		uri := "http://"
+		if Dev.https {
+			uri = "https://"
+		}
+		uri = uri + host + "/main.js"
+		glog.Infoln(uri)
 		http.Redirect(w, r, uri, 307)
 		return
 	}
@@ -78,7 +84,7 @@ func (p *dev) Start(https bool, port string) {
 		prot = "https"
 	}
 
-	serve_uri := prot + "://localhost" + port + "/"
+	serve_uri := prot + "://0.0.0.0" + port + "/"
 
 	if p.webpack && p.webpackCmd == nil {
 		args := []string{
@@ -88,6 +94,7 @@ func (p *dev) Start(https bool, port string) {
 		if https {
 			args = append(args, "--https")
 		}
+		args = append(args, "--host=0.0.0.0")
 		args = append(args, "--port="+strconv.Itoa(p.port))
 		args = append(args, "--output-public-path="+serve_uri)
 		args = append(args, "--content-base="+serve_uri)

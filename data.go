@@ -10,7 +10,7 @@ import (
 	"./crawl"
 )
 
-var stocks *crawl.Stocks = crawl.NewStocks()
+var stocks *crawl.Stocks
 
 func search_handle(w http.ResponseWriter, r *http.Request) {
 	sid := r.FormValue("s")

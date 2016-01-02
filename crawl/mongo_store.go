@@ -2,7 +2,6 @@ package crawl
 
 import (
 	"flag"
-	"time"
 
 	"github.com/golang/glog"
 
@@ -101,16 +100,4 @@ func (p *MongoStore) SaveTick(table string, tick *Tick) (err error) {
 		glog.Warningln("insert tick error", err, *tick)
 	}
 	return
-}
-
-func (p *MongoStore) TickHasTimeData(table string, t time.Time) bool {
-	c := p.session.DB("").C(table)
-	begin_id := Time2ObjectId(t)
-	end_id := Time2ObjectId(t.AddDate(0, 0, 1))
-	n, err := c.Find(bson.M{"_id": bson.M{"$gt": begin_id, "$lt": end_id}}).Count()
-	if err != nil {
-		glog.Warningln("count fail", err)
-		return false
-	}
-	return n > 0
 }
