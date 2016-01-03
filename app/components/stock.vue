@@ -62,4 +62,5 @@ module.exports =
       @opt =
         s: @$route.params.sid
         k: @$route.params.k
+        v: +(new Date())
 </script>
