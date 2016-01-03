@@ -47,7 +47,7 @@ func (p *dev) webpackHost(r *http.Request) string {
 }
 
 func (p *dev) RedirectWebpack(w http.ResponseWriter, r *http.Request) {
-	uri = p.webpackHost(r) + r.URL.Path
+	uri := p.webpackHost(r) + r.URL.Path
 	http.Redirect(w, r, uri, 302)
 }
 
