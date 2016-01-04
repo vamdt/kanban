@@ -5,38 +5,23 @@ import "github.com/golang/glog"
 type segment_parser struct {
 	typing_parser
 
-	break_index   int
-	unsure_typing Typing
-	need_sure     bool
-	wait_3end     bool
+	break_index int
+	need_sure   bool
+	wait_3end   bool
 }
 
-func (p *segment_parser) add_typing(typing Typing, case1 bool) bool {
+func (p *segment_parser) add_typing(typing Typing, case1 bool) {
+	l := len(p.Data)
 	typing.Case1 = case1
 	if p.need_sure {
 		p.need_sure = false
-		if l := len(p.Data); l > 0 && p.unsure_typing.I == p.Data[l-1].I {
-			glog.V(SegmentI).Infoln("overwrite prev case2 segment", p.unsure_typing, len(p.Data))
-			p.Data[l-1] = p.unsure_typing
-		} else {
-			glog.V(SegmentD).Infoln("new ensure case2 segment", p.unsure_typing, len(p.Data))
-			p.Data = append(p.Data, p.unsure_typing)
-		}
-	}
-
-	if !case1 {
-		p.wait_3end = true
-		p.need_sure = true
-		p.unsure_typing = typing
-		glog.V(SegmentD).Infoln("new unsure case2 segment", typing, len(p.Data))
-		return true
+		glog.V(SegmentD).Infof("[%d] ensure case2 segment %+v", l-1, p.Data[l-1])
 	}
 
 	p.Data = append(p.Data, typing)
 	p.wait_3end = true
-	p.need_sure = false
-	glog.V(SegmentD).Infoln("new case1 segment typing", typing.Type, len(p.Data))
-	return true
+	p.need_sure = !case1
+	glog.V(SegmentD).Infof("new segment typing [%d] case1[%t] %+v", l, case1, typing)
 }
 
 func (p *segment_parser) is_unsure_typing_fail(a *Tdata) bool {
@@ -44,13 +29,18 @@ func (p *segment_parser) is_unsure_typing_fail(a *Tdata) bool {
 		return false
 	}
 
-	switch p.unsure_typing.Type {
+	l := len(p.Data)
+	if l < 1 {
+		return false
+	}
+	t := p.Data[l-1]
+	switch t.Type {
 	case BottomTyping:
-		if p.unsure_typing.Low > a.Low {
+		if t.Low > a.Low {
 			return true
 		}
 	case TopTyping:
-		if p.unsure_typing.High < a.High {
+		if t.High < a.High {
 			return true
 		}
 	}
@@ -59,13 +49,17 @@ func (p *segment_parser) is_unsure_typing_fail(a *Tdata) bool {
 }
 
 func (p *segment_parser) clean_fail_unsure_typing() int {
-	start := p.unsure_typing.I
-	if l := len(p.Data); l > 0 && !p.Data[l-1].Case1 {
-		p.unsure_typing = p.Data[l-1]
+	l := len(p.Data)
+	if l < 1 {
+		panic("should not be here, len(Data) < 1")
+	}
+	start := p.Data[l-1].I
+	p.need_sure = false
+	p.Data = p.Data[:l-1]
+	l = l - 1
+
+	if l > 0 && !p.Data[l-1].Case1 {
 		p.need_sure = true
-		p.Data = p.Data[:l-1]
-	} else {
-		p.need_sure = false
 	}
 	return start
 }
@@ -302,7 +296,7 @@ func (p *Tdatas) ParseSegment() bool {
 		a.Time = p.Typing.Line[i].Time
 
 		if p.Segment.need_sure && p.Segment.is_unsure_typing_fail(a) {
-			glog.V(SegmentV).Infoln("found unsure typing fail", i, p.Segment.unsure_typing, a)
+			glog.V(SegmentV).Infoln("found unsure typing fail", i, a, p.Segment.Data[len(p.Segment.Data)-1])
 			i = p.Segment.clean_fail_unsure_typing() - 2
 			glog.V(SegmentV).Infoln("new start", i, "need_sure", p.Segment.need_sure)
 			p.Segment.clear()
