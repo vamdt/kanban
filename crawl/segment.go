@@ -75,7 +75,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if l := len(p.tp); l > 0 {
 		p.tp[l-1].t.end = i - 2
 		p.tp[l-1].t.ETime = line[i-2].ETime
-		p.tp[l-1].t.assertETimeMatchEndLine(line)
+		p.tp[l-1].t.assertETimeMatchEndLine(line, "new node prev")
 	}
 	tp := typing_parser_node{}
 	tp.t = line[i]
@@ -86,7 +86,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	if !tp.t.ETime.Equal(line[i].ETime) {
 		glog.Fatalln("found tp t.ETime not eq Line[i].ETime")
 	}
-	tp.t.assertETimeMatchEndLine(line)
+	tp.t.assertETimeMatchEndLine(line, "new_node")
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
 	p.tp = append(p.tp, tp)
@@ -221,7 +221,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 				prev.d = *a
 				prev.t.end = i
 				prev.t.ETime = line[i].ETime
-				prev.t.assertETimeMatchEndLine(line)
+				prev.t.assertETimeMatchEndLine(line, "need_wait_3end")
 				return true, i
 			}
 		} else if prev.t.Type == DownTyping {
@@ -233,7 +233,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 				prev.d = *a
 				prev.t.end = i
 				prev.t.ETime = line[i].ETime
-				prev.t.assertETimeMatchEndLine(line)
+				prev.t.assertETimeMatchEndLine(line, "need_wait_3end")
 				return true, i
 			}
 		}
@@ -241,7 +241,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 	p.Segment.clear()
 
 	i = pprev.t.end + 1
-	i = 1 + pprev.t.assertETimeMatchEndLine(line)
+	i = 1 + pprev.t.assertETimeMatchEndLine(line, "need_wait_3end")
 	p.Segment.new_node(i, &p.Typing, false)
 
 	i = prev.t.end - 1
@@ -260,10 +260,10 @@ func (p *Tdatas) ParseSegment() bool {
 
 	if x := len(p.Segment.tp); x > 0 {
 		start = p.Segment.tp[x-1].t.end + 1
-		start = 1 + p.Segment.tp[x-1].t.assertETimeMatchEndLine(p.Typing.Line)
+		start = 1 + p.Segment.tp[x-1].t.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start")
 	} else if y := len(p.Segment.Data); y > 0 {
 		start = p.Segment.Data[y-1].end + 1
-		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line)
+		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start2")
 	} else if l > 100 {
 		for i := 0; i < l; i++ {
 			if i+2 > l {
@@ -345,7 +345,7 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 
 			merge_contain_node(prev, a, i, &p.Typing.Line[i])
-			prev.t.assertETimeMatchEndLine(p.Typing.Line)
+			prev.t.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment Contain")
 			continue
 		} else {
 			if ltp > 1 {
@@ -376,7 +376,7 @@ func (p *Tdatas) ParseSegment() bool {
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
 			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
-			i = -1 + p.Segment.tp[len(p.Segment.tp)-2].t.assertETimeMatchEndLine(p.Typing.Line)
+			i = -1 + p.Segment.tp[len(p.Segment.tp)-2].t.assertETimeMatchEndLine(p.Typing.Line, "after parse top bottom")
 			p.Segment.clear()
 		}
 	}

@@ -117,14 +117,14 @@ func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.end = i - 1
 		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
-		p.tp[len(p.tp)-1].t.assertETimeMatchEnd(td.Data)
+		p.tp[len(p.tp)-1].t.assertETimeMatchEnd(td.Data, "new_node prev end")
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.end = i
 	tp.t.ETime = td.Data[i].Time
-	tp.t.assertETimeMatchEnd(td.Data)
+	tp.t.assertETimeMatchEnd(td.Data, "new_node")
 	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
 }
@@ -211,26 +211,26 @@ func (p *Tdatas) findChanTypingStart() int {
 	return hi
 }
 
-func (p *Typing) assertETimeMatchEnd(data TdataSlice) int {
+func (p *Typing) assertETimeMatchEnd(data TdataSlice, note string) int {
 	i, ok := data.SearchByTime(p.ETime)
 	if ok {
 		if p.end != i {
-			glog.Fatalf("assert end/%d eq SearchByTime/%d", p.end, i)
+			glog.Fatalf("%s assert end/%d eq SearchByTime/%d", note, p.end, i)
 		}
 	} else {
-		glog.Fatalln("not found with time", p.ETime, data[len(data)-20:])
+		glog.Fatalln("%s not found with time", note, p.ETime, data[len(data)-20:])
 	}
 	return i
 }
 
-func (p *Typing) assertETimeMatchEndLine(data TypingSlice) int {
+func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 	i, ok := data.SearchByETime(p.ETime)
 	if ok {
 		if p.end != i {
-			glog.Fatalf("assert end/%d eq SearchByETime/%d", p.end, i)
+			glog.Fatalf("%s assert end/%d eq SearchByETime/%d", note, p.end, i)
 		}
 	} else {
-		glog.Fatalln("not found with etime", p.ETime, data[len(data)-20:])
+		glog.Fatalln("%s not found with etime", note, p.ETime, data[len(data)-20:])
 	}
 	return i
 }
@@ -240,7 +240,7 @@ func (p *Tdatas) ParseTyping() bool {
 	start := 0
 	if l := len(p.Typing.tp); l > 0 {
 		start = p.Typing.tp[l-1].t.end + 1
-		i := p.Typing.tp[l-1].t.assertETimeMatchEnd(p.Data)
+		i := p.Typing.tp[l-1].t.assertETimeMatchEnd(p.Data, "ParseTyping")
 		start = i + 1
 	} else {
 		start = p.findChanTypingStart()
@@ -275,7 +275,7 @@ func (p *Tdatas) ParseTyping() bool {
 			prev.d = *a
 			prev.t.end = i
 			prev.t.ETime = p.Data[i].Time
-			prev.t.assertETimeMatchEnd(p.Data)
+			prev.t.assertETimeMatchEnd(p.Data, "ParseTyping Contain")
 		} else {
 			p.Typing.new_node(i, p)
 		}
@@ -286,7 +286,7 @@ func (p *Tdatas) ParseTyping() bool {
 		}
 	}
 	for i, l := 0, len(p.Typing.Data); i < l; i++ {
-		p.Typing.Data[i].assertETimeMatchEnd(p.Data)
+		p.Typing.Data[i].assertETimeMatchEnd(p.Data, "ParseTyping foreach assert")
 	}
 	return hasnew
 }
