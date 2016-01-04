@@ -80,7 +80,7 @@ func dev_static_handle(w http.ResponseWriter, r *http.Request) {
 				if content, err := ioutil.ReadFile(rpath); err == nil {
 					webpack := Dev.webpackHost(r) + "/main.js"
 					content = bytes.Replace(content, []byte("src=\"main.js\""), []byte("src=\""+webpack+"\""), 1)
-					w.Header().Set("Content-Type", "text/html")
+					w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 					w.Write(content)
 					return
 				}
@@ -131,6 +131,7 @@ func (p *dev) Start(https bool, port string) {
 		p.webpackCmd = exec.Command("webpack-dev-server", args...)
 		p.webpackCmd.Stdout = os.Stdout
 		p.webpackCmd.Stderr = os.Stderr
+		glog.Infoln("start webpack-dev-server")
 		err := p.webpackCmd.Start()
 		if err != nil {
 			glog.Warningln(err)
@@ -139,9 +140,9 @@ func (p *dev) Start(https bool, port string) {
 
 	if p.open {
 		go func() {
-			time.Sleep(time.Second)
+			time.Sleep(time.Second * 2)
 			glog.Infoln("open", serve_uri)
-			err := exec.Command("open", serve_uri).Start()
+			err := exec.Command("open", serve_uri).Run()
 			if err != nil {
 				glog.Warning(err)
 			}

@@ -47,7 +47,9 @@ class KLine
     @options.size = +@options.size || 100
 
   update_size: (size, left) ->
-    @options.size = size || @options.size
+    size = size || @options.size || 10
+    size = Math.max(size, 10)
+    @options.size = size
     left = left || @_left
     atrightedge = @_left == @_max_left
     @_max_left = Math.max(0, @_data.length - 1 - @options.size)
