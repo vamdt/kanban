@@ -117,7 +117,10 @@ func (h *hub) send(m *crawl.Stock, c *connection) {
 }
 
 func (h *hub) run() {
-	stocks = crawl.NewStocks(opt.store)
+	if !opt.debug {
+		opt.play = 0
+	}
+	stocks = crawl.NewStocks(opt.store, opt.play)
 	stocks.Chan(h.broadcast)
 	go stocks.Run()
 

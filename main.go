@@ -13,6 +13,7 @@ import (
 
 type Opt struct {
 	debug bool
+	play  int
 	https bool
 	store string
 }
@@ -22,6 +23,7 @@ var opt Opt
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
+	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.store, "store", "mysql", "back store with")
 }

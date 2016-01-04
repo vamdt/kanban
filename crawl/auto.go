@@ -14,6 +14,7 @@ import (
 
 const (
 	tickPeriod = 5 * time.Second
+	minPlay    = 10
 )
 
 var market_begin_day time.Time
@@ -42,6 +43,7 @@ type Stocks struct {
 	stocks  PStockSlice
 	rwmutex sync.RWMutex
 	store   Store
+	play    int
 	ch      chan *Stock
 
 	min_hub_height int
@@ -60,14 +62,26 @@ func getStore(s string) Store {
 	}
 	return store
 }
-func NewStocks(storestr string) *Stocks {
+
+func NewStocks(storestr string, play int) *Stocks {
 	store := getStore(storestr)
-	return &Stocks{min_hub_height: 10, store: store}
+	return &Stocks{
+		min_hub_height: 10,
+		store:          store,
+		play:           play,
+	}
 }
 
 func (p *Stocks) Run() {
 	if p.min_hub_height < 1 {
 		p.min_hub_height = 1
+	}
+
+	if p.play > minPlay {
+		for {
+			p.play_next_tick()
+			time.Sleep(time.Duration(p.play) * time.Millisecond)
+		}
 	}
 
 	for {
@@ -89,7 +103,7 @@ func (p *Stocks) res(stock *Stock) {
 }
 
 func (p *Stocks) update(s *Stock) {
-	if s.Update(p.store) {
+	if s.Update(p.store, p.play > minPlay) {
 		p.res(s)
 	}
 }
@@ -167,6 +181,32 @@ func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 		pstocks = append(pstocks, p.stocks[i])
 	}
 	return
+}
+
+func (p *Stocks) play_next_tick() {
+	p.rwmutex.RLock()
+	defer p.rwmutex.RUnlock()
+	for i, l := 0, len(p.stocks); i < l; i++ {
+		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
+			continue
+		}
+		if atomic.LoadInt32(&p.stocks[i].count) < 1 {
+			continue
+		}
+
+		if p.stocks[i].Ticks.play == nil || len(p.stocks[i].Ticks.play) < 1 {
+			p.stocks[i].Ticks.play = p.stocks[i].Ticks.Data
+			p.stocks[i].Ticks.Data = []Tick{}
+		}
+		lplay := len(p.stocks[i].Ticks.play)
+		ldata := len(p.stocks[i].Ticks.Data)
+		if ldata >= lplay {
+			return
+		}
+		p.stocks[i].Ticks.Add(p.stocks[i].Ticks.play[ldata])
+		p.stocks[i].Merge()
+		p.res(p.stocks[i])
+	}
 }
 
 func (p *Stocks) Ticks_update_real() {
@@ -302,7 +342,7 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 	p.Hub.Link()
 }
 
-func (p *Stock) Update(store Store) bool {
+func (p *Stock) Update(store Store, play bool) bool {
 	if atomic.LoadInt32(&p.loaded) > 0 {
 		return false
 	}
@@ -313,7 +353,11 @@ func (p *Stock) Update(store Store) bool {
 	p.Ticks_update(store)
 	p.Ticks_today_update()
 
-	p.Merge()
+	if play {
+		glog.Warningln("WITH PLAY MODE")
+	} else {
+		p.Merge()
+	}
 	atomic.StoreInt32(&p.loaded, 2)
 	return true
 }

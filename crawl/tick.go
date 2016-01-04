@@ -31,6 +31,7 @@ type Tick struct {
 
 type Ticks struct {
 	Data []Tick `json:"data"`
+	play []Tick
 }
 
 type RealtimeTick struct {
