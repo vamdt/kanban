@@ -159,14 +159,9 @@ func (p *Stocks) UnWatch(id string) {
 
 func (p *Stocks) Find_need_update_tick_ids() (pstocks PStockSlice) {
 	p.rwmutex.RLock()
-	glog.V(LogV).Infoln("RLock in find update tick ids")
-	defer glog.V(LogV).Infoln("defer RUnLock in find update tick ids")
 	defer p.rwmutex.RUnlock()
 	for i, l := 0, len(p.stocks); i < l; i++ {
 		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
-			continue
-		}
-		if atomic.LoadInt32(&p.stocks[i].count) < 1 {
 			continue
 		}
 		pstocks = append(pstocks, p.stocks[i])
