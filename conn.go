@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -24,7 +25,9 @@ var upgrader = websocket.Upgrader{
 type connection struct {
 	ws *websocket.Conn
 
-	send chan []byte
+	send   chan []byte
+	closed int32
+	last   int64
 }
 
 type watchRequest struct {
@@ -36,6 +39,30 @@ type watchRequest struct {
 	Conn    *connection `json:"-"`
 }
 
+func (c *connection) Send(data []byte) bool {
+	n := time.Now().Unix()
+	if atomic.LoadInt64(&c.last)+2 > n {
+		return false
+	}
+	atomic.StoreInt64(&c.last, n)
+	select {
+	case c.send <- data:
+	default:
+		c.Close()
+		return false
+	}
+	return true
+}
+
+func (c *connection) Close() {
+	if !atomic.CompareAndSwapInt32(&c.closed, 0, 1) {
+		return
+	}
+	go func() { h.unregister <- c }()
+	c.ws.Close()
+	close(c.send)
+}
+
 func (c *connection) watch(req *watchRequest) {
 	log.Println("watch", req)
 	req.Conn = c
@@ -44,10 +71,7 @@ func (c *connection) watch(req *watchRequest) {
 }
 
 func (c *connection) readPump() {
-	defer func() {
-		h.unregister <- c
-		c.ws.Close()
-	}()
+	defer c.Close()
 	c.ws.SetReadLimit(maxMessageSize)
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
@@ -71,7 +95,7 @@ func (c *connection) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.ws.Close()
+		c.Close()
 	}()
 	for {
 		select {

@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/golang/glog"
+
 	"./crawl"
 )
 
@@ -49,6 +51,7 @@ func (h *hub) do_register(r *watchRequest) {
 }
 
 func (h *hub) do_unregister(c *connection) {
+	glog.Infoln("in unregister c closed=", c.closed)
 	holder := make(map[string][]*connection)
 	for name, conns := range h.connections {
 		if conns == nil {
@@ -75,7 +78,7 @@ func (h *hub) do_unregister(c *connection) {
 		h.connections[name] = conns
 		stocks.UnWatch(name)
 	}
-	close(c.send)
+	c.Close()
 }
 
 func (h *hub) do_broadcast(m *crawl.Stock) {
@@ -93,11 +96,7 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 		wg.Add(1)
 		go func(c *connection) {
 			defer wg.Done()
-			select {
-			case c.send <- data:
-			default:
-				h.do_unregister(c)
-			}
+			c.Send(data)
 		}(conns[i])
 	}
 	wg.Wait()
@@ -109,11 +108,7 @@ func (h *hub) send(m *crawl.Stock, c *connection) {
 		log.Println(err)
 		return
 	}
-	select {
-	case c.send <- data:
-	default:
-		h.do_unregister(c)
-	}
+	c.Send(data)
 }
 
 func (h *hub) run() {
