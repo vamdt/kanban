@@ -99,6 +99,7 @@ type typing_parser struct {
 	Data []Typing
 	Line []Typing
 	tp   []typing_parser_node
+	tag  string
 }
 
 func (p *typing_parser) clear() {
@@ -230,7 +231,7 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 			glog.Fatalf("%s assert end/%d eq SearchByETime/%d", note, p.end, i)
 		}
 	} else {
-		glog.Fatalln("%s not found with etime", note, p.ETime, data[len(data)-20:])
+		glog.Fatalln("not found with etime", note, p.ETime)
 	}
 	return i
 }
@@ -357,17 +358,20 @@ func ContainMerge(pra, a, b *Tdata) *Tdata {
 func (p *typing_parser) LinkTyping() bool {
 	hasnew := false
 	start := 0
-	typing := Typing{}
+
 	if l := len(p.Line); l > 0 {
-		typing = p.Line[l-1]
-		if typing.Type == DownTyping {
-			typing.Type = BottomTyping
-		} else if typing.Type == UpTyping {
-			typing.Type = TopTyping
+		if l > 5 {
+			p.Line = p.Line[0 : l-5]
+		} else {
+			p.Line = []Typing{}
 		}
+	}
+
+	if l := len(p.Line); l > 0 {
+		t := p.Line[l-1]
 		for i := len(p.Data) - 1; i > -1; i-- {
-			if p.Data[i].I == typing.I {
-				start = i + 1
+			if p.Data[i].end == t.end {
+				start = i
 				break
 			}
 		}
@@ -381,6 +385,7 @@ func (p *typing_parser) LinkTyping() bool {
 		}
 	}
 
+	typing := Typing{}
 	for i := start; i < end; i++ {
 		t := p.Data[i]
 		if typing.Type == UnknowTyping {
@@ -400,6 +405,8 @@ func (p *typing_parser) LinkTyping() bool {
 		} else if typing.Type == BottomTyping {
 			typing.High = t.High
 			typing.Type = UpTyping
+		} else {
+			glog.Fatalf("%s typing.Type=%d should be %d or %d", p.tag, typing.Type, TopTyping, BottomTyping)
 		}
 		p.Line = append(p.Line, typing)
 		typing = t

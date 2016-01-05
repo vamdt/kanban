@@ -14,7 +14,7 @@ import (
 
 const (
 	tickPeriod = 5 * time.Second
-	minPlay    = 10
+	minPlay    = 1
 )
 
 var market_begin_day time.Time
@@ -37,6 +37,23 @@ type Stock struct {
 	count     int32
 	loaded    int32
 	lst_trade time.Time
+}
+
+func NewStock(id string, hub_height int) *Stock {
+	p := &Stock{
+		Id:    id,
+		hash:  StockHash(id),
+		count: 1,
+	}
+
+	p.M1s.Init(hub_height, id+" f1")
+	p.M5s.Init(hub_height, id+" f5")
+	p.M30s.Init(hub_height, id+" f30")
+	p.Days.Init(hub_height, id+" day")
+	p.Weeks.Init(hub_height, id+" week")
+	p.Months.Init(hub_height, id+" month")
+
+	return p
 }
 
 type Stocks struct {
@@ -122,10 +139,8 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 		return i, s, false
 	}
 
-	s := &Stock{Id: id, hash: StockHash(id), count: 1}
+	s := NewStock(id, p.min_hub_height)
 	go p.update(s)
-
-	s.set_min_hub_height(p.min_hub_height)
 
 	glog.V(LogV).Infoln("RUnLock in stocks pre insert", id)
 	p.rwmutex.RUnlock()
@@ -203,7 +218,7 @@ func (p *Stocks) play_next_tick() {
 		if ldata >= lplay {
 			return
 		}
-		p.stocks[i].Ticks.Add(p.stocks[i].Ticks.play[ldata])
+		p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:ldata+1]
 		p.stocks[i].Merge()
 		p.res(p.stocks[i])
 	}
@@ -343,10 +358,9 @@ func (p *Tdatas) ParseChan(base *Tdatas) {
 }
 
 func (p *Stock) Update(store Store, play bool) bool {
-	if atomic.LoadInt32(&p.loaded) > 0 {
+	if !atomic.CompareAndSwapInt32(&p.loaded, 0, 1) {
 		return false
 	}
-	atomic.StoreInt32(&p.loaded, 1)
 
 	p.Days_update(store)
 
@@ -620,13 +634,4 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		return true
 	}
 	return false
-}
-
-func (p *Stock) set_min_hub_height(h int) {
-	p.M1s.min_hub_height = h
-	p.M5s.min_hub_height = h
-	p.M30s.min_hub_height = h
-	p.Days.min_hub_height = h
-	p.Weeks.min_hub_height = h
-	p.Months.min_hub_height = h
 }

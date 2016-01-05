@@ -53,8 +53,16 @@ type Tdatas struct {
 	Typing  typing_parser
 	Segment segment_parser
 	Hub     hub_parser
+	tag     string
 
 	min_hub_height int
+}
+
+func (p *Tdatas) Init(hub_height int, tag string) {
+	p.min_hub_height = hub_height
+	p.tag = tag
+	p.Typing.tag = tag
+	p.Segment.tag = tag
 }
 
 func (p *Tdatas) Add(data Tdata) {
