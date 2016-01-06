@@ -34,6 +34,45 @@ kColor = (d, i, data) ->
     return cdown
   cup
 
+merge_data = (o, n) ->
+  if not n
+    return o
+  for k in ['m1s', 'm5s', 'm30s', 'days', 'weeks', 'months'] when n[k] and n[k].data
+    n[k].data.forEach (d) -> d.date = d.date || parseDate(d.time)
+    for name in ['Typing', 'Segment', 'Hub'] when n[k][name]
+      for dn in ['Data', 'Line'] when n[k][name][dn]
+        n[k][name][dn].forEach (d) -> d.date = d.date || parseDate(d.Time)
+  if not o
+    return n
+
+  for k in ['m1s', 'm5s', 'm30s', 'days', 'weeks', 'months'] when n[k] and n[k].data
+    if not o[k]
+      o[k] = n[k]
+    else if not o[k].data
+      o[k] = n[k]
+    else if o[k].data.length < 1
+      o[k] = n[k]
+    else
+      ndate = +n[k].data[0].date
+      odate = +o[k].data[o[k].data.length-1].date
+      o0date = +o[k].data[0].date
+      if odate < ndate
+        console.log 'merge_data with concat () + ()'
+        o[k].data = o[k].data.concat n[k].data
+      else if o0date > ndate
+        o[k].data = n[k].data
+      else
+        i = o[k].data.length - 1
+        while i > -1 and +o[k].data[i].date > ndate
+          i--
+        if i < 0
+          o[k].data = n[k].data
+        else
+          o[k].data.slice(0, i+1).concat(n[k].data)
+      for name in ['Typing', 'Segment', 'Hub'] when n[k][name]
+        for dn in ['Data', 'Line'] when n[k][name][dn]
+          n[k][name][dn].forEach (d) -> d.date = d.date || parseDate(d.Time)
+
 class KLine
   constructor: (@options) ->
     @dispatch = d3.dispatch('resize', 'param', 'tip')
@@ -64,6 +103,8 @@ class KLine
       return @_data.slice(@_left, @_left+@options.size+1)
 
     s = data.id
+    @_dataset = merge_data(@_dataset, data)
+    data = @_dataset
     k = @param 'k'
     dataset = switch k
       when '1' then data.m1s
@@ -72,13 +113,8 @@ class KLine
       when 'week' then data.weeks
       when 'month' then data.months
       else data.days
-    @_dataset = data
     @_datasel = dataset
-    data = dataset.data
-
-    data.forEach (d) ->
-      d.date = parseDate(d.time)
-    @_data = data
+    @_data = dataset.data
     @update_size()
 
   param: (p) ->
