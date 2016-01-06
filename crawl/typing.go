@@ -102,15 +102,13 @@ type typing_parser struct {
 	tag  string
 }
 
-func (p *typing_parser) clear() {
+func (p *typing_parser) parser_reset() {
 	p.tp = []typing_parser_node{}
 }
 
 func (p *typing_parser) clean() {
 	if len(p.tp) > 3 {
-		var tmp []typing_parser_node
-		tmp = append(tmp, p.tp[len(p.tp)-3:]...)
-		p.tp = tmp
+		p.tp = p.tp[len(p.tp)-3:]
 	}
 }
 
@@ -179,6 +177,7 @@ func (p *typing_parser) parse_top_bottom() bool {
 		}
 	}
 	p.Data = append(p.Data, typing)
+	p.parser_reset()
 	return true
 }
 
@@ -239,27 +238,31 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
-	if l := len(p.Typing.tp); l > 0 {
-		start = p.Typing.tp[l-1].t.end + 1
-		i := p.Typing.tp[l-1].t.assertETimeMatchEnd(p.Data, "ParseTyping")
-		start = i + 1
+	if l := len(p.Typing.Data); l > 0 {
+		p.Typing.Data = p.Typing.Data[:l-1]
+	}
+	if l := len(p.Typing.Data); l > 0 {
+		start = p.Typing.Data[l-1].end + 1
+		start = 1 + p.Typing.Data[l-1].assertETimeMatchEnd(p.Data, "ParseTyping start2")
 	} else {
 		start = p.findChanTypingStart()
 	}
 
+	p.Typing.parser_reset()
 	for i, l := start, len(p.Data); i < l; i++ {
 		a := &p.Data[i]
 
-		if len(p.Typing.tp) < 1 {
+		ltp := len(p.Typing.tp)
+		if ltp < 1 {
 			p.Typing.new_node(i, p)
 			continue
 		}
 
-		prev := &p.Typing.tp[len(p.Typing.tp)-1]
+		prev := &p.Typing.tp[ltp-1]
 		if Contain(&prev.d, a) {
 			var base *Tdata
-			if len(p.Typing.tp) > 1 {
-				base = &p.Typing.tp[len(p.Typing.tp)-2].d
+			if ltp > 1 {
+				base = &p.Typing.tp[ltp-2].d
 			} else {
 				base = &Tdata{}
 			}
@@ -285,9 +288,6 @@ func (p *Tdatas) ParseTyping() bool {
 		if p.Typing.parse_top_bottom() {
 			hasnew = true
 		}
-	}
-	for i, l := 0, len(p.Typing.Data); i < l; i++ {
-		p.Typing.Data[i].assertETimeMatchEnd(p.Data, "ParseTyping foreach assert")
 	}
 	return hasnew
 }
