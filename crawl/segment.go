@@ -6,33 +6,37 @@ type segment_parser struct {
 	typing_parser
 
 	break_index int
-	need_sure   bool
 	wait_3end   bool
+}
+
+func (p *segment_parser) need_sure() bool {
+	l := len(p.Data)
+	if l < 1 {
+		return false
+	}
+
+	return !p.Data[l-1].Case1
 }
 
 func (p *segment_parser) add_typing(typing Typing, case1 bool) {
 	l := len(p.Data)
 	typing.Case1 = case1
-	if p.need_sure {
-		p.need_sure = false
-		glog.V(SegmentD).Infof("[%d] ensure case2 segment %+v", l-1, p.Data[l-1])
-	}
 
 	p.Data = append(p.Data, typing)
 	p.wait_3end = true
-	p.need_sure = !case1
 	glog.V(SegmentD).Infof("new segment typing [%d] case1[%t] %+v", l, case1, typing)
 }
 
 func (p *segment_parser) is_unsure_typing_fail(a *Tdata) bool {
-	if !p.need_sure {
-		return false
-	}
-
 	l := len(p.Data)
 	if l < 1 {
 		return false
 	}
+
+	if !p.need_sure() {
+		return false
+	}
+
 	t := p.Data[l-1]
 	switch t.Type {
 	case BottomTyping:
@@ -54,13 +58,7 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 		panic("should not be here, len(Data) < 1")
 	}
 	start := p.Data[l-1].I
-	p.need_sure = false
 	p.Data = p.Data[:l-1]
-	l = l - 1
-
-	if l > 0 && !p.Data[l-1].Case1 {
-		p.need_sure = true
-	}
 	return start
 }
 
@@ -92,16 +90,14 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	glog.V(SegmentD).Infoln("new node len(tp)", len(p.tp), "line:", i, "len(data):", len(p.Data), "bindex", p.break_index, isbreak)
 }
 
-func (p *segment_parser) clear() {
+func (p *segment_parser) reset() {
 	p.tp = []typing_parser_node{}
 	p.break_index = -1
 }
 
 func (p *segment_parser) clean() {
 	if len(p.tp) > 3 {
-		var tmp []typing_parser_node
-		tmp = append(tmp, p.tp[len(p.tp)-3:]...)
-		p.tp = tmp
+		p.tp = p.tp[len(p.tp)-3:]
 	}
 }
 
@@ -160,7 +156,7 @@ func (p *segment_parser) handle_special_case1(i int, a *Tdata) bool {
 
 	if case1_seg_ok {
 		p.add_typing(typing, true)
-		p.clear()
+		p.reset()
 	}
 	return case1_seg_ok
 }
@@ -232,7 +228,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 			}
 		}
 	}
-	p.Segment.clear()
+	p.Segment.reset()
 
 	i = pprev.t.end + 1
 	i = 1 + pprev.t.assertETimeMatchEndLine(line, "need_wait_3end")
@@ -252,15 +248,12 @@ func (p *Tdatas) ParseSegment() bool {
 		l--
 	}
 
-	if x := len(p.Segment.tp); x > 0 {
-		start = p.Segment.tp[x-1].t.end + 1
-		start = 1 + p.Segment.tp[x-1].t.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start")
-	} else if y := len(p.Segment.Data); y > 0 {
+	if y := len(p.Segment.Data); y > 0 {
 		start = p.Segment.Data[y-1].end + 1
 		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start2")
-	} else if l > 100 {
+	} else {
 		for i := 0; i < l; i++ {
-			if i+2 > l {
+			if i+2 >= l {
 				return hasnew
 			}
 
@@ -274,15 +267,13 @@ func (p *Tdatas) ParseSegment() bool {
 				break
 			}
 		}
-	} else {
-		start = 1
 	}
 
-	glog.V(SegmentV).Infoln("start", start)
-	ltp := len(p.Segment.tp)
+	glog.V(SegmentV).Infof("start-%d lines-%d", start, l)
+	p.Segment.reset()
 	for i := start; i < l; i += 2 {
 
-		ltp = len(p.Segment.tp)
+		ltp := len(p.Segment.tp)
 		if ltp < 1 {
 			p.Segment.new_node(i, &p.Typing, false)
 			continue
@@ -295,11 +286,11 @@ func (p *Tdatas) ParseSegment() bool {
 		a.Low = p.Typing.Line[i].Low
 		a.Time = p.Typing.Line[i].Time
 
-		if p.Segment.need_sure && p.Segment.is_unsure_typing_fail(a) {
+		if p.Segment.need_sure() && p.Segment.is_unsure_typing_fail(a) {
 			glog.V(SegmentV).Infoln("found unsure typing fail", i, a, p.Segment.Data[len(p.Segment.Data)-1])
 			i = p.Segment.clean_fail_unsure_typing() - 2
 			glog.V(SegmentV).Infoln("new start", i, "need_sure", p.Segment.need_sure)
-			p.Segment.clear()
+			p.Segment.reset()
 			continue
 		}
 
@@ -309,7 +300,7 @@ func (p *Tdatas) ParseSegment() bool {
 		//}
 
 		if Contain(&prev.d, a) {
-			if !p.Segment.need_sure {
+			if !p.Segment.need_sure() {
 				if p.Segment.break_index == ltp-1 {
 					// case   |  or |
 					//       ||     |||
@@ -371,7 +362,7 @@ func (p *Tdatas) ParseSegment() bool {
 			hasnew = true
 			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
 			i = -1 + p.Segment.tp[len(p.Segment.tp)-2].t.assertETimeMatchEndLine(p.Typing.Line, "after parse top bottom")
-			p.Segment.clear()
+			p.Segment.reset()
 		}
 	}
 	return hasnew
