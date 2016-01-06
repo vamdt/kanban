@@ -2,6 +2,7 @@ package crawl
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"log"
 	"strconv"
@@ -36,8 +37,34 @@ type Stock struct {
 	hash      int
 	count     int32
 	loaded    int32
+	broadcast bool
 	lst_trade time.Time
 	rw        sync.RWMutex
+}
+
+func (p *Stock) MarshalTail(tail bool) ([]byte, error) {
+	p.rw.RLock()
+	defer p.rw.RUnlock()
+	s := Stock{Id: p.Id}
+	if !tail || !p.broadcast {
+		p.broadcast = true
+		// full
+		p.M1s.tail(&s.M1s, 0)
+		p.M5s.tail(&s.M5s, 0)
+		p.M30s.tail(&s.M30s, 0)
+		p.Days.tail(&s.Days, 0)
+		p.Weeks.tail(&s.Weeks, 0)
+		p.Months.tail(&s.Months, 0)
+	} else {
+		// tail
+		p.M1s.tail(&s.M1s, 240)
+		p.M5s.tail(&s.M5s, 60)
+		p.M30s.tail(&s.M30s, 8)
+		p.Days.tail(&s.Days, 8)
+		p.Weeks.tail(&s.Weeks, 8)
+		p.Months.tail(&s.Months, 8)
+	}
+	return json.Marshal(s)
 }
 
 func NewStock(id string, hub_height int) *Stock {
@@ -214,6 +241,9 @@ func (p *Stocks) play_next_tick() {
 		if p.stocks[i].Ticks.play == nil || len(p.stocks[i].Ticks.play) < 1 {
 			p.stocks[i].Ticks.play = p.stocks[i].Ticks.Data
 			p.stocks[i].Ticks.Data = []Tick{}
+			if len(p.stocks[i].Ticks.play) > 240 {
+				p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:240]
+			}
 		}
 		lplay := len(p.stocks[i].Ticks.play)
 		ldata := len(p.stocks[i].Ticks.Data)

@@ -58,6 +58,39 @@ type Tdatas struct {
 	min_hub_height int
 }
 
+func (p *typing_parser) tail(s *typing_parser, tail int) {
+	if l := len(p.Data); l > 0 {
+		start := l - tail
+		if start < 0 || start >= l {
+			start = 0
+		}
+		s.Data = p.Data[start:]
+	}
+
+	if l := len(p.Line); l > 0 {
+		start := l - tail
+		if start < 0 || start >= l {
+			start = 0
+		}
+		s.Line = p.Line[start:]
+	}
+}
+
+func (p *Tdatas) tail(s *Tdatas, tail int) {
+	l := len(p.Data)
+	if l < 1 {
+		return
+	}
+	start := l - tail
+	if start < 0 || start >= l {
+		start = 0
+	}
+	s.Data = p.Data[start:]
+	p.Typing.tail(&s.Typing, tail)
+	p.Segment.tail(&s.Segment.typing_parser, tail)
+	p.Hub.tail(&s.Hub.typing_parser, tail)
+}
+
 func (p *Tdatas) Init(hub_height int, tag string) {
 	p.min_hub_height = hub_height
 	p.tag = tag

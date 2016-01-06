@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"sync"
 
@@ -86,7 +85,8 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 	if !ok {
 		return
 	}
-	data, err := json.Marshal(m)
+
+	data, err := m.MarshalTail(true)
 	if err != nil {
 		log.Println(err)
 		return
@@ -103,7 +103,7 @@ func (h *hub) do_broadcast(m *crawl.Stock) {
 }
 
 func (h *hub) send(m *crawl.Stock, c *connection) {
-	data, err := json.Marshal(m)
+	data, err := m.MarshalTail(false)
 	if err != nil {
 		log.Println(err)
 		return
