@@ -37,6 +37,7 @@ type Stock struct {
 	count     int32
 	loaded    int32
 	lst_trade time.Time
+	rw        sync.RWMutex
 }
 
 func NewStock(id string, hub_height int) *Stock {
@@ -209,18 +210,19 @@ func (p *Stocks) play_next_tick() {
 			continue
 		}
 
+		p.stocks[i].rw.Lock()
 		if p.stocks[i].Ticks.play == nil || len(p.stocks[i].Ticks.play) < 1 {
 			p.stocks[i].Ticks.play = p.stocks[i].Ticks.Data
 			p.stocks[i].Ticks.Data = []Tick{}
 		}
 		lplay := len(p.stocks[i].Ticks.play)
 		ldata := len(p.stocks[i].Ticks.Data)
-		if ldata >= lplay {
-			return
+		if ldata < lplay {
+			p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:ldata+1]
+			p.stocks[i].Merge()
+			p.res(p.stocks[i])
 		}
-		p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:ldata+1]
-		p.stocks[i].Merge()
-		p.res(p.stocks[i])
+		p.stocks[i].rw.Unlock()
 	}
 }
 
