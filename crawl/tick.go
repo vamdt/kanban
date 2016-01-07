@@ -9,8 +9,6 @@ import (
 	"path"
 	"strconv"
 	"time"
-
-	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -222,10 +220,6 @@ func Tick_get_today_date(id string) (time.Time, error) {
 
 func Tick_collection_name(id string) string {
 	return fmt.Sprintf("%s.tick", id)
-}
-
-func Tick_collection(db *mgo.Database, id string) *mgo.Collection {
-	return db.C(Tick_collection_name(id))
 }
 
 func Tick_sina_url(id string, t time.Time) string {
