@@ -1,4 +1,3 @@
-require 'main.css'
 d3 = require 'd3'
 KLine = require './kline'
 

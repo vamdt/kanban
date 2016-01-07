@@ -18,7 +18,7 @@
 
 <script lang="coffee">
 Vue = require 'vue'
-KLine = require '../stock'
+KLine = require '../stock/webpack'
 
 Vue.directive 'kanpan',
   deep: true
