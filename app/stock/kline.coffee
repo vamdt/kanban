@@ -36,7 +36,9 @@ kColor = (d, i, data) ->
 merge_with_key = (o, n, k) ->
   if not o
     return n
-  if !o[k] or o[k].length < 1
+  if !Array.isArray(n[k]) or n[k].length < 1
+    return o
+  if !Array.isArray(o[k]) or o[k].length < 1
     o[k] = n[k]
   else
     ndate = +n[k][0].date
@@ -49,7 +51,7 @@ merge_with_key = (o, n, k) ->
       o[k] = n[k]
     else
       i = o[k].length - 1
-      while i > -1 and +o[k][i].date > ndate
+      while i > -1 and +o[k][i].date >= ndate
         i--
       if i < 0
         o[k] = n[k]
@@ -57,27 +59,31 @@ merge_with_key = (o, n, k) ->
         o[k] = o[k].slice(0, i+1).concat(n[k])
   o
 
-merge_data = (o, n) ->
-  console.log o,n
-  return o if not n
+data_init = (n) ->
+  return n unless n
   for k in ['m1s', 'm5s', 'm30s', 'days', 'weeks', 'months'] when n[k] and n[k].data
     n[k].data.forEach (d) -> d.date = d.date || parseDate(d.time)
     for name in ['Typing', 'Segment', 'Hub'] when n[k][name]
       for dn in ['Data', 'Line'] when n[k][name][dn]
         n[k][name][dn].forEach (d) -> d.date = d.date || parseDate(d.Time)
+  n
+merge_data = (o, n) ->
+  return o if not n
+  n = data_init n
   return n if not o
+  o = data_init o
 
   for k in ['m1s', 'm5s', 'm30s', 'days', 'weeks', 'months'] when n[k] and n[k].data
     if not o[k]
       o[k] = n[k]
     else
-      o[k].data = merge_with_key o[k], n[k], 'data'
+      o[k] = merge_with_key o[k], n[k], 'data'
       for name in ['Typing', 'Segment', 'Hub'] when n[k][name]
         if not o[k][name]
           o[k][name] = n[k][name]
           continue
         for dn in ['Data', 'Line'] when n[k][name][dn]
-          o[k][name][dn] = merge_with_key o[k][name], n[k][name], dn
+          o[k][name] = merge_with_key o[k][name], n[k][name], dn
   o
 
 class KLine
@@ -106,6 +112,7 @@ class KLine
       @_left = Math.min(@_max_left, Math.max(0, left))
 
   data: (data) ->
+    @_data = @_data || []
     if not arguments.length
       return @_data.slice(@_left, @_left+@options.size+1)
 
@@ -469,5 +476,7 @@ filter = (src, range) ->
       continue
   rv
 KLine.filter = filter
+KLine.merge_data = merge_data
+KLine.merge_with_key = merge_with_key
 
 module.exports = KLine
