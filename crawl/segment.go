@@ -243,8 +243,10 @@ func (p *Tdatas) ParseSegment() bool {
 	hasnew := false
 	start := 0
 
+	p.Segment.drop_last_5_data()
+
 	l := len(p.Typing.Line)
-	if l > 0 && p.Typing.Line[l-1].Type != UpTyping && p.Typing.Line[l-1].Type != DownTyping {
+	if l > 0 && (p.Typing.Line[l-1].Type != UpTyping || p.Typing.Line[l-1].Type != DownTyping) {
 		l--
 	}
 

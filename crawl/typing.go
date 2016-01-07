@@ -102,6 +102,32 @@ type typing_parser struct {
 	tag  string
 }
 
+func (p *typing_parser) drop_last_5_data() {
+	l := len(p.Data)
+	if l < 1 {
+		return
+	}
+
+	if l > 5 {
+		p.Data = p.Data[0 : l-5]
+	} else {
+		p.Data = []Typing{}
+	}
+}
+
+func (p *typing_parser) drop_last_5_line() {
+	l := len(p.Line)
+	if l < 1 {
+		return
+	}
+
+	if l > 5 {
+		p.Line = p.Line[0 : l-5]
+	} else {
+		p.Line = []Typing{}
+	}
+}
+
 func (p *typing_parser) parser_reset() {
 	p.tp = []typing_parser_node{}
 }
@@ -238,9 +264,9 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
-	if l := len(p.Typing.Data); l > 0 {
-		p.Typing.Data = p.Typing.Data[:l-1]
-	}
+
+	p.Typing.drop_last_5_data()
+
 	if l := len(p.Typing.Data); l > 0 {
 		start = p.Typing.Data[l-1].end + 1
 		start = 1 + p.Typing.Data[l-1].assertETimeMatchEnd(p.Data, "ParseTyping start2")
@@ -359,13 +385,7 @@ func (p *typing_parser) LinkTyping() bool {
 	hasnew := false
 	start := 0
 
-	if l := len(p.Line); l > 0 {
-		if l > 5 {
-			p.Line = p.Line[0 : l-5]
-		} else {
-			p.Line = []Typing{}
-		}
-	}
+	p.drop_last_5_line()
 
 	if l := len(p.Line); l > 0 {
 		t := p.Line[l-1]
@@ -377,14 +397,7 @@ func (p *typing_parser) LinkTyping() bool {
 		}
 	}
 
-	end := len(p.Data) - 1
-	for i := end - 1; i > -1; i-- {
-		if p.Data[i].Type != p.Data[i+1].Type {
-			end = i + 1
-			break
-		}
-	}
-
+	end := len(p.Data)
 	typing := Typing{}
 	for i := start; i < end; i++ {
 		t := p.Data[i]
