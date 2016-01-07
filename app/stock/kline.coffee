@@ -435,46 +435,44 @@ filter = (src, range) ->
   if (range||[]).length < 2
     return []
 
-  start = range[0].date
-  end = range[range.length-1].date
+  for d in range
+    d.date = d.date || parseDate(d.Time)
+  for d in src
+    d.date = d.date || parseDate(d.Time)
+
+  start_date = range[0].date
+  end_date = range[range.length-1].date
+
+  bisect = d3.bisector((d) -> d.date)
+  istart = bisect.left(src, start_date)
+  iend = bisect.right(src, end_date)
+  istart = Math.max(istart - 1, 0)
+  src = src.slice istart, iend+1
 
   hash = {}
   hash[+d.date] = i for d, i in range
 
-  closeIndexOf = (date) ->
-    date = +date
-    j = 0
-    j = i for d, i in range when date >= +d.date
-    j
+  indexOfFun = (start, end) ->
+    (date) ->
+      idate = +date
+      if start > idate
+        return -1
+      if idate > end
+        return hash[end]+1
+      if hash.hasOwnProperty idate
+        return hash[idate]
+      bisect.right(range, date)
 
-  indexOf = (date) ->
-    date = +date
-    if +range[0].date > date
-      return -1
-    if +range[range.length-1].date < date
-      return -1
-    hash[+date] || closeIndexOf(date)
+  indexOf = indexOfFun(+start_date, +end_date)
 
   for d in src
-    d.date = d.date || parseDate(d.Time)
-    d.edate = d.edate || parseDate(d.ETime)
     d.i = indexOf d.date
-    d.ei = indexOf d.edate
+    if d.ETime
+      d.edate = d.edate || parseDate(d.ETime)
+      d.ei = indexOf d.edate
 
-  rv = []
-  for d in src
-    if d.i != -1
-      rv.push d
-      continue
+  src
 
-    if rv.length < 2
-      rv = [d]
-      continue
-
-    if rv[rv.length-1].i != -1
-      rv.push d
-      continue
-  rv
 KLine.filter = filter
 KLine.merge_data = merge_data
 KLine.merge_with_key = merge_with_key
