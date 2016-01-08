@@ -239,6 +239,30 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 	return false, i
 }
 
+func findLineDir(line []Typing, l int) int {
+	for i := 0; i < l; i++ {
+		if line[i].Type == UpTyping {
+			// Up yes
+			if i+2 > l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
+				return i + 1
+			}
+
+			if i+4 < l && line[i+4].High > line[i].High && line[i+4].Low > line[i].Low {
+				return i + 1
+			}
+		} else if line[i].Type == DownTyping {
+			// Down yes
+			if i+2 < l && line[i+2].High < line[i].High && line[i+2].Low < line[i].Low {
+				return i + 1
+			}
+			if i+4 < l && line[i+4].High < line[i].High && line[i+4].Low < line[i].Low {
+				return i + 1
+			}
+		}
+	}
+	return -1
+}
+
 func (p *Tdatas) ParseSegment() bool {
 	hasnew := false
 	start := 0
@@ -246,7 +270,7 @@ func (p *Tdatas) ParseSegment() bool {
 	p.Segment.drop_last_5_data()
 
 	l := len(p.Typing.Line)
-	if l > 0 && (p.Typing.Line[l-1].Type != UpTyping || p.Typing.Line[l-1].Type != DownTyping) {
+	if l > 0 && p.Typing.Line[l-1].Type != UpTyping && p.Typing.Line[l-1].Type != DownTyping {
 		l--
 	}
 
@@ -254,21 +278,11 @@ func (p *Tdatas) ParseSegment() bool {
 		start = p.Segment.Data[y-1].end + 1
 		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start2")
 	} else {
-		for i := 0; i < l; i++ {
-			if i+2 >= l {
-				return hasnew
-			}
-
-			if p.Typing.Line[i].Type == UpTyping && p.Typing.Line[i+2].High > p.Typing.Line[i].High && p.Typing.Line[i+2].Low > p.Typing.Line[i].Low {
-				// Up yes
-				start = i + 1
-				break
-			} else if p.Typing.Line[i].Type == DownTyping && p.Typing.Line[i+2].High < p.Typing.Line[i].High && p.Typing.Line[i+2].Low < p.Typing.Line[i].Low {
-				// Down yes
-				start = i + 1
-				break
-			}
+		i := findLineDir(p.Typing.Line, l)
+		if i == -1 {
+			return hasnew
 		}
+		start = i
 	}
 
 	glog.V(SegmentV).Infof("start-%d lines-%d", start, l)

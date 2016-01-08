@@ -78,6 +78,8 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 	}
 	sort.Sort(TypingSlice(tline))
 	for i := len(tline) - 1; i > -1; i-- {
+		tline[i].Time = tline[i].Time.UTC().AddDate(0, 0, i)
+		tline[i].ETime = tline[i].Time
 		if tline[i].Type == DownTyping {
 			tline[i].Price = tline[i].Low
 			tline[i].I = tline[i].I - 1 + (tline[i].High-tline[i].Low)/base/2
@@ -212,6 +214,8 @@ func TestText2Segment(t *testing.T) {
 }
 
 func TestParseSegment(t *testing.T) {
+	flag.Lookup("logtostderr").Value.Set("true")
+	flag.Lookup("v").Value.Set("1000")
 	pattern := *segment_files_flag
 	if len(pattern) < 1 {
 		pattern = "**/*.segment"

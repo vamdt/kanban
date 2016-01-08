@@ -274,6 +274,7 @@ func (p *Tdatas) ParseTyping() bool {
 		start = p.findChanTypingStart()
 	}
 
+	glog.Infof("start %d", start)
 	p.Typing.parser_reset()
 	for i, l := start, len(p.Data); i < l; i++ {
 		a := &p.Data[i]

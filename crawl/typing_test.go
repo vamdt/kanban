@@ -18,9 +18,9 @@ func text2Tdatas(text []byte) Tdatas {
 	tline := []Typing{}
 	lines := bytes.Split(text, []byte("\n"))
 	for _, l := range lines {
-    if bytes.Count(l, []byte(" ")) == len(l) {
-      continue
-    }
+		if bytes.Count(l, []byte(" ")) == len(l) {
+			continue
+		}
 		if bytes.IndexAny(l, "|-_") > -1 {
 			for i, c := 0, len(td); i < c; i++ {
 				if td[i].High > 0 {
@@ -30,8 +30,9 @@ func text2Tdatas(text []byte) Tdatas {
 			}
 		}
 		for i, c := range l {
-			if len(td) <= i {
+			if ltd := len(td); ltd <= i {
 				td = append(td, Tdata{})
+				td[ltd].Time = td[ltd].Time.UTC().AddDate(0, 0, i)
 			}
 
 			switch c {
