@@ -99,8 +99,10 @@ func getStore(s string) Store {
 	var err error
 	if s == "mongo" {
 		store, err = NewMongoStore()
-	} else {
+	} else if s == "mysql" {
 		store, err = NewMysqlStore()
+	} else {
+		store, err = NewMemStore()
 	}
 	if err != nil {
 		glog.Fatalln("new [", s, "] store", err)
@@ -168,7 +170,6 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	}
 
 	s := NewStock(id, p.min_hub_height)
-	go p.update(s)
 
 	glog.V(LogV).Infoln("RUnLock in stocks pre insert", id)
 	p.rwmutex.RUnlock()
@@ -203,6 +204,7 @@ func (p *Stocks) Remove(id string) {
 func (p *Stocks) Watch(id string) (*Stock, bool) {
 	i, s, isnew := p.Insert(id)
 	if isnew {
+		go p.update(s)
 		glog.V(LogV).Infof("watch new stock id=%s index=%d", id, i)
 	} else {
 		glog.V(LogV).Infof("watch stock id=%s index=%d count=%d", id, i, s.count)
