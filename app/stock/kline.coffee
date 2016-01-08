@@ -263,9 +263,9 @@ class KLine
         nsize = parseInt nsize * 0.9
       else
         if x0 > x1
-          nleft = nleft + Math.max(20, parseInt nsize * 0.1)
+          nleft = nleft + Math.max(20, parseInt nsize * 0.05)
         else if x0 < x1
-          nleft = nleft - Math.max(20, parseInt nsize * 0.1)
+          nleft = nleft - Math.max(20, parseInt nsize * 0.05)
         else
           return
       @update_size(nsize, nleft)
