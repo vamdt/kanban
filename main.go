@@ -25,7 +25,7 @@ func init() {
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
 	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
-	flag.StringVar(&opt.store, "store", "mysql", "back store with")
+	flag.StringVar(&opt.store, "store", "mem", "back store with")
 }
 
 func serve() {
