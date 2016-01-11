@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"time"
 )
@@ -30,6 +31,27 @@ type Tick struct {
 type Ticks struct {
 	Data []Tick `json:"data"`
 	play []Tick
+}
+
+type TickSlice []Tick
+
+func (p TickSlice) Len() int           { return len(p) }
+func (p TickSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p TickSlice) Less(i, j int) bool { return p[i].Time.Before(p[j].Time) }
+
+func SearchTickSlice(a TickSlice, t time.Time) int {
+	return sort.Search(len(a), func(i int) bool {
+		// a[i].Time >= t
+		return a[i].Time.After(t) || a[i].Time.Equal(t)
+	})
+}
+
+func (p TickSlice) Search(t time.Time) (int, bool) {
+	i := SearchTickSlice(p, t)
+	if i < p.Len() {
+		return i, t.Equal(p[i].Time)
+	}
+	return i, false
 }
 
 type RealtimeTick struct {
@@ -254,27 +276,18 @@ func (p *Ticks) Add(data Tick) {
 	} else if data.Time.Equal(p.Data[len(p.Data)-1].Time) {
 		p.Data[len(p.Data)-1] = data
 	} else {
-		j := len(p.Data) - 1
-		should_insert := true
-		for i := j - 1; i > -1; i-- {
-			if p.Data[i].Time.After(data.Time) {
-				j = i
-				continue
-			} else if p.Data[i].Time.Equal(data.Time) {
-				p.Data[i] = data
-				should_insert = false
-			}
-			break
+		i, ok := (TickSlice(p.Data)).Search(data.Time)
+		if ok {
+			p.Data[i] = data
+			return
 		}
 
-		if should_insert {
-			if j < 1 {
-				p.Data = append([]Tick{data}, p.Data...)
-			} else {
-				p.Data = append(p.Data, data)
-				copy(p.Data[j+1:], p.Data[j:])
-				p.Data[j] = data
-			}
+		if i < 1 {
+			p.Data = append([]Tick{data}, p.Data...)
+		} else {
+			p.Data = append(p.Data, data)
+			copy(p.Data[i+1:], p.Data[i:])
+			p.Data[i] = data
 		}
 	}
 }
