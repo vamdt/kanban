@@ -21,7 +21,7 @@ const (
 var market_begin_day time.Time
 
 func init() {
-	market_begin_day, _ = time.Parse("2006-01-02", "2000-01-01")
+	market_begin_day, _ = time.Parse("2006-01-02", "1990-12-19")
 }
 
 type Stock struct {
