@@ -5,22 +5,24 @@ import (
 	"time"
 )
 
+func stringSlice2Ticks(dates []string) Ticks {
+	ticks := Ticks{}
+	fmt := "2006-01-02 15:04:05"
+	ticks.Data = make([]Tick, len(dates))
+	for i := len(ticks.Data) - 1; i > -1; i-- {
+		d, _ := time.Parse(fmt[:len(dates[i])], dates[i])
+		ticks.Data[i].Time = d
+	}
+	return ticks
+}
+
 func TestTicksAdd(t *testing.T) {
-	var base_ticks_data = func() Ticks {
-		dates := []string{
-			"2000-01-01",
-			"2000-01-02",
-			"2000-01-03",
-			"2000-01-04",
-			"2000-01-06",
-		}
-		ticks := Ticks{}
-		ticks.Data = make([]Tick, len(dates))
-		for i, l := 0, len(ticks.Data); i < l; i++ {
-			d, _ := time.Parse("2006-01-02", dates[i])
-			ticks.Data[i].Time = d
-		}
-		return ticks
+	dates := []string{
+		"2000-01-01",
+		"2000-01-02",
+		"2000-01-03",
+		"2000-01-04",
+		"2000-01-06",
 	}
 
 	type date_pair struct {
@@ -39,7 +41,7 @@ func TestTicksAdd(t *testing.T) {
 	}
 
 	for i, l := 0, len(tests); i < l; i++ {
-		ticks := base_ticks_data()
+		ticks := stringSlice2Ticks(dates)
 		old_len := len(ticks.Data)
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
