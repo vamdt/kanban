@@ -22,6 +22,7 @@ class KLineSegment
     x = @_ui.x
     y = @_ui.y
 
+    dispatch = @root.dispatch
     sdata = datasel.Segment.Data
     dataset = KLine.filter sdata, data
     color = (d, i) -> colors[d.Type] || colors[0]
@@ -34,6 +35,6 @@ class KLineSegment
       .attr('r', 6)
       .style("stroke", color)
       .style("fill", (d,i) -> if d.Case1 then color(d,i) else '#fff')
-      .on('mouseover', (d,i) -> console.log(d,i))
+      .on('mouseover', (d, i) -> dispatch.tip d, i, 'segment')
 
 KLine.register_plugin 'segment', KLineSegment

@@ -53,10 +53,17 @@ class KLineToolTip
       tips.style k, v
     @tips = tips
 
-    @root.dispatch.on 'tip', (d) ->
+    templ = (d, i, name) ->
+      switch name
+        when 'k'
+          "#{d.date}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
+        when 'typing', 'segment'
+          "#{d.date}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
+        else "no templ"
+    @root.dispatch.on 'tip', (d, i, name) ->
       tips
         .style('display', '')
-        .html("#{d.date}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}")
+        .html(templ(d, i, name))
         .transition()
         .duration(2000)
         .transition()
