@@ -238,7 +238,7 @@ func (p *Tdatas) findChanTypingStart() int {
 }
 
 func (p *Typing) assertETimeMatchEnd(data TdataSlice, note string) int {
-	i, ok := data.SearchByTime(p.ETime)
+	i, ok := data.Search(p.ETime)
 	if ok {
 		if p.end != i {
 			glog.Fatalf("%s assert end/%d eq SearchByTime/%d", note, p.end, i)

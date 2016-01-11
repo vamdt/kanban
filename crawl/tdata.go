@@ -33,15 +33,15 @@ func (p TdataSlice) Len() int           { return len(p) }
 func (p TdataSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p TdataSlice) Less(i, j int) bool { return p[i].Time.Before(p[j].Time) }
 
-func SearchTdataSliceByTime(a TdataSlice, t time.Time) int {
+func SearchTdataSlice(a TdataSlice, t time.Time) int {
 	return sort.Search(len(a), func(i int) bool {
 		// a[i].Time >= t
 		return a[i].Time.After(t) || a[i].Time.Equal(t)
 	})
 }
 
-func (p TdataSlice) SearchByTime(t time.Time) (int, bool) {
-	i := SearchTdataSliceByTime(p, t)
+func (p TdataSlice) Search(t time.Time) (int, bool) {
+	i := SearchTdataSlice(p, t)
 	if i < p.Len() {
 		return i, t.Equal(p[i].Time)
 	}
@@ -106,27 +106,18 @@ func (p *Tdatas) Add(data Tdata) {
 	} else if data.Time.Equal(p.Data[len(p.Data)-1].Time) {
 		p.Data[len(p.Data)-1] = data
 	} else {
-		j := len(p.Data) - 1
-		should_insert := true
-		for i := j - 1; i > -1; i-- {
-			if p.Data[i].Time.After(data.Time) {
-				j = i
-				continue
-			} else if p.Data[i].Time.Equal(data.Time) {
-				p.Data[i] = data
-				should_insert = false
-			}
-			break
+		i, ok := (TdataSlice(p.Data)).Search(data.Time)
+		if ok {
+			p.Data[i] = data
+			return
 		}
 
-		if should_insert {
-			if j < 1 {
-				p.Data = append([]Tdata{data}, p.Data...)
-			} else {
-				p.Data = append(p.Data, data)
-				copy(p.Data[j+1:], p.Data[j:])
-				p.Data[j] = data
-			}
+		if i < 1 {
+			p.Data = append([]Tdata{data}, p.Data...)
+		} else {
+			p.Data = append(p.Data, data)
+			copy(p.Data[i+1:], p.Data[i:])
+			p.Data[i] = data
 		}
 	}
 }
