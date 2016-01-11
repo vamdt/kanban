@@ -3,7 +3,10 @@ package crawl
 import "time"
 
 func (p *Stock) Ticks2M1s() {
-	for i, c := 0, len(p.Ticks.Data); i < c; {
+	p.M1s.Drop_lastday_data()
+	start_time := p.M1s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	start, _ := (TickSlice(p.Ticks.Data)).Search(start_time)
+	for i, c := start, len(p.Ticks.Data); i < c; {
 		end := Minuteend(p.Ticks.Data[i].Time)
 		hour, min, _ := end.Clock()
 		if hour == 9 && min <= 30 {
@@ -72,7 +75,10 @@ func (p *Tdatas) MergeTil(begin int, end time.Time) (Tdata, int) {
 }
 
 func (p *Stock) M1s2M5s() {
-	for i, c := 0, len(p.M1s.Data); i < c; {
+	p.M5s.Drop_lastday_data()
+	start_time := p.M5s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	start, _ := (TdataSlice(p.M1s.Data)).Search(start_time)
+	for i, c := start, len(p.M1s.Data); i < c; {
 		t := Minute5end(p.M1s.Data[i].Time)
 		tdata, j := p.M1s.MergeTil(i, t)
 		tdata.Time = t
@@ -82,7 +88,10 @@ func (p *Stock) M1s2M5s() {
 }
 
 func (p *Stock) M1s2M30s() {
-	for i, c := 0, len(p.M1s.Data); i < c; {
+	p.M30s.Drop_lastday_data()
+	start_time := p.M30s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	start, _ := (TdataSlice(p.M1s.Data)).Search(start_time)
+	for i, c := start, len(p.M1s.Data); i < c; {
 		t := Minute30end(p.M1s.Data[i].Time)
 		tdata, j := p.M1s.MergeTil(i, t)
 		tdata.Time = t
@@ -92,7 +101,10 @@ func (p *Stock) M1s2M30s() {
 }
 
 func (p *Stock) Days2Weeks() {
-	for i, c := 0, len(p.Days.Data); i < c; {
+	p.Weeks.Drop_lastday_data()
+	start_time := p.Weeks.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	start, _ := (TdataSlice(p.Days.Data)).Search(start_time)
+	for i, c := start, len(p.Days.Data); i < c; {
 		t := Weekend(p.Days.Data[i].Time)
 		tdata, j := p.Days.MergeTil(i, t)
 		tdata.Time = tdata.Time.Truncate(time.Hour * 24)
@@ -102,7 +114,10 @@ func (p *Stock) Days2Weeks() {
 }
 
 func (p *Stock) Days2Months() {
-	for i, c := 0, len(p.Days.Data); i < c; {
+	p.Months.Drop_lastday_data()
+	start_time := p.Months.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	start, _ := (TdataSlice(p.Days.Data)).Search(start_time)
+	for i, c := start, len(p.Days.Data); i < c; {
 		t := Monthend(p.Days.Data[i].Time)
 		tdata, j := p.Days.MergeTil(i, t)
 		tdata.Time = tdata.Time.Truncate(time.Hour * 24)
