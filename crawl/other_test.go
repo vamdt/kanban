@@ -29,6 +29,22 @@ func TestByteString(t *testing.T) {
 	}
 }
 
+func TestTimeParseLayout(t *testing.T) {
+	fmt := "2006-01-02 15:04:05"
+	date := "1999-01-02 11:11:11"
+	d, _ := time.Parse(fmt[:len(date)], date)
+	ts := d.Format(fmt[:len(date)])
+	t.Log(date, d, ts)
+
+	if ts != date {
+		t.Error(
+			"For", date,
+			"expected", date,
+			"got", ts,
+		)
+	}
+}
+
 func TestTimeNowHour(t *testing.T) {
 	now := time.Now().UTC()
 	t.Logf("now utc hour %d", now.Hour())
