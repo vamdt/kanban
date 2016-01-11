@@ -98,6 +98,35 @@ func (p *Tdatas) Init(hub_height int, tag string) {
 	p.Segment.tag = tag
 }
 
+func (p *Tdatas) First_lastday_data() int {
+	ldata := len(p.Data)
+	if ldata < 1 {
+		return 0
+	}
+
+	start := ldata - 240 - 10
+	if start < 0 {
+		start = 0
+	}
+	t := p.Data[ldata-1].Time.Truncate(time.Hour * 24)
+	i, _ := (TdataSlice(p.Data[start:])).Search(t)
+	return i + start
+}
+
+func (p *Tdatas) Drop_lastday_data() {
+	ldata := len(p.Data)
+	if ldata < 1 {
+		return
+	}
+
+	i := p.First_lastday_data()
+	if i < 1 {
+		p.Data = []Tdata{}
+		return
+	}
+	p.Data = p.Data[:i]
+}
+
 func (p *Tdatas) Add(data Tdata) {
 	if len(p.Data) < 1 {
 		p.Data = append(p.Data, data)

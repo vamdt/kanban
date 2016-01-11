@@ -5,22 +5,24 @@ import (
 	"time"
 )
 
+func stringSlice2Tdatas(dates []string) Tdatas {
+	tdatas := Tdatas{}
+	fmt := "2006-01-02 15:04:05"
+	tdatas.Data = make([]Tdata, len(dates))
+	for i := len(tdatas.Data) - 1; i > -1; i-- {
+		d, _ := time.Parse(fmt[:len(dates[i])], dates[i])
+		tdatas.Data[i].Time = d
+	}
+	return tdatas
+}
+
 func TestTdatasAdd(t *testing.T) {
-	var base_data = func() Tdatas {
-		dates := []string{
-			"2000-01-01",
-			"2000-01-02",
-			"2000-01-03",
-			"2000-01-04",
-			"2000-01-06",
-		}
-		tdatas := Tdatas{}
-		tdatas.Data = make([]Tdata, len(dates))
-		for i, l := 0, len(tdatas.Data); i < l; i++ {
-			d, _ := time.Parse("2006-01-02", dates[i])
-			tdatas.Data[i].Time = d
-		}
-		return tdatas
+	dates := []string{
+		"2000-01-01",
+		"2000-01-02",
+		"2000-01-03",
+		"2000-01-04",
+		"2000-01-06",
 	}
 
 	type date_pair struct {
@@ -39,7 +41,7 @@ func TestTdatasAdd(t *testing.T) {
 	}
 
 	for i, l := 0, len(tests); i < l; i++ {
-		cases := base_data()
+		cases := stringSlice2Tdatas(dates)
 		old_len := len(cases.Data)
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
@@ -70,5 +72,79 @@ func TestTdatasAdd(t *testing.T) {
 				"got", "[].Time", cases.Data[tests[i].index].Time,
 			)
 		}
+	}
+}
+
+func TestFirstLastdayData(t *testing.T) {
+	TestDropLastdayData(t)
+}
+
+func TestDropLastdayData(t *testing.T) {
+	type date_pair struct {
+		date  []string
+		index int
+	}
+	tests := []date_pair{
+		{[]string{
+			"2000-01-01 01:00:00",
+			"2000-01-01 02:00:00",
+		}, 0},
+		{[]string{
+			"1999-01-01 01:00:00",
+			"2000-01-01 01:00:00",
+			"2000-01-01 02:00:00",
+		}, 1},
+		{[]string{
+			"1999-01-01 01:00:00",
+			"2000-01-01 01:00:00",
+			"2000-01-01 02:00:00",
+			"2000-01-02 02:00:00",
+		}, 3},
+		{[]string{
+			"1999-01-01 01:00:00",
+			"2000-01-01 01:00:00",
+			"2000-01-01 02:00:00",
+			"2000-01-02 23:59:59",
+		}, 3},
+		{[]string{
+			"1999-01-01 01:00:00",
+			"2000-01-01 01:00:00",
+			"2000-01-01 02:00:00",
+			"2000-01-02 00:00:00",
+		}, 3},
+	}
+
+	fmt := "2006-01-02 15:04:05"
+	for i, l := 0, len(tests); i < l; i++ {
+		cases := stringSlice2Tdatas(tests[i].date)
+		index := cases.First_lastday_data()
+		if index != tests[i].index {
+			t.Error(
+				"For", "case", i, tests[i],
+				"expected", tests[i].index,
+				"got", index,
+			)
+		}
+
+		cases.Drop_lastday_data()
+		if index != len(cases.Data) {
+			t.Error(
+				"For", "case", i, tests[i],
+				"expected", "len(Data)==index",
+				"got", "index", index, "len", len(cases.Data),
+			)
+		}
+		if index < 1 {
+			continue
+		}
+		ndate := cases.Data[index-1].Time.Format(fmt[:len(tests[i].date[index-1])])
+		if ndate != tests[i].date[index-1] {
+			t.Error(
+				"For", "case", i, tests[i],
+				"expected", "last Data.Time eq ", tests[i].date[index-1],
+				"got", "date[", index-1, "]", ndate,
+			)
+		}
+		t.Log("expected", tests[i].date[index-1], "got", ndate)
 	}
 }
