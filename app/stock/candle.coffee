@@ -48,7 +48,7 @@ class KLineCandle
         .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
         .attr("stroke", kColor)
         .attr("fill", kColor)
-        .on('mouseover', (d, i) -> dispatch.tip d, i, 'k')
+        .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
 
     svg.selectAll("line.candle")
       .data(data)
@@ -61,7 +61,7 @@ class KLineCandle
       .attr("y1", (d, i) -> y(d.high))
       .attr("x2", (d, i) -> x(i))
       .attr("y2", (d, i) -> y(d.low - Math.max(1, Math.min(d.high - d.low, 0))))
-      .on('mouseover', (d, i) -> dispatch.tip d, i, 'k')
+      .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
     opacity = @root.param 'opacity'
     if opacity
       svg.selectAll('.candle').style('opacity', opacity)

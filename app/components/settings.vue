@@ -1,6 +1,7 @@
 <template>
   <form class="pure-form pure-form-aligned">
     <fieldset>
+      <legend>Candle</legend>
       <div class="pure-control-group">
         <label for="nc" class="pure-checkbox">
           <input id="nc" v-model="settings.nc" type="checkbox"> no candle
@@ -34,18 +35,54 @@
         </label>
       </div>
     </fieldset>
+    <fieldset>
+      <legend>Mas</legend>
+      <div class="pure-control-group" v-for="mas in settings.mas">
+        <label v-bind="{for:'mas_'+mas.interval}">mas_{{mas.interval}}</label>
+        <input v-bind="{id:'mas_'+mas.interval}" placeholder="mas" v-model="mas.interval" type="number">
+        <input type="color" v-on:click="cur_mas=mas.interval"
+        v-model="mas.color" placeholder="color" readonly
+        v-bind:style="{ backgroundColor: mas.color }">
+        <button class="pure-button" @click="del_mas(mas)">Delete</button>
+        <div v-if="color && cur_mas==mas.interval" v-for="cs in color" class="pure-g">
+          <div v-for="c in cs" class="pure-u-1-24" @click="cur_mas=mas.color=c" v-bind:style="{ backgroundColor: c }">
+          {{c}}
+          </div>
+        </div>
+      </div>
+      <div class="pure-control-group">
+        <label></label>
+        <button class="pure-button" @click="add_mas">Add</button>
+      </div>
+    </fieldset>
   </form>
 </template>
 
 <script lang="coffee">
+d3 = require 'd3'
 module.exports =
   watch:
     'settings':
       handler: 'submit'
       deep: true
+  data: ->
+    issafari = false
+    ua = navigator.userAgent.toLowerCase()
+    if ua.indexOf('safari') != -1
+      if ua.indexOf('chrome') > -1
+      else
+        issafari = true
+    color = [[],[],[]]
+    for c,j in [d3.scale.category20(), d3.scale.category20b(), d3.scale.category20c()]
+      color[j].push c i for i in [0...20]
+    unless issafari
+      color = off
+    color: color
+    cur_mas: 0
+    settings: {}
   route:
     data: ->
-      settings: try
+      @settings = try
           JSON.parse localStorage.getItem 'settings'
         catch
           nc: true
@@ -53,9 +90,25 @@ module.exports =
           ocl: true
           nvolume: false
           nmacd: false
+          mas: [
+            interval: 5
+            interval: 10
+            interval: 20
+          ]
 
   methods:
     submit: (val, oldVal) ->
       return unless oldVal
       localStorage.setItem('settings', JSON.stringify(@settings))
+    add_mas: ->
+      mas = @settings.mas = @settings.mas || []
+      n = interval: 5
+      if mas.length
+        n.interval = +mas[mas.length-1].interval + 1
+      mas.push n
+    del_mas: (mas) ->
+      mass = @settings.mas = @settings.mas || []
+      index = mass.indexOf mas
+      return if index is -1
+      mass.splice(index, 1)
 </script>

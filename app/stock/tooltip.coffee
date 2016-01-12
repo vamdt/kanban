@@ -4,7 +4,6 @@ defaults =
   tmpl : '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.high%><br/>最低价：<%- p.low%>'
   margin : [0, 10, 0, 10]
   style:
-    'display': 'block'
     'padding': '6px 10px 4px'
     'line-height': '20px'
     'position': 'absolute'
@@ -15,7 +14,6 @@ defaults =
     'box-shadow': '0px 0px 3px 3px rgba(0, 0, 0, 0.3)'
     'opacity': '0.8'
     #'visibility': 'hidden'
-    'top': 0
     'display': 'none'
   width : 120
   height : 82
@@ -53,17 +51,24 @@ class KLineToolTip
       tips.style k, v
     @tips = tips
 
-    templ = (d, i, name) ->
+    templ = (name, d, i) ->
       switch name
         when 'k'
           "#{d.date}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
         when 'typing', 'segment'
           "#{d.date}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
+        when 'mas'
+          e = d3.select(@)
+          "#{e.attr('id')}<div style='background-color:#{e.style('stroke')}'>#{e.attr('id')}</div>#{name}"
         else "no templ"
-    @root.dispatch.on 'tip', (d, i, name) ->
+    @root.dispatch.on 'tip', (e) ->
+      args = Array.prototype.slice.call(arguments)
+      args.shift() if args.length && args[0] == e
       tips
         .style('display', '')
-        .html(templ(d, i, name))
+        .style("left", (d3.event.pageX+10) + "px")
+        .style("top", (d3.event.pageY+10) + "px")
+        .html(templ.apply(e, args))
         .transition()
         .duration(2000)
         .transition()

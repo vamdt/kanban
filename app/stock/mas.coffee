@@ -1,39 +1,30 @@
 d3 = require 'd3'
 KLine = require './kline'
-defaults =
-  '5d':
-    interval: 5
-    color: 'silver'
-  '10d':
-    interval: 10
-    color: 'gray'
+defaults = [ {interval: 5, color: 'silver'}, {interval: 10, color: 'gray'} ]
 
 class KLineMas
   constructor: (@root, @svg, @y, @d) ->
-    @options = KLine.extend {}, @root.options.mas, defaults
-    @root.options.mas = @options
     @y = @y || @root._ui.y
     @d = @d || (d) -> d.close
 
   init: ->
-    svg = @svg
-    for n,ma of @options
-      interval = +ma.interval
-
-      line = svg.select("path.line.mas.ma#{interval}")
-      if line.empty()
-        line = svg.append("path")
-          .attr("class", "line mas ma#{interval}")
-      line
-        .style("stroke", ma.color)
-        .style("stroke-width", "1")
 
   update: (data) ->
     svg = @svg
-    for n,ma of @options
+    mas = @root.param('mas') || defaults
+    color = d3.scale.category20()
+    dispatch = @root.dispatch
+    for ma in mas
       interval = +ma.interval
-      e = svg.select("path.line.mas.ma#{interval}")
+      e = svg.select("path#ma#{interval}")
+      if e.empty()
+        e = svg.append("path")
+          .attr("class", "line mas")
+          .attr("id", "ma#{interval}")
+          .style("stroke", ma.color||color interval)
+          .style("stroke-width", "1")
       e.data([data])
+        .on('mouseover', (d, i) -> dispatch.tip @, 'mas', d, i)
       @drawMA(data, interval, e)
 
   drawMA: (data, interval, element) ->

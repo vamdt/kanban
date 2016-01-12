@@ -35,6 +35,6 @@ class KLineSegment
       .attr('r', 6)
       .style("stroke", color)
       .style("fill", (d,i) -> if d.Case1 then color(d,i) else '#fff')
-      .on('mouseover', (d, i) -> dispatch.tip d, i, 'segment')
+      .on('mouseover', (d, i) -> dispatch.tip @, 'segment', d, i)
 
 KLine.register_plugin 'segment', KLineSegment
