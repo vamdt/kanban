@@ -147,3 +147,30 @@ response:
     }
   }
 }
+
+
+## Data Source
+
+### gu.qq.com
+
+http://data.gtimg.cn/flashdata/hushen/4day/sh/sh000001.js
+
+http://data.gtimg.cn/flashdata/hushen/minute/sh000001.js
+
+http://data.gtimg.cn/flashdata/hushen/monthly/sh000001.js
+
+http://data.gtimg.cn/flashdata/hushen/weekly/sh000001.js
+
+http://data.gtimg.cn/flashdata/hushen/daily/15/sh000001.js
+
+http://data.gtimg.cn/flashdata/hushen/latest/daily/sh000001.js
+
+num:100 total:5958 start:901219 90:9 91:247 92:90 93:257 94:252 95:251 96:247 97:243 98:246 99:239 00:239 01:240 02:237 03:241 04:243 05:242 06:241 07:242 08:246 09:244 10:242 11:244 12:243 13:238 14:245 15:244 16:6\n\
+150813 3869.91 3954.56 3955.79 3838.16 430073303\n\
+       open    close   high    low     volume
+160111 3131.85 3016.70 3166.22 3016.70 271643691\n\
+
+### sina
+
+http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sh000001&scale=5&ma=no&datalen=1023
+
