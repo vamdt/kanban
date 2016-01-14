@@ -30,6 +30,7 @@ func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err 
 			return
 		}
 
+		//timestr, open, high, cloze, low, volume
 		td.FromBytes(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5])
 		res = append(res, td)
 	}

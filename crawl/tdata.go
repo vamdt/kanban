@@ -7,10 +7,12 @@ import (
 )
 
 const (
-	lmt   = "2006-01-02 15:04:05"
-	smt   = "2006-01-02"
-	l_lmt = len(lmt)
-	l_smt = len(smt)
+	lmt    = "2006-01-02 15:04:05"
+	smt    = "2006-01-02"
+	qqmt   = "060102"
+	l_lmt  = len(lmt)
+	l_smt  = len(smt)
+	l_qqmt = len(qqmt)
 )
 
 type Tdata struct {
@@ -164,10 +166,14 @@ func (p *Tdata) FromBytes(timestr, open, high, cloze, low, volume []byte) {
 }
 
 func (p *Tdata) FromString(timestr, open, high, cloze, low, volume string) {
-	if len(timestr) == l_lmt {
+	ltime := len(timestr)
+	switch ltime {
+	case l_lmt:
 		p.Time, _ = time.Parse(lmt, timestr)
-	} else {
+	case l_smt:
 		p.Time, _ = time.Parse(smt, timestr)
+	case l_qqmt:
+		p.Time, _ = time.Parse(qqmt, timestr)
 	}
 	p.Open = ParseCent(open)
 	p.High = ParseCent(high)
