@@ -20,9 +20,8 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
-    kselIndex = i for level, i in levels when level.level is ksel
     line = dataset.m1s.Segment.Line
-    for level,i in levels when dataset[level.name] and Math.abs(i-kselIndex) < 3
+    for level,i in levels when dataset[level.name]
       k = level.level
       d = level.name
       iscur = ksel is k
