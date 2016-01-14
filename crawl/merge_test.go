@@ -2,9 +2,19 @@ package crawl
 
 import "testing"
 
+func TestM1s2M5s(t *testing.T) {
+	t.Skip("todo TestM1s2M5s")
+	//TODO merge test M5s
+	// 09:35 [09:30, 09:35)
+	// 11:30 [11:25, 11:35)
+	// 13:05 [13:00, 13:05)
+	// 14:55 [14:50, 14:55)
+	// 15:00 [14:55, 15:05)
+}
+
 func TestBuildM30s(t *testing.T) {
 	t.Skip("todo m30s")
-	//TODO merge test M5s
+	//TODO merge test M30s
 	// 10:00 [09:00, 10:00)
 	// 10:30 [10:00, 10:30)
 	// 11:00 [10:30, 11:00)
