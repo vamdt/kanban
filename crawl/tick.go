@@ -245,6 +245,12 @@ func (p *Ticks) hasTimeData(t time.Time) bool {
 }
 
 func (p *Ticks) Add(data Tick) {
+	if data.Volume == 0 && data.Price == 0 {
+		return
+	}
+	if data.Volume == 0 && data.Change == 0 && data.Turnover == 0 {
+		return
+	}
 	if len(p.Data) < 1 {
 		p.Data = []Tick{data}
 	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {

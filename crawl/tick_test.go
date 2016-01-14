@@ -16,6 +16,21 @@ func stringSlice2Ticks(dates []string) Ticks {
 	return ticks
 }
 
+func TestTicksAddCheck(t *testing.T) {
+	ticks := Ticks{}
+	cases := []Tick{{}, {Price: 1}, {Change: 1}}
+	for i, l := 0, len(cases); i < l; i++ {
+		ticks.Add(cases[i])
+		if len(ticks.Data) != 0 {
+			t.Error(
+				"For", "case", i, cases[i],
+				"expected", "skip add",
+				"got", "len(ticks.Data) != 0",
+			)
+		}
+	}
+}
+
 func TestTicksAdd(t *testing.T) {
 	dates := []string{
 		"2000-01-01",
@@ -45,7 +60,7 @@ func TestTicksAdd(t *testing.T) {
 		old_len := len(ticks.Data)
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
-		tick := Tick{Time: d}
+		tick := Tick{Time: d, Price: 1, Volume: 1}
 		ticks.Add(tick)
 		new_len := len(ticks.Data)
 
