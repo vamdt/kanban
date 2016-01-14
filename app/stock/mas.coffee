@@ -11,6 +11,9 @@ class KLineMas
 
   update: (data) ->
     svg = @svg
+    if @root.param('nmas')
+      svg.selectAll("path.ma").remove()
+      return
     mas = @root.param('mas') || defaults
     color = d3.scale.category20()
     dispatch = @root.dispatch
