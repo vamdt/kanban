@@ -411,25 +411,13 @@ func (p *Stock) Update(store Store, play bool) bool {
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
-	body := DownloadDaysFromSina(p.Id, t)
-	body = bytes.TrimSpace(body)
-	lines := bytes.Split(body, []byte("\n"))
-	count := len(lines)
-	if count < 1 {
-		return false, nil
+	sina := SinaRobot{}
+	tds, err := sina.Days_download(p.Id, t)
+	if err != nil {
+		return false, err
 	}
-
-	day := Tdata{}
-	for i := 0; i < count; i++ {
-		line := bytes.TrimSpace(lines[i])
-		infos := bytes.Split(line, []byte(","))
-		if len(infos) != 6 {
-			err := errors.New("could not parse line " + string(line))
-			return false, err
-		}
-
-		day.FromBytes(infos[0], infos[1], infos[2], infos[3], infos[4], infos[5])
-		p.Days.Add(day)
+	for i, count := 0, len(tds); i < count; i++ {
+		p.Days.Add(tds[i])
 	}
 	return true, nil
 }
