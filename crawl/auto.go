@@ -110,20 +110,19 @@ func getStore(s string) Store {
 	return store
 }
 
-func NewStocks(storestr string, play int) *Stocks {
+func NewStocks(storestr string, play, min_hub_height int) *Stocks {
 	store := getStore(storestr)
+	if min_hub_height < 0 {
+		min_hub_height = 0
+	}
 	return &Stocks{
-		min_hub_height: 10,
+		min_hub_height: min_hub_height,
 		store:          store,
 		play:           play,
 	}
 }
 
 func (p *Stocks) Run() {
-	if p.min_hub_height < 1 {
-		p.min_hub_height = 1
-	}
-
 	if p.play > minPlay {
 		for {
 			p.play_next_tick()

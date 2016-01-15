@@ -16,6 +16,8 @@ type Opt struct {
 	play  int
 	https bool
 	store string
+
+	min_hub_height int
 }
 
 var opt Opt
@@ -26,6 +28,7 @@ func init() {
 	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.store, "store", "mem", "back store with")
+	flag.IntVar(&opt.min_hub_height, "min_hub_height", 10, "min hub height")
 }
 
 func serve() {

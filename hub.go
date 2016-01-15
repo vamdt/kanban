@@ -115,7 +115,8 @@ func (h *hub) run() {
 	if !opt.debug {
 		opt.play = 0
 	}
-	stocks = crawl.NewStocks(opt.store, opt.play)
+	glog.Infof("new stocks with store [%s] min_hub_height [%d]", opt.store, opt.min_hub_height)
+	stocks = crawl.NewStocks(opt.store, opt.play, opt.min_hub_height)
 	stocks.Chan(h.broadcast)
 	go stocks.Run()
 
