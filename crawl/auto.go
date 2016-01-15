@@ -251,7 +251,7 @@ func (p *Stocks) play_next_tick() {
 		ldata := len(p.stocks[i].Ticks.Data)
 		if ldata < lplay {
 			p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:ldata+1]
-			p.stocks[i].Merge()
+			p.stocks[i].Merge(false)
 			p.res(p.stocks[i])
 		}
 		p.stocks[i].rw.Unlock()
@@ -306,7 +306,7 @@ func (p *Stocks) Ticks_update_real() {
 				id := info[0][len(prefix):]
 				if idx, ok := pstocks.Search(string(id)); ok {
 					if pstocks[idx].tick_get_real(info[1]) {
-						pstocks[idx].Merge()
+						pstocks[idx].Merge(false)
 						glog.V(LogV).Infoln("pre send stocks", pstocks[idx].Id)
 						p.res(pstocks[idx])
 						glog.V(LogV).Infoln("send done stocks", pstocks[idx].Id)
@@ -331,34 +331,25 @@ func StockHash(id string) int {
 	return 0
 }
 
-func (p *Stock) Merge() {
-	var wg sync.WaitGroup
+func (p *Stock) Merge(day bool) {
+	m1_fresh_index := p.Ticks2M1s()
+	p.M1s.Macd(m1_fresh_index)
+	m5_fresh_index := p.M5s.MergeFrom(&p.M1s, false, Minute5end)
+	p.M5s.Macd(m5_fresh_index)
+	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
+	p.M30s.Macd(m30_fresh_index)
+	p.M1s.ParseChan(nil)
+	p.M5s.ParseChan(&p.M1s)
+	p.M30s.ParseChan(&p.M5s)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		p.Ticks2M1s()
-		p.M1s2M5s()
-		p.M1s2M30s()
-		p.M1s.Macd()
-		p.M5s.Macd()
-		p.M30s.Macd()
-		p.M1s.ParseChan(nil)
-		p.M5s.ParseChan(&p.M1s)
-		p.M30s.ParseChan(&p.M5s)
-	}()
+	if day {
+		p.Weeks.MergeFrom(&p.Days, true, Weekend)
+		p.Months.MergeFrom(&p.Days, true, Monthend)
+		p.Days.Macd(0)
+		p.Weeks.Macd(0)
+		p.Months.Macd(0)
+	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		p.Days2Weeks()
-		p.Days2Months()
-		p.Days.Macd()
-		p.Weeks.Macd()
-		p.Months.Macd()
-	}()
-
-	wg.Wait()
 	p.Days.ParseChan(&p.M30s)
 	p.Weeks.ParseChan(&p.Days)
 	p.Months.ParseChan(&p.Weeks)
@@ -404,7 +395,7 @@ func (p *Stock) Update(store Store, play bool) bool {
 	if play {
 		glog.Warningln("WITH PLAY MODE")
 	} else {
-		p.Merge()
+		p.Merge(true)
 	}
 	atomic.StoreInt32(&p.loaded, 2)
 	return true

@@ -1,23 +1,38 @@
 package crawl
 
-func (p *Tdatas) Macd() {
-	macd(p, 12, 26, 9)
+func (p *Tdatas) Macd(start int) {
+	macd(p, 12, 26, 9, start)
 }
 
-func macd(td *Tdatas, short, long, m int) {
+func macd(td *Tdatas, short, long, m, start int) {
 	c := len(td.Data)
 	if c < 1 {
 		return
 	}
-	td.Data[0].emas = td.Data[0].Close * 10
-	td.Data[0].emal = td.Data[0].Close * 10
-	td.Data[0].DIFF = 0
-	td.Data[0].DEA = 0
-	td.Data[0].MACD = 0
+
+	if start > c {
+		start = c
+	}
+	for i := start - 1; i > -1; i-- {
+		if td.Data[i].emas > 0 {
+			break
+		}
+		start = i
+	}
+
+	if start < 1 {
+		td.Data[0].emas = td.Data[0].Close * 10
+		td.Data[0].emal = td.Data[0].Close * 10
+		td.Data[0].DIFF = 0
+		td.Data[0].DEA = 0
+		td.Data[0].MACD = 0
+		start = 1
+	}
+
 	s1, s2 := short-1, short+1
 	l1, l2 := long-1, long+1
 	m1, m2 := m-1, m+1
-	for i := 1; i < c; i++ {
+	for i := start; i < c; i++ {
 		td.Data[i].emas = (td.Data[i-1].emas*s1 + td.Data[i].Close*20) / s2
 		td.Data[i].emal = (td.Data[i-1].emal*l1 + td.Data[i].Close*20) / l2
 		td.Data[i].DIFF = td.Data[i].emas - td.Data[i].emal
