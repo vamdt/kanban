@@ -129,28 +129,37 @@ func (p *Tdatas) Drop_lastday_data() {
 	p.Data = p.Data[:i]
 }
 
-func (p *Tdatas) Add(data Tdata) {
-	if len(p.Data) < 1 {
+func (p *Tdatas) Add(data Tdata) int {
+	l := len(p.Data)
+	if l < 1 {
 		p.Data = append(p.Data, data)
-	} else if data.Time.After(p.Data[len(p.Data)-1].Time) {
-		p.Data = append(p.Data, data)
-	} else if data.Time.Equal(p.Data[len(p.Data)-1].Time) {
-		p.Data[len(p.Data)-1] = data
-	} else {
-		i, ok := (TdataSlice(p.Data)).Search(data.Time)
-		if ok {
-			p.Data[i] = data
-			return
-		}
-
-		if i < 1 {
-			p.Data = append([]Tdata{data}, p.Data...)
-		} else {
-			p.Data = append(p.Data, data)
-			copy(p.Data[i+1:], p.Data[i:])
-			p.Data[i] = data
-		}
+		return 0
 	}
+
+	if data.Time.After(p.Data[l-1].Time) {
+		p.Data = append(p.Data, data)
+		return l
+	}
+
+	if data.Time.Equal(p.Data[l-1].Time) {
+		p.Data[l-1] = data
+		return l - 1
+	}
+
+	i, ok := (TdataSlice(p.Data)).Search(data.Time)
+	if ok {
+		p.Data[i] = data
+		return i
+	}
+
+	if i < 1 {
+		p.Data = append([]Tdata{data}, p.Data...)
+	} else {
+		p.Data = append(p.Data, data)
+		copy(p.Data[i+1:], p.Data[i:])
+		p.Data[i] = data
+	}
+	return i
 }
 
 func (p *Tdatas) latest_time() time.Time {

@@ -46,7 +46,7 @@ func TestTdatasAdd(t *testing.T) {
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
 		tdata := Tdata{Time: d}
-		cases.Add(tdata)
+		index := cases.Add(tdata)
 		new_len := len(cases.Data)
 
 		if tests[i].new && new_len-old_len != 1 {
@@ -54,6 +54,14 @@ func TestTdatasAdd(t *testing.T) {
 				"For", "case", i, tests[i].date,
 				"expected", "length +1",
 				"got", "newlen", new_len, "oldlen", old_len,
+			)
+		}
+
+		if tests[i].index != index {
+			t.Error(
+				"For", "case", i,
+				"expected", "insert at", tests[i].index,
+				"got", "index", index,
 			)
 		}
 
