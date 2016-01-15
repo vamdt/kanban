@@ -98,6 +98,7 @@ func (p *Tdatas) Init(hub_height int, tag string) {
 	p.tag = tag
 	p.Typing.tag = tag
 	p.Segment.tag = tag
+	p.Hub.tag = tag
 }
 
 func (p *Tdatas) First_lastday_data() int {

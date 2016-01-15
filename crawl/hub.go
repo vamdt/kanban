@@ -25,6 +25,7 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	if base != nil {
 		line = base.Hub.Line
 	}
+	p.Hub.drop_last_5_data()
 	hasnew := false
 	start := 0
 	if l := len(p.Hub.Data); l > 0 {
@@ -56,70 +57,118 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		hub.end = c.end
 		hub.ETime = c.ETime
 		p.Hub.Data = append(p.Hub.Data, hub)
+		i += 2
 		hasnew = true
 	}
 	glog.Infoln("hub len(line)=", len(line), hasnew)
 	return hasnew
 }
 
-func (p *hub_parser) Link() bool {
-	hasnew := false
+func begin_end(line []Typing, begin, end int) (int, int) {
+	l := len(line)
+	if l < 1 {
+		glog.Fatalf("segment line len=%d should > 0", l)
+	}
+	rv_begin := 0
+	rv_end := 0
+	for i := 0; i < l; i++ {
+		if begin == line[i].begin {
+			rv_begin = i
+		}
+		if end == line[i].end {
+			rv_end = i
+		}
+	}
+	return rv_begin, rv_end
+}
+
+func GG(line []Typing, t Typing) int {
+	l := len(line)
+	begin, end := begin_end(line, t.begin, t.end)
+	if begin < 0 || begin >= l {
+		glog.Fatalf("segment line begin=%d should in range [0, %d)", begin, l)
+	}
+	if end < 0 || end >= l {
+		glog.Fatalf("segment line end=%d should in range [0, %d)", end, l)
+	}
+
+	v := line[begin].High
+	for i, end := begin+1, end+1; i < end; i++ {
+		if v < line[i].High {
+			v = line[i].High
+		}
+	}
+	return v
+}
+
+func DD(line []Typing, t Typing) int {
+	l := len(line)
+	begin, end := begin_end(line, t.begin, t.end)
+	if begin < 0 || begin >= l {
+		glog.Fatalf("segment line begin=%d should in range [0, %d)", begin, l)
+	}
+	if end < 0 || end >= l {
+		glog.Fatalf("segment line end=%d should in range [0, %d)", end, l)
+	}
+
+	v := line[begin].Low
+	for i, end := begin+1, end+1; i < end; i++ {
+		if v > line[i].Low {
+			v = line[i].Low
+		}
+	}
+	return v
+}
+
+func (p *Tdatas) LinkHub(next *Tdatas) {
+	hub := p.Hub
+	hub.drop_last_5_line()
+	segline := p.Segment.Line
 	start := 0
-	ldata := len(p.Data)
-	if l := len(p.Line); l > 0 {
-		end := p.Line[l-1].ETime
+	ldata := len(hub.Data)
+	line := hub.Line
+	prev := Typing{}
+
+	if l := len(line); l > 0 {
+		end := line[l-1].end
 		for i := ldata - 1; i > -1; i-- {
-			if end.Before(p.Data[i].ETime) {
+			if end < hub.Data[i].end {
 				continue
 			}
 			start = i
+			prev = line[i]
 			break
 		}
 	}
 
-	typing := Typing{}
 	for i := start; i < ldata; i++ {
-		t := p.Data[i]
-		if typing.I == 0 {
-			typing = t
-			continue
+		t := hub.Data[i]
+		t.High = GG(segline, t)
+		t.Low = DD(segline, t)
+		if prev.I == 0 {
+			line = append(line, t)
+		} else if LineContain(&prev, &t) {
+			line = append(line, t)
+		} else if prev.Type == UpTyping && prev.High < t.High {
+			l := len(line)
+			line[l-1].High = t.High
+			line[l-1].end = t.end
+			line[l-1].ETime = t.ETime
+		} else if prev.Type == DownTyping && prev.Low > t.Low {
+			l := len(line)
+			line[l-1].Low = t.Low
+			line[l-1].end = t.end
+			line[l-1].ETime = t.ETime
+		} else {
+			line = append(line, t)
 		}
 
-		if LineContain(&typing, &t) {
-			typing.Type = DullTyping
-			typing.High = maxInt(typing.High, t.High)
-			typing.Low = minInt(typing.Low, t.Low)
-		} else if typing.High < t.High {
-			typing.Type = UpTyping
-			typing.High = t.High
-		} else if typing.Low > t.Low {
-			typing.Type = DownTyping
-			typing.Low = t.Low
-		} else {
-			glog.Infoln("found unkonw typing of hub", typing, t)
-		}
-
-		typing.end = t.end
-		typing.ETime = t.ETime
-		// TODO should keep every line?
-		if l := len(p.Line); l > 0 && p.Line[l-1].Type == typing.Type {
-			if typing.Type == DullTyping {
-				p.Line[l-1].High = maxInt(typing.High, p.Line[l-1].High)
-				p.Line[l-1].Low = minInt(typing.Low, p.Line[l-1].Low)
-			} else if typing.Type == UpTyping {
-				p.Line[l-1].High = typing.High
-			} else {
-				p.Line[l-1].Low = typing.Low
-			}
-      p.Line[l-1].end = typing.end
-      p.Line[l-1].ETime = typing.ETime
-		} else {
-			p.Line = append(p.Line, typing)
-		}
-		typing = t
-		hasnew = true
+		prev = t
 	}
 
-	glog.Infoln("hub link len(line)=", len(p.Line), hasnew)
-	return hasnew
+	hub.Line = line
+	glog.Infoln("hub link len(line)=", len(line))
+	if next != nil {
+		next.Segment.Line = hub.Line
+	}
 }

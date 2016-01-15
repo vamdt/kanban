@@ -20,20 +20,14 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
-    line = dataset.m1s.Segment.Line
     for level,i in levels when dataset[level.name]
       k = level.level
       d = level.name
-      iscur = ksel is k
-      @draw(k, dataset[d].Hub.Data, line, data, iscur)
-      line = dataset[d].Hub.Line
+      @draw(k, dataset[d].Hub.Data, data)
 
-  draw: (k, data, line, kdata, issel) ->
+  draw: (k, data, kdata) ->
     if not data
       console.log 'no hub level', k
-      return
-    if not line
-      console.log 'no hub segment or prev line'
       return
     g = @_ui.svg.append("g")
       .attr("id", "hub-#{k}")
@@ -66,26 +60,5 @@ class KLineHub
       .attr("y", (d, i) -> y(d.High)+10)
       .attr("fill", 'black')
       .text(k)
-
-    if issel and k isnt '1'
-      @link(g, line, kdata)
-
-  link: (g, ldata, kdata) ->
-    path = g.append("path")
-      .style("fill", "none")
-      .style("stroke", '#abc')
-      .style("stroke-width", "2")
-
-    x = @_ui.x
-    y = @_ui.y
-
-    dataset = KLine.filter ldata, kdata
-    path.data([dataset])
-
-    line = d3.svg.line()
-      .x((d) -> x d.i)
-      .y((d) -> y d.Price)
-
-    path.attr("d", line)
 
 KLine.register_plugin 'hub', KLineHub

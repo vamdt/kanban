@@ -330,9 +330,9 @@ func (p *Stock) Merge(day bool) {
 	p.M5s.Macd(m5_fresh_index)
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
 	p.M30s.Macd(m30_fresh_index)
-	p.M1s.ParseChan(nil)
-	p.M5s.ParseChan(&p.M1s)
-	p.M30s.ParseChan(&p.M5s)
+	p.M1s.ParseChan(nil, &p.M5s)
+	p.M5s.ParseChan(&p.M1s, &p.M30s)
+	p.M30s.ParseChan(&p.M5s, &p.Days)
 
 	if day {
 		p.Weeks.MergeFrom(&p.Days, true, Weekend)
@@ -342,36 +342,24 @@ func (p *Stock) Merge(day bool) {
 		p.Months.Macd(0)
 	}
 
-	p.Days.ParseChan(&p.M30s)
-	p.Weeks.ParseChan(&p.Days)
-	p.Months.ParseChan(&p.Weeks)
+	p.Days.ParseChan(&p.M30s, &p.Weeks)
+	p.Weeks.ParseChan(&p.Days, &p.Months)
+	p.Months.ParseChan(&p.Weeks, nil)
 }
 
-func (p *Tdatas) ParseChan(base *Tdatas) {
-	if !p.ParseTyping() {
-		return
-	}
+func (p *Tdatas) ParseChan(base *Tdatas, next *Tdatas) {
+	p.ParseTyping()
 
 	if base != nil {
-		if !p.ParseHub(base) {
-			return
-		}
-		p.Hub.Link()
+		p.ParseHub(base)
+		p.LinkHub(next)
 		return
 	}
-	if !p.Typing.LinkTyping() {
-		return
-	}
-	if !p.ParseSegment() {
-		return
-	}
-	if !p.Segment.LinkTyping() {
-		return
-	}
-	if !p.ParseHub(base) {
-		return
-	}
-	p.Hub.Link()
+	p.Typing.LinkTyping()
+	p.ParseSegment()
+	p.Segment.LinkTyping()
+	p.ParseHub(base)
+	p.LinkHub(next)
 }
 
 func (p *Stock) Update(store Store, play bool) bool {
