@@ -157,12 +157,10 @@ func (p *Stocks) update(s *Stock) {
 
 func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 	p.rwmutex.RLock()
-	glog.V(LogV).Infoln("RLock in stocks insert", id)
 	i, ok := p.stocks.Search(id)
 	if ok {
 		s := p.stocks[i]
 		p.rwmutex.RUnlock()
-		glog.V(LogV).Infoln("RUnLock in stocks insert search ok", id)
 		if atomic.AddInt32(&s.count, 1) < 1 {
 			atomic.StoreInt32(&s.count, 1)
 		}
@@ -171,11 +169,8 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 
 	s := NewStock(id, p.min_hub_height)
 
-	glog.V(LogV).Infoln("RUnLock in stocks pre insert", id)
 	p.rwmutex.RUnlock()
-	glog.V(LogV).Infoln("Lock in stocks pre insert", id)
 	p.rwmutex.Lock()
-	defer glog.V(LogV).Infoln("defer UnLock in stocks pre insert", id)
 	defer p.rwmutex.Unlock()
 
 	if i < 1 {
@@ -193,8 +188,6 @@ func (p *Stocks) Insert(id string) (int, *Stock, bool) {
 
 func (p *Stocks) Remove(id string) {
 	p.rwmutex.RLock()
-	glog.V(LogV).Infoln("RLock in stocks remove", id)
-	defer glog.V(LogV).Infoln("defer RUnLock in stocks remove", id)
 	defer p.rwmutex.RUnlock()
 	if i, ok := p.stocks.Search(id); ok {
 		atomic.AddInt32(&p.stocks[i].count, -1)
