@@ -64,21 +64,29 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	line := ptyping.Line
-	if l := len(p.tp); l > 0 {
-		p.tp[l-1].t.end = i - 2
-		p.tp[l-1].t.ETime = line[i-2].ETime
-		p.tp[l-1].t.assertETimeMatchEndLine(line, "new node prev")
-	}
 	tp := typing_parser_node{}
 	tp.t = line[i]
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.end = i
-	tp.d.Time = tp.t.Time
-	if !tp.t.ETime.Equal(line[i].ETime) {
-		glog.Fatalln("found tp t.ETime not eq Line[i].ETime")
-	}
 	tp.t.assertETimeMatchEndLine(line, "new_node")
+
+	if l := len(p.tp); l > 0 {
+		p.tp[l-1].t.end = i - 2
+		p.tp[l-1].t.ETime = line[i-2].ETime
+		p.tp[l-1].t.assertETimeMatchEndLine(line, "new node prev")
+	} else if l = len(p.Data); l > 0 && p.Data[l-1].end == i-1 {
+		if t := p.Data[l-1]; t.begin < t.end {
+			switch tp.t.Type {
+			case UpTyping:
+				tp.t.Low = minInt(t.Low, tp.t.High)
+			case DownTyping:
+				tp.t.High = maxInt(t.High, tp.t.Low)
+			}
+		}
+	}
+
+	tp.d.Time = tp.t.Time
 	tp.d.High = tp.t.High
 	tp.d.Low = tp.t.Low
 	p.tp = append(p.tp, tp)
