@@ -6,6 +6,20 @@ import (
 	"time"
 )
 
+func minInt(a, b int) int {
+	if a > b {
+		return b
+	}
+	return a
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func ParseCent(s string) int {
 	ms := strings.SplitN(s, ".", 3)
 	if len(ms) < 1 {

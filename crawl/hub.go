@@ -6,20 +6,6 @@ type hub_parser struct {
 	typing_parser
 }
 
-func minInt(a, b int) int {
-	if a > b {
-		return b
-	}
-	return a
-}
-
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func (p *Tdatas) ParseHub() bool {
 	line := p.Segment.Line
 	p.Hub.drop_last_5_data()
