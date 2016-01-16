@@ -29,14 +29,7 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	hasnew := false
 	start := 0
 	if l := len(p.Hub.Data); l > 0 {
-		end := p.Hub.Data[l-1].ETime
-		for i := len(line) - 1; i > -1; i-- {
-			if end.Before(line[i].ETime) {
-				continue
-			}
-			start = i
-			break
-		}
+		start = p.Hub.Data[l-1].end + 1
 	}
 
 	for i, l := start, len(line); i+2 < l; i++ {
@@ -54,7 +47,8 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 		hub := *a
 		hub.High = minHigh
 		hub.Low = maxLow
-		hub.end = c.end
+		hub.begin = i
+		hub.end = i + 2
 		hub.ETime = c.ETime
 		p.Hub.Data = append(p.Hub.Data, hub)
 		i += 2
@@ -64,27 +58,9 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	return hasnew
 }
 
-func begin_end(line []Typing, begin, end int) (int, int) {
-	l := len(line)
-	if l < 1 {
-		glog.Fatalf("segment line len=%d should > 0", l)
-	}
-	rv_begin := 0
-	rv_end := 0
-	for i := 0; i < l; i++ {
-		if begin == line[i].begin {
-			rv_begin = i
-		}
-		if end == line[i].end {
-			rv_end = i
-		}
-	}
-	return rv_begin, rv_end
-}
-
 func GG(line []Typing, t Typing) int {
 	l := len(line)
-	begin, end := begin_end(line, t.begin, t.end)
+	begin, end := t.begin, t.end
 	if begin < 0 || begin >= l {
 		glog.Fatalf("segment line begin=%d should in range [0, %d)", begin, l)
 	}
@@ -103,7 +79,7 @@ func GG(line []Typing, t Typing) int {
 
 func DD(line []Typing, t Typing) int {
 	l := len(line)
-	begin, end := begin_end(line, t.begin, t.end)
+	begin, end := t.begin, t.end
 	if begin < 0 || begin >= l {
 		glog.Fatalf("segment line begin=%d should in range [0, %d)", begin, l)
 	}
@@ -130,14 +106,11 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 	prev := Typing{}
 
 	if l := len(line); l > 0 {
-		end := line[l-1].end
-		for i := ldata - 1; i > -1; i-- {
-			if end < hub.Data[i].end {
-				continue
-			}
-			start = i
-			prev = line[i]
-			break
+		start = line[l-1].end + 1
+		if line[l-1].end < ldata {
+			prev = hub.Data[line[l-1].end]
+		} else {
+			glog.Fatalln("line[].end >= len(hub.Data)")
 		}
 	}
 
@@ -145,6 +118,8 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		t := hub.Data[i]
 		t.High = GG(segline, t)
 		t.Low = DD(segline, t)
+		t.begin = i
+		t.end = i
 		if prev.I == 0 {
 			line = append(line, t)
 		} else if LineContain(&prev, &t) {
