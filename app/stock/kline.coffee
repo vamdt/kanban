@@ -117,6 +117,7 @@ class KLine
       return @_data.slice(@_left, @_left+@options.size+1)
 
     s = data.id
+    return if s != @param 's'
     @_dataset = @_dataset || off
     data = merge_data(@_dataset, data)
     @_dataset = data

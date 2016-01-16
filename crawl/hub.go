@@ -88,15 +88,11 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 	start := 0
 	ldata := len(hub.Data)
 	line := hub.Line
-	prev := Typing{}
+	var prev *Typing
 
 	if l := len(line); l > 0 {
 		start = line[l-1].end + 1
-		if line[l-1].end < ldata {
-			prev = hub.Data[line[l-1].end]
-		} else {
-			glog.Fatalln("line[].end >= len(hub.Data)")
-		}
+		prev = &line[l-1]
 	}
 
 	for i := start; i < ldata; i++ {
@@ -105,7 +101,7 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		t.Low = DD(segline, t)
 		t.begin = i
 		t.end = i
-		if prev.I == 0 {
+		if prev == nil {
 			line = append(line, t)
 		} else if t.Low > prev.High {
 			// UpTyping
@@ -113,17 +109,19 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 			line[l-1].High = t.High
 			line[l-1].end = t.end
 			line[l-1].ETime = t.ETime
+			t = line[l-1]
 		} else if t.High < prev.Low {
 			// DownTyping
 			l := len(line)
 			line[l-1].Low = t.Low
 			line[l-1].end = t.end
 			line[l-1].ETime = t.ETime
+			t = line[l-1]
 		} else {
 			line = append(line, t)
 		}
 
-		prev = t
+		prev = &t
 	}
 
 	hub.Line = line
