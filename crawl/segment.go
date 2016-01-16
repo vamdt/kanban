@@ -331,11 +331,13 @@ func (p *Tdatas) ParseSegment() bool {
 					//      |||      ||
 					//      |         |
 					if prev.t.Type == DownTyping && prev.d.High < a.High {
-						p.Segment.new_node(i, &p.Typing, false)
+						isBreak := i+1 < l && p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
+						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
 					}
 					if prev.t.Type == UpTyping && prev.d.Low > a.Low {
-						p.Segment.new_node(i, &p.Typing, false)
+						isBreak := i+1 < l && p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
+						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
 					}
 				} else if p.Segment.break_index < 0 {
