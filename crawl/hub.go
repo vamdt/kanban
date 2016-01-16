@@ -20,11 +20,8 @@ func maxInt(a, b int) int {
 	return b
 }
 
-func (p *Tdatas) ParseHub(base *Tdatas) bool {
+func (p *Tdatas) ParseHub() bool {
 	line := p.Segment.Line
-	if base != nil {
-		line = base.Hub.Line
-	}
 	p.Hub.drop_last_5_data()
 	hasnew := false
 	start := 0
@@ -33,29 +30,31 @@ func (p *Tdatas) ParseHub(base *Tdatas) bool {
 	}
 
 	for i, l := start, len(line); i+2 < l; i++ {
-		a := &line[i]
-		b := &line[i+1]
-		c := &line[i+2]
-		minHigh, maxLow := a.High, a.Low
-		minHigh = minInt(minHigh, b.High)
-		minHigh = minInt(minHigh, c.High)
-		maxLow = maxInt(maxLow, b.Low)
-		maxLow = maxInt(maxLow, c.Low)
-		if minHigh-maxLow < p.min_hub_height {
+		zg := ZG(line[i], line[i+1], line[i+2])
+		zd := ZD(line[i], line[i+1], line[i+2])
+		if zg-zd < p.min_hub_height {
 			continue
 		}
-		hub := *a
-		hub.High = minHigh
-		hub.Low = maxLow
+		hub := line[i]
+		hub.High = zg
+		hub.Low = zd
 		hub.begin = i
 		hub.end = i + 2
-		hub.ETime = c.ETime
+		hub.ETime = line[i+2].ETime
 		p.Hub.Data = append(p.Hub.Data, hub)
 		i += 2
 		hasnew = true
 	}
-	glog.Infoln("hub len(line)=", len(line), hasnew)
+	glog.Infoln(p.Hub.tag, "hub len(line)=", len(line), hasnew)
 	return hasnew
+}
+
+func ZG(a, b, c Typing) int {
+	return minInt(a.High, c.High)
+}
+
+func ZD(a, b, c Typing) int {
+	return maxInt(a.Low, c.Low)
 }
 
 func GG(line []Typing, t Typing) int {
@@ -122,14 +121,14 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		t.end = i
 		if prev.I == 0 {
 			line = append(line, t)
-		} else if LineContain(&prev, &t) {
-			line = append(line, t)
-		} else if prev.Type == UpTyping && prev.High < t.High {
+		} else if t.Low > prev.High {
+			// UpTyping
 			l := len(line)
 			line[l-1].High = t.High
 			line[l-1].end = t.end
 			line[l-1].ETime = t.ETime
-		} else if prev.Type == DownTyping && prev.Low > t.Low {
+		} else if t.High < prev.Low {
+			// DownTyping
 			l := len(line)
 			line[l-1].Low = t.Low
 			line[l-1].end = t.end
@@ -142,7 +141,7 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 	}
 
 	hub.Line = line
-	glog.Infoln("hub link len(line)=", len(line))
+	glog.Infoln(hub.tag, "hub link len(line)=", len(line))
 	if next != nil {
 		next.Segment.Line = hub.Line
 	}
