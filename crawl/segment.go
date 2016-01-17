@@ -109,12 +109,17 @@ func (p *segment_parser) clean() {
 	}
 }
 
-func (p *segment_parser) isLineBreak(line, nline *Typing) bool {
+func (p *segment_parser) isLineBreak(lines []Typing, i int) bool {
+	l := len(lines)
+	if i+1 >= l {
+		return false
+	}
 	ltp := len(p.tp)
 	if ltp < 1 {
 		return false
 	}
 
+	line, nline := lines[i], lines[i+1]
 	if p.tp[0].t.Type == UpTyping {
 		if line.High > p.tp[ltp-1].d.Low {
 			return line.Low < p.tp[ltp-1].d.Low && line.Low < nline.Low
@@ -331,26 +336,23 @@ func (p *Tdatas) ParseSegment() bool {
 					//      |||      ||
 					//      |         |
 					if prev.t.Type == DownTyping && prev.d.High < a.High {
-						isBreak := i+1 < l && p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
+						isBreak := p.Segment.isLineBreak(p.Typing.Line, i)
 						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
 					}
 					if prev.t.Type == UpTyping && prev.d.Low > a.Low {
-						isBreak := i+1 < l && p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
+						isBreak := p.Segment.isLineBreak(p.Typing.Line, i)
 						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
 					}
 				} else if p.Segment.break_index < 0 {
-					if i+1 < l {
+					isBreak := p.Segment.isLineBreak(p.Typing.Line, i)
+					if isBreak {
 						//       |
 						// case |||
 						//       |
-						if p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1]) {
-							p.Segment.new_node(i, &p.Typing, true)
-							continue
-						}
-					} else {
-						return hasnew
+						p.Segment.new_node(i, &p.Typing, true)
+						continue
 					}
 				}
 			}
@@ -374,11 +376,7 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 			isbreak := false
 			if p.Segment.break_index < 0 {
-				if i+1 < l {
-					isbreak = p.Segment.isLineBreak(&p.Typing.Line[i], &p.Typing.Line[i+1])
-				} else {
-					return hasnew
-				}
+				isbreak = p.Segment.isLineBreak(p.Typing.Line, i)
 			}
 			p.Segment.new_node(i, &p.Typing, isbreak)
 		}
