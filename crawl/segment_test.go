@@ -58,7 +58,9 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 		for j, c := 0, len(lines[i]); j < c; j++ {
 			switch lines[i][j] {
 			case '*':
-				segment = append(segment, Typing{I: j})
+				segment = append(segment, Typing{I: j, Case1: true})
+			case '?':
+				segment = append(segment, Typing{I: j, Case1: false})
 			case '\\':
 				k := findDownLine(i, j)
 				if k < 0 {
@@ -160,7 +162,7 @@ var tests_text_segment = []test_text_data_pair{
 		}, nil,
 	},
 	{`
-    *    /
+    ?    /
     /\  /
 \  /  \/
  \/
@@ -173,8 +175,8 @@ var tests_text_segment = []test_text_data_pair{
 			Typing{I: 9, Price: 45, Low: 15, High: 45, Type: UpTyping},
 		},
 		[]Typing{
-			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping},
-			Typing{I: 2, Price: 35, Low: 5, High: 35, Type: TopTyping},
+			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping, Case1: true},
+			Typing{I: 2, Price: 35, Low: 5, High: 35, Type: TopTyping, Case1: false},
 		},
 	},
 }
@@ -185,6 +187,9 @@ func test_line_i_price_type_equal(a, b []Typing) bool {
 	}
 	for i, c := 0, len(a); i < c; i++ {
 		if a[i].I != b[i].I || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
+			return false
+		}
+		if a[i].Case1 != b[i].Case1 {
 			return false
 		}
 	}
