@@ -251,7 +251,7 @@ func findLineDir(line []Typing, l int) int {
 	for i := 0; i < l; i++ {
 		if line[i].Type == UpTyping {
 			// Up yes
-			if i+2 > l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
+			if i+2 < l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
 				return i + 1
 			}
 
