@@ -8,13 +8,24 @@ func (p *Stock) Ticks2M1s() int {
 	start_time := p.M1s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
 	start, _ := (TickSlice(p.Ticks.Data)).Search(start_time)
 	for i, c := start, len(p.Ticks.Data); i < c; {
-		end := Minuteend(p.Ticks.Data[i].Time)
-		hour, min, _ := end.Clock()
-		if hour == 9 && min <= 30 {
-			end = end.Truncate(30 * time.Minute).Add(31 * time.Minute)
+		t := Minuteend(p.Ticks.Data[i].Time)
+		end := t
+		t = t.Truncate(time.Minute)
+		h, m, _ := t.UTC().Clock()
+		if h == 1 && m < 26 { // < 9:26
+			t = t.Truncate(time.Hour).Add(25 * time.Minute)
+			end = end.Truncate(time.Hour).Add(26 * time.Minute)
+		} else if h == 1 && m < 30 {
+			t = t.Truncate(time.Hour).Add(30 * time.Minute)
+			end = end.Truncate(time.Hour).Add(31 * time.Minute)
+		} else if h == 3 && m > 28 { // >= 11:29 11:35
+			end = end.Truncate(time.Hour).Add(35 * time.Minute)
+		} else if h == 6 && m > 58 { // >= 14:59 15:05
+			end = end.Truncate(time.Hour).Add(65 * time.Minute)
 		}
 		tdata, j := MergeTickTil(&p.Ticks, i, end)
 		i += j
+		tdata.Time = t
 		k := p.M1s.Add(tdata)
 		if k < index {
 			index = k
@@ -49,7 +60,6 @@ func MergeTickTil(td *Ticks, begin int, end time.Time) (Tdata, int) {
 		}
 		tdata.Volume += t.Volume
 	}
-	tdata.Time = tdata.Time.Truncate(time.Minute)
 	return tdata, i - begin
 }
 
@@ -88,9 +98,9 @@ func (p *Tdatas) MergeFrom(from *Tdatas, biglevel bool, endtime func(t time.Time
 		t := endtime(from.Data[i].Time)
 		end := t
 		h, m, _ := t.UTC().Clock()
-		if h == 7 && m == 00 { // > 14:55 15:05
+		if h == 3 && m == 30 { // > 11:24 11:35
 			end = t.Add(5 * time.Minute)
-		} else if h == 3 && m == 30 { // > 11:24 11:35
+		} else if h == 7 && m == 00 { // > 14:55 15:05
 			end = t.Add(5 * time.Minute)
 		}
 		tdata, j := from.MergeTil(i, end)
