@@ -86,7 +86,14 @@ func (p *Tdatas) MergeFrom(from *Tdatas, biglevel bool, endtime func(t time.Time
 	start, _ := (TdataSlice(from.Data)).Search(start_time)
 	for i, c := start, len(from.Data); i < c; {
 		t := endtime(from.Data[i].Time)
-		tdata, j := from.MergeTil(i, t)
+		end := t
+		h, m, _ := t.UTC().Clock()
+		if h == 7 && m == 00 { // > 14:55 15:05
+			end = t.Add(5 * time.Minute)
+		} else if h == 3 && m == 30 { // > 11:24 11:35
+			end = t.Add(5 * time.Minute)
+		}
+		tdata, j := from.MergeTil(i, end)
 		i += j
 
 		if biglevel {

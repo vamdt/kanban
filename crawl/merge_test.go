@@ -1,28 +1,148 @@
 package crawl
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
-func TestM1s2M5s(t *testing.T) {
-	t.Skip("todo TestM1s2M5s")
-	//TODO merge test M5s
-	// 09:35 [09:30, 09:35)
-	// 11:30 [11:25, 11:35)
-	// 13:05 [13:00, 13:05)
-	// 14:55 [14:50, 14:55)
-	// 15:00 [14:55, 15:05)
+func _d(s string) time.Time {
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	d, _ := time.ParseInLocation("2006-01-02 15:04:05", s, loc)
+	return d
 }
 
-func TestBuildM30s(t *testing.T) {
-	t.Skip("todo m30s")
-	//TODO merge test M30s
-	// 10:00 [09:00, 10:00)
-	// 10:30 [10:00, 10:30)
-	// 11:00 [10:30, 11:00)
-	// 11:30 [11:00, 11:35)
-	// 13:30 [13:00, 13:30)
-	// 14:00 [13:30, 14:00)
-	// 14:30 [14:00, 14:30)
-	// 15:00 [14:30, 15:05)
+func TestM1s2M5s(t *testing.T) {
+	type Case struct {
+		m1 []Tdata
+		m5 []Tdata
+	}
+
+	tests := []Case{
+		// 09:35 [09:30, 09:35)
+		{[]Tdata{
+			{Time: _d("2000-01-01 09:30:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:31:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:32:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:34:59"), Volume: 1},
+			{Time: _d("2000-01-01 09:35:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 09:35:00"), Volume: 4},
+			{Time: _d("2000-01-01 09:40:00"), Volume: 1},
+		}},
+		// 11:30 [11:25, 11:35)
+		{[]Tdata{
+			{Time: _d("2000-01-01 11:25:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:26:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:27:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:30:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:31:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 11:30:00"), Volume: 5},
+		}},
+		// 13:05 [13:00, 13:05)
+		{[]Tdata{
+			{Time: _d("2000-01-01 13:00:00"), Volume: 1},
+			{Time: _d("2000-01-01 13:01:00"), Volume: 1},
+			{Time: _d("2000-01-01 13:02:00"), Volume: 1},
+			{Time: _d("2000-01-01 13:04:59"), Volume: 1},
+			{Time: _d("2000-01-01 13:05:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 13:05:00"), Volume: 4},
+			{Time: _d("2000-01-01 13:10:00"), Volume: 1},
+		}},
+		// 15:00 [14:55, 15:05)
+		{[]Tdata{
+			{Time: _d("2000-01-01 14:55:00"), Volume: 1},
+			{Time: _d("2000-01-01 14:59:00"), Volume: 1},
+			{Time: _d("2000-01-01 15:00:00"), Volume: 1},
+			{Time: _d("2000-01-01 15:04:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 15:00:00"), Volume: 4},
+		}},
+	}
+	for i, l := 0, len(tests); i < l; i++ {
+		m1s := Tdatas{Data: tests[i].m1}
+		m5s := Tdatas{}
+		m5s.MergeFrom(&m1s, false, Minute5end)
+		if len(m5s.Data) != len(tests[i].m5) {
+			t.Error(
+				"For", "case", i,
+				"expected", "len eq",
+				"got", "neq", m5s.Data,
+			)
+			continue
+		}
+		for k := 0; k < len(m5s.Data); k++ {
+			if m5s.Data[k].Volume != tests[i].m5[k].Volume {
+				t.Error(
+					"For", "case", i, "data[", k, "]",
+					"expected", "voleume eq",
+					"got", "neq", m5s.Data[k],
+				)
+			}
+		}
+	}
+}
+
+func TestM1s2M30s(t *testing.T) {
+	type Case struct {
+		m1 []Tdata
+		m30 []Tdata
+	}
+
+	tests := []Case{
+		// 10:00 [09:00, 10:00)
+		{[]Tdata{
+			{Time: _d("2000-01-01 09:30:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:31:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:32:00"), Volume: 1},
+			{Time: _d("2000-01-01 09:59:59"), Volume: 1},
+			{Time: _d("2000-01-01 10:00:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 10:00:00"), Volume: 4},
+			{Time: _d("2000-01-01 10:30:00"), Volume: 1},
+		}},
+		// 11:30 [11:00, 11:35)
+		{[]Tdata{
+			{Time: _d("2000-01-01 11:00:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:29:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:30:00"), Volume: 1},
+			{Time: _d("2000-01-01 11:31:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 11:30:00"), Volume: 4},
+		}},
+		// 15:00 [14:30, 15:05)
+		{[]Tdata{
+			{Time: _d("2000-01-01 14:30:00"), Volume: 1},
+			{Time: _d("2000-01-01 14:59:00"), Volume: 1},
+			{Time: _d("2000-01-01 15:00:00"), Volume: 1},
+			{Time: _d("2000-01-01 15:04:00"), Volume: 1},
+		}, []Tdata{
+			{Time: _d("2000-01-01 15:00:00"), Volume: 4},
+		}},
+	}
+	for i, l := 0, len(tests); i < l; i++ {
+		m1s := Tdatas{Data: tests[i].m1}
+		m30s := Tdatas{}
+		m30s.MergeFrom(&m1s, false, Minute30end)
+		if len(m30s.Data) != len(tests[i].m30) {
+			t.Error(
+				"For", "case", i,
+				"expected", "len eq",
+				"got", "neq", m30s.Data,
+			)
+			continue
+		}
+		for k := 0; k < len(m30s.Data); k++ {
+			if m30s.Data[k].Volume != tests[i].m30[k].Volume {
+				t.Error(
+					"For", "case", i, "data[", k, "]",
+					"expected", "voleume eq",
+					"got", "neq", m30s.Data[k],
+				)
+			}
+		}
+	}
 }
 
 func TestTicks2M1s(t *testing.T) {
