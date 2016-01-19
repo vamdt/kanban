@@ -1,26 +1,35 @@
 package crawl
 
-import "time"
+import (
+	"flag"
+	"time"
+)
+
+var jhjj_k bool
+
+func init() {
+	flag.BoolVar(&jhjj_k, "auction_as_a_k", false, "集合竞价作为一个独立K线")
+}
 
 func (p *Stock) Ticks2M1s() int {
+	jhjj := time.Duration(31)
+	if jhjj_k {
+		jhjj = time.Duration(30)
+	}
 	p.M1s.Drop_lastday_data()
 	index := len(p.M1s.Data)
 	start_time := p.M1s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
 	start, _ := (TickSlice(p.Ticks.Data)).Search(start_time)
 	for i, c := start, len(p.Ticks.Data); i < c; {
-		t := Minuteend(p.Ticks.Data[i].Time)
-		end := t
-		t = t.Truncate(time.Minute)
+		end := Minuteend(p.Ticks.Data[i].Time)
+		t := end.Add(-1 * time.Minute)
 		h, m, _ := t.UTC().Clock()
-		if h == 1 && m < 26 { // < 9:26
-			t = t.Truncate(time.Hour).Add(25 * time.Minute)
-			end = end.Truncate(time.Hour).Add(26 * time.Minute)
-		} else if h == 1 && m < 30 {
-			t = t.Truncate(time.Hour).Add(30 * time.Minute)
-			end = end.Truncate(time.Hour).Add(31 * time.Minute)
-		} else if h == 3 && m > 28 { // >= 11:29 11:35
+		if h == 1 && m < 30 { // < 9:30
+			end = end.Truncate(time.Hour).Add(jhjj * time.Minute)
+			t = end.Add(-1 * time.Minute)
+		} else if h == 3 && m > 29 { // > 11:29 11:35
 			end = end.Truncate(time.Hour).Add(35 * time.Minute)
-		} else if h == 6 && m > 58 { // >= 14:59 15:05
+		} else if h == 6 && m > 59 { // > 14:59 15:05
 			end = end.Truncate(time.Hour).Add(65 * time.Minute)
 		}
 		tdata, j := MergeTickTil(&p.Ticks, i, end)

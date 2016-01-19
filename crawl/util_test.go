@@ -116,6 +116,23 @@ func TestWeekend(t *testing.T) {
 	}
 }
 
+func TestTimeForMinuteend(t *testing.T) {
+	f := "01:01:00"
+	exp := "01:01:00"
+	tf, _ := time.Parse("15:04:05", f)
+	texp, _ := time.Parse("15:04:05", exp)
+	for i := 0; i < 10; i++ {
+		tf = tf.Truncate(time.Minute)
+		if !tf.Equal(texp) {
+			t.Error(
+				"For", f,
+				"expected", exp,
+				"got", tf,
+			)
+		}
+	}
+}
+
 func TestMinuteend(t *testing.T) {
 	type date_pair struct {
 		f, exp string
