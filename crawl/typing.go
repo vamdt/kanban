@@ -142,14 +142,12 @@ func (p *typing_parser) new_node(i int, td *Tdatas) {
 	if len(p.tp) > 0 {
 		p.tp[len(p.tp)-1].t.end = i - 1
 		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
-		p.tp[len(p.tp)-1].t.assertETimeMatchEnd(td.Data, "new_node prev end")
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
 	tp.t.I = i
 	tp.t.end = i
 	tp.t.ETime = td.Data[i].Time
-	tp.t.assertETimeMatchEnd(td.Data, "new_node")
 	tp.d = td.Data[i]
 	p.tp = append(p.tp, tp)
 }
@@ -389,13 +387,7 @@ func (p *typing_parser) LinkTyping() bool {
 	p.drop_last_5_line()
 
 	if l := len(p.Line); l > 0 {
-		t := p.Line[l-1]
-		for i := len(p.Data) - 1; i > -1; i-- {
-			if p.Data[i].end == t.end {
-				start = i
-				break
-			}
-		}
+		start = p.Line[l-1].end
 	}
 
 	end := len(p.Data)
