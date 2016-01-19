@@ -35,7 +35,7 @@ class KLineSegmentLine
       .x((d) -> x d.i)
       .y((d) -> y d.Price)
 
-    path.attr("d", line)
+    path.transition().attr("d", line)
 
     # TODO opt for last line of path
     if dataset.length and dataset[dataset.length-1] == ldata[ldata.length-1]

@@ -11,14 +11,6 @@ class KLineSegment
   init: ->
 
   update: (data, datasel, dataset) ->
-    @_ui.svg.select("g.segment").remove()
-    if not datasel.Segment
-      return
-    if not datasel.Segment.Data
-      return
-    g = @_ui.svg.append("g")
-      .attr("class", "segment")
-
     x = @_ui.x
     y = @_ui.y
 
@@ -26,15 +18,23 @@ class KLineSegment
     sdata = datasel.Segment.Data
     dataset = KLine.filter sdata, data
     color = (d, i) -> colors[d.Type] || colors[0]
-    g.selectAll('circle')
+
+    c = @_ui.svg.selectAll("circle.segment")
       .data(dataset)
+
+    c
       .enter()
       .append('circle')
+      .attr("class", "segment")
+      .attr('r', 6)
+      .on('mouseover', (d, i) -> dispatch.tip @, 'segment', d, i)
+
+    c.exit().transition().remove()
+
+    c.transition()
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
-      .attr('r', 6)
       .style("stroke", color)
       .style("fill", (d,i) -> if d.Case1 then color(d,i) else '#fff')
-      .on('mouseover', (d, i) -> dispatch.tip @, 'segment', d, i)
 
 KLine.register_plugin 'segment', KLineSegment

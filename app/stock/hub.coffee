@@ -9,7 +9,6 @@ class KLineHub
   init: ->
 
   update: (data, datasel, dataset) ->
-    @_ui.svg.selectAll("g.hub").remove()
     ksel = @root.param 'k'
     levels = [
       {level: '1', name: 'm1s'}
@@ -20,31 +19,25 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
-    for level,i in levels when dataset[level.name]
+    for level,i in levels
       k = level.level
       d = level.name
-      @draw(k, dataset[d].Hub.Data, data)
+      hubdata = off
+      if dataset[d]
+        hubdata = dataset[d].Hub.Data
+      @draw(k, hubdata, data)
 
   draw: (k, data, kdata) ->
-    if not data
-      console.log 'no hub level', k
-      return
-    g = @_ui.svg.append("g")
-      .attr("id", "hub-#{k}")
-      .attr("class", "hub")
-
     x = @_ui.x
     y = @_ui.y
 
     dataset = KLine.filter data, kdata
-    g.selectAll("rect")
+    rect = @_ui.svg.selectAll("rect.hub-#{k}")
       .data(dataset)
+    rect
       .enter()
       .append("rect")
-      .attr("x", (d, i) -> x(d.i))
-      .attr("y", (d, i) -> y(d.High))
-      .attr("width", (d, i) -> Math.max(1, x(d.ei) - x(d.i)))
-      .attr("height", (d, i) -> Math.max(1, y(d.Low) - y(d.High)))
+      .attr("class", "hub-#{k}")
       .attr("fill", 'steelblue')
       .style("stroke", 'green')
       .style("stroke-width", '0')
@@ -52,13 +45,24 @@ class KLineHub
       .on("mouseover", -> d3.select(@).style("stroke-width", "1"))
       .on("mouseout", -> d3.select(@).style("stroke-width", "0"))
 
-    g.selectAll("text")
+    rect.exit().transition().remove()
+    rect.transition()
+      .attr("x", (d, i) -> x(d.i))
+      .attr("y", (d, i) -> y(d.High))
+      .attr("width", (d, i) -> Math.max(1, x(d.ei) - x(d.i)))
+      .attr("height", (d, i) -> Math.max(1, y(d.Low) - y(d.High)))
+
+    text = @_ui.svg.selectAll("text.hub-#{k}")
       .data(dataset)
+    text
       .enter()
       .append("text")
+      .attr("class", "hub-#{k}")
+      .attr("fill", 'black')
+    text.exit().transition().remove()
+    text.transition()
       .attr("x", (d, i) -> x(d.i))
       .attr("y", (d, i) -> y(d.High)+10)
-      .attr("fill", 'black')
       .text(k)
 
 KLine.register_plugin 'hub', KLineHub

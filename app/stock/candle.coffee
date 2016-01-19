@@ -29,41 +29,56 @@ class KLineCandle
     y = @_ui.y
     candleWidth = @options.width
 
-    svg.selectAll(".candle").remove()
-
     nc = @root.param 'nc'
     if nc
+      svg.selectAll(".candle").remove()
       return
     dispatch = @root.dispatch
     ocl = @root.param 'ocl'
+    if ocl
+      svg.selectAll("rect.candle").remove()
     if not ocl
-      svg.selectAll("rect.candle")
+      rect = svg.selectAll("rect.candle")
         .data(data)
+
+      rect
         .enter()
         .append("rect")
         .attr("class", "candle")
+        .attr("width", (d, i) -> candleWidth)
+        .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
+
+      rect.exit().transition().remove()
+
+      rect
+        .transition()
         .attr("x", (d, i) -> x(i) - candleWidth / 2)
         .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
-        .attr("width", (d, i) -> candleWidth)
         .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
         .attr("stroke", kColor)
         .attr("fill", kColor)
-        .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
 
-    svg.selectAll("line.candle")
+    line = svg.selectAll("line.candle")
       .data(data)
+
+    line
       .enter()
       .append("line")
       .attr("class", "candle")
-      .style("stroke", kColor)
       .style("stroke-width", "1")
+      .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
+
+    line.exit().transition().remove()
+    line
+      .transition()
+      .style("stroke", kColor)
       .attr("x1", (d, i) -> x(i))
       .attr("y1", (d, i) -> y(d.high))
       .attr("x2", (d, i) -> x(i))
       .attr("y2", (d, i) -> y(d.low - Math.max(1, Math.min(d.high - d.low, 0))))
-      .on('mouseover', (d, i) -> dispatch.tip @, 'k', d, i)
+
     opacity = @root.param 'opacity'
     if opacity
-      svg.selectAll('.candle').style('opacity', opacity)
+      svg.selectAll('.candle').transition().style('opacity', opacity)
 
 KLine.register_plugin 'candle', KLineCandle

@@ -45,6 +45,8 @@ class KLineMas
       .x((d, i) -> x i)
       .y((d, i) -> y mean d, i)
 
-    element.attr("d", line)
+    element
+      .transition()
+      .attr("d", line)
 
 module.exports = KLineMas

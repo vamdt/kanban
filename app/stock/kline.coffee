@@ -53,6 +53,7 @@ merge_with_key = (o, n, k) ->
       i = o[k].length - 1
       while i > -1 and +o[k][i].date >= ndate
         i--
+      console.log 'find', (o[k].length - i), 'times'
       if i < 0
         o[k] = n[k]
       else

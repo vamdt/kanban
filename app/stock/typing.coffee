@@ -11,11 +11,6 @@ class KLineTyping
   init: ->
 
   update: (data, datasel, dataset) ->
-    @_ui.svg.select("g#typing").remove()
-    return unless datasel.Typing.Data
-    g = @_ui.svg.append("g")
-      .attr("id", "typing")
-
     x = @_ui.x
     y = @_ui.y
 
@@ -23,14 +18,22 @@ class KLineTyping
     dataset = KLine.filter tdata, data
     dispatch = @root.dispatch
 
-    g.selectAll('circle')
+    circle = @_ui.svg.selectAll('circle.typing')
       .data(dataset)
+
+    circle
       .enter()
       .append('circle')
+      .attr('class', 'typing')
+      .attr('r', 2)
+      .on('mouseover', (d, i) -> dispatch.tip @, 'typing', d, i)
+
+    circle.exit().transition().remove()
+
+    circle
+      .transition()
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
-      .attr('r', 2)
       .style("fill", (d,i) -> colors[d.Type] || colors[0])
-      .on('mouseover', (d, i) -> dispatch.tip @, 'typing', d, i)
 
 KLine.register_plugin 'typing', KLineTyping
