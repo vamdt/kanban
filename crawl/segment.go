@@ -289,7 +289,7 @@ func (p *Tdatas) ParseSegment() bool {
 
 	if y := len(p.Segment.Data); y > 0 {
 		start = p.Segment.Data[y-1].end + 1
-		start = 1 + p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start2")
+		p.Segment.Data[y-1].assertETimeMatchEndLine(p.Typing.Line, "ParseSegment start2")
 	} else {
 		i := findLineDir(p.Typing.Line, l)
 		if i == -1 {
@@ -385,7 +385,6 @@ func (p *Tdatas) ParseSegment() bool {
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
 			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
-			i = -1 + p.Segment.tp[len(p.Segment.tp)-2].t.assertETimeMatchEndLine(p.Typing.Line, "after parse top bottom")
 			p.Segment.reset()
 		}
 	}
