@@ -154,6 +154,7 @@ class KLine
       @data data
       @draw()
     @dispatch.on 'param.core', =>
+      console.log 'handle param'
       d3.timer =>
         @data @_dataset
         @draw()

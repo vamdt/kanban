@@ -25,6 +25,18 @@ Vue.directive 'kanpan',
   bind: ->
     window.addEventListener 'resize', =>
       @kl.resize() if @kl
+    window.addEventListener 'keyup', (e) =>
+      return unless e.target.tagName == 'BODY'
+      return unless @kl
+      handles =
+        49: 'nmas'
+        50: 'nc'
+        51: 'nvolume'
+      name = handles[e.keyCode] || off
+      if name
+        param = {}
+        param[name] = not @kl.param name
+        @kl.param param
   update: (value, oldValue) ->
     return unless value
     return unless value.s

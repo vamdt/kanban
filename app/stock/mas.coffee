@@ -12,7 +12,7 @@ class KLineMas
   update: (data) ->
     svg = @svg
     if @root.param('nmas')
-      svg.selectAll("path.ma").remove()
+      svg.selectAll("path.mas").remove()
       return
     mas = @root.param('mas') || defaults
     color = d3.scale.category20()
