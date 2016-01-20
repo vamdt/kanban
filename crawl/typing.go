@@ -380,12 +380,10 @@ func ContainMerge(pra, a, b *Tdata) *Tdata {
 	return nil
 }
 
-func (p *typing_parser) LinkTyping() bool {
-	hasnew := false
-	start := 0
-
+func (p *typing_parser) LinkTyping() {
 	p.drop_last_5_line()
 
+	start := 0
 	if l := len(p.Line); l > 0 {
 		start = p.Line[l-1].end
 	}
@@ -396,6 +394,8 @@ func (p *typing_parser) LinkTyping() bool {
 		t := p.Data[i]
 		if typing.Type == UnknowTyping {
 			typing = t
+			typing.begin = i
+			typing.I = i
 			continue
 		}
 
@@ -403,7 +403,7 @@ func (p *typing_parser) LinkTyping() bool {
 			continue
 		}
 
-		typing.end = t.end
+		typing.end = i
 		typing.ETime = t.ETime
 		if typing.Type == TopTyping {
 			typing.Low = t.Low
@@ -416,8 +416,7 @@ func (p *typing_parser) LinkTyping() bool {
 		}
 		p.Line = append(p.Line, typing)
 		typing = t
-		hasnew = true
+		typing.begin = i
+		typing.I = i
 	}
-
-	return hasnew
 }
