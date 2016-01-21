@@ -19,6 +19,7 @@
 <script lang="coffee">
 Vue = require 'vue'
 KLine = require '../stock/webpack'
+config = require './config'
 
 Vue.directive 'kanpan',
   deep: true
@@ -36,15 +37,12 @@ Vue.directive 'kanpan',
       if name
         param = {}
         param[name] = not @kl.param name
+        config.update param
         @kl.param param
   update: (value, oldValue) ->
     return unless value
     return unless value.s
-    settings = {}
-    try
-      settings = JSON.parse localStorage.getItem 'settings'
-    catch
-    settings = settings || {}
+    settings = config.load() || {}
     params = JSON.parse(JSON.stringify(value))
     for k,v of params
       settings[k] = v

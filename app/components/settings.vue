@@ -60,6 +60,7 @@
 
 <script lang="coffee">
 d3 = require 'd3'
+config = require './config'
 module.exports =
   watch:
     'settings':
@@ -82,24 +83,12 @@ module.exports =
     settings: {}
   route:
     data: ->
-      @settings = try
-          JSON.parse localStorage.getItem 'settings'
-        catch
-          nc: true
-          nmas: true
-          ocl: true
-          nvolume: false
-          nmacd: false
-          mas: [
-            interval: 5
-            interval: 10
-            interval: 20
-          ]
+      @settings = config.load()
 
   methods:
     submit: (val, oldVal) ->
       return unless oldVal
-      localStorage.setItem('settings', JSON.stringify(@settings))
+      config.save @settings
     add_mas: ->
       mas = @settings.mas = @settings.mas || []
       n = interval: 5
