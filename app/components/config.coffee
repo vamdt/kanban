@@ -26,7 +26,7 @@ update = (settings) ->
     n = JSON.parse JSON.stringify settings
     for k,v of n
       o[k] = v
-    save n
+    save o
   catch
 
 module.exports =

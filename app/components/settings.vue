@@ -84,7 +84,7 @@ module.exports =
     settings: {mas:[]}
   route:
     data: ->
-      @settings = config.load()
+      @settings[k] = v for k,v of config.load()
 
   methods:
     submit: (val, oldVal) ->
