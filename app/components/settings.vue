@@ -53,6 +53,7 @@
       <div class="pure-control-group">
         <label></label>
         <button class="pure-button" @click="add_mas">Add</button>
+        <button class="pure-button" @click="reset_mas">Reset</button>
       </div>
     </fieldset>
   </form>
@@ -80,7 +81,7 @@ module.exports =
       color = off
     color: color
     cur_mas: 0
-    settings: {}
+    settings: {mas:[]}
   route:
     data: ->
       @settings = config.load()
@@ -100,4 +101,9 @@ module.exports =
       index = mass.indexOf mas
       return if index is -1
       mass.splice(index, 1)
+    reset_mas: ->
+      mas = []
+      for i in [5, 13, 21, 34, 55, 89, 144, 233]
+        mas.push interval: i
+      @settings.mas = mas
 </script>
