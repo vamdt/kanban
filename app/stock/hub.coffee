@@ -31,6 +31,7 @@ class KLineHub
     x = @_ui.x
     y = @_ui.y
 
+    dispatch = @root.dispatch
     dataset = KLine.filter data, kdata
     rect = @_ui.svg.selectAll("rect.hub-#{k}")
       .data(dataset)
@@ -42,7 +43,8 @@ class KLineHub
       .style("stroke", 'green')
       .style("stroke-width", '0')
       .style("fill-opacity", ".1")
-      .on("mouseover", -> d3.select(@).style("stroke-width", "1"))
+      .on("mouseover.stroke", -> d3.select(@).style("stroke-width", "1"))
+      .on("mouseover.tip", (d, i) -> dispatch.tip @, 'hub', d, i)
       .on("mouseout", -> d3.select(@).style("stroke-width", "0"))
 
     rect.exit().transition().remove()

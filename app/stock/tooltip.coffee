@@ -57,6 +57,8 @@ class KLineToolTip
           "#{d.date}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
         when 'typing', 'segment'
           "#{d.date}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
+        when 'hub'
+          "#{d.Time} -- #{d.ETime}<br/>#{name}"
         when 'mas'
           e = d3.select(@)
           "#{e.attr('id')}<div style='background-color:#{e.style('stroke')}'>#{e.attr('id')}</div>#{name}"
@@ -70,7 +72,7 @@ class KLineToolTip
         .style("top", (d3.event.pageY+10) + "px")
         .html(templ.apply(e, args))
         .transition()
-        .duration(2000)
+        .duration(5000)
         .transition()
         .style('display', 'none')
 
