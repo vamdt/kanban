@@ -20,14 +20,14 @@ const (
 )
 
 type Typing struct {
-	I     int
+	end   int
+	i     int
+	begin int
 	Time  time.Time
 	Price int
 	Type  int
 	High  int
 	Low   int
-	begin int
-	end   int
 	ETime time.Time
 	Case1 bool
 }
@@ -36,7 +36,7 @@ type TypingSlice []Typing
 
 func (p TypingSlice) Len() int           { return len(p) }
 func (p TypingSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-func (p TypingSlice) Less(i, j int) bool { return p[i].I < p[j].I }
+func (p TypingSlice) Less(i, j int) bool { return p[i].i < p[j].i }
 
 func (p TypingSlice) MergeTyping(t Typing) (int, bool) {
 	pos := 0
@@ -145,7 +145,7 @@ func (p *typing_parser) new_node(i int, td *Tdatas) {
 	}
 	tp := typing_parser_node{}
 	tp.t.begin = i
-	tp.t.I = i
+	tp.t.i = i
 	tp.t.end = i
 	tp.t.ETime = td.Data[i].Time
 	tp.d = td.Data[i]
@@ -175,7 +175,7 @@ func (p *typing_parser) parse_top_bottom() bool {
 	typing.Time = b.Time
 
 	if len(p.Data) > 0 {
-		if typing.I-p.Data[len(p.Data)-1].I < 4 {
+		if typing.i-p.Data[len(p.Data)-1].i < 4 {
 			return false
 		}
 
@@ -294,11 +294,11 @@ func (p *Tdatas) ParseTyping() bool {
 			a = ContainMerge(base, &prev.d, a)
 			if IsUpTyping(base, &prev.d) {
 				if prev.d.High != a.High {
-					prev.t.I = i
+					prev.t.i = i
 				}
 			} else if IsDownTyping(base, &prev.d) {
 				if prev.d.Low != a.Low {
-					prev.t.I = i
+					prev.t.i = i
 				}
 			}
 			prev.d = *a
@@ -395,7 +395,7 @@ func (p *typing_parser) LinkTyping() {
 		if typing.Type == UnknowTyping {
 			typing = t
 			typing.begin = i
-			typing.I = i
+			typing.i = i
 			continue
 		}
 
@@ -417,6 +417,6 @@ func (p *typing_parser) LinkTyping() {
 		p.Line = append(p.Line, typing)
 		typing = t
 		typing.begin = i
-		typing.I = i
+		typing.i = i
 	}
 }

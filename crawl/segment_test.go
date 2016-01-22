@@ -17,7 +17,7 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 
 	findLine := func(I int) int {
 		for i := len(tline) - 1; i > -1; i-- {
-			if tline[i].I == I {
+			if tline[i].i == I {
 				return i
 			}
 		}
@@ -58,20 +58,20 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 		for j, c := 0, len(lines[i]); j < c; j++ {
 			switch lines[i][j] {
 			case '*':
-				segment = append(segment, Typing{I: j, Case1: true})
+				segment = append(segment, Typing{i: j, Case1: true})
 			case '?':
-				segment = append(segment, Typing{I: j, Case1: false})
+				segment = append(segment, Typing{i: j, Case1: false})
 			case '\\':
 				k := findDownLine(i, j)
 				if k < 0 {
-					tline = append(tline, Typing{I: j, Type: DownTyping, High: base * 3})
+					tline = append(tline, Typing{i: j, Type: DownTyping, High: base * 3})
 					k = len(tline) - 1
 				}
 				tline[k].Low = base
 			case '/':
 				k := findUpLine(i, j)
 				if k < 0 {
-					tline = append(tline, Typing{I: j, Type: UpTyping, High: base * 3})
+					tline = append(tline, Typing{i: j, Type: UpTyping, High: base * 3})
 					k = len(tline) - 1
 				}
 				tline[k].Low = base
@@ -84,15 +84,15 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 		tline[i].ETime = tline[i].Time
 		if tline[i].Type == DownTyping {
 			tline[i].Price = tline[i].Low
-			tline[i].I = tline[i].I - 1 + (tline[i].High-tline[i].Low)/base/2
+			tline[i].i = tline[i].i - 1 + (tline[i].High-tline[i].Low)/base/2
 		} else if tline[i].Type == UpTyping {
 			tline[i].Price = tline[i].High
 		}
 	}
 	sort.Sort(TypingSlice(segment))
 	for i, c := 0, len(segment); i < c; i++ {
-		if j := findLine(segment[i].I); j > -1 {
-			segment[i].I = j + 1
+		if j := findLine(segment[i].i); j > -1 {
+			segment[i].i = j + 1
 			segment[i].High = tline[j].High
 			segment[i].Low = tline[j].Low
 			segment[i].Price = tline[j].Price
@@ -109,7 +109,7 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 				}
 			}
 		} else {
-			log.Panicf("find segment[%d].I %d in tline fail, %s", i, segment[i].I, string(text))
+			log.Panicf("find segment[%d].I %d in tline fail, %s", i, segment[i].i, string(text))
 		}
 	}
 	return
@@ -127,14 +127,14 @@ var tests_text_segment = []test_text_data_pair{
 /
       `,
 		[]Typing{
-			Typing{I: 1, Price: 25, Low: 5, High: 25, Type: UpTyping},
+			Typing{i: 1, Price: 25, Low: 5, High: 25, Type: UpTyping},
 		}, nil,
 	},
 	{`
 \
       `,
 		[]Typing{
-			Typing{I: 0, Price: 5, Low: 5, High: 15, Type: DownTyping},
+			Typing{i: 0, Price: 5, Low: 5, High: 15, Type: DownTyping},
 		}, nil,
 	},
 	{`
@@ -142,8 +142,8 @@ var tests_text_segment = []test_text_data_pair{
  \/
       `,
 		[]Typing{
-			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
-			Typing{I: 2, Price: 15, Low: 5, High: 15, Type: UpTyping},
+			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
+			Typing{i: 2, Price: 15, Low: 5, High: 15, Type: UpTyping},
 		}, nil,
 	},
 	{`
@@ -155,10 +155,10 @@ var tests_text_segment = []test_text_data_pair{
 /
       `,
 		[]Typing{
-			Typing{I: 2, Price: 35, Low: 5, High: 35, Type: UpTyping},
-			Typing{I: 4, Price: 15, Low: 15, High: 35, Type: DownTyping},
-			Typing{I: 9, Price: 65, Low: 15, High: 65, Type: UpTyping},
-			Typing{I: 13, Price: 25, Low: 25, High: 65, Type: DownTyping},
+			Typing{i: 2, Price: 35, Low: 5, High: 35, Type: UpTyping},
+			Typing{i: 4, Price: 15, Low: 15, High: 35, Type: DownTyping},
+			Typing{i: 9, Price: 65, Low: 15, High: 65, Type: UpTyping},
+			Typing{i: 13, Price: 25, Low: 25, High: 65, Type: DownTyping},
 		}, nil,
 	},
 	{`
@@ -169,14 +169,14 @@ var tests_text_segment = []test_text_data_pair{
  *
       `,
 		[]Typing{
-			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
-			Typing{I: 4, Price: 35, Low: 5, High: 35, Type: UpTyping},
-			Typing{I: 6, Price: 15, Low: 15, High: 35, Type: DownTyping},
-			Typing{I: 9, Price: 45, Low: 15, High: 45, Type: UpTyping},
+			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
+			Typing{i: 4, Price: 35, Low: 5, High: 35, Type: UpTyping},
+			Typing{i: 6, Price: 15, Low: 15, High: 35, Type: DownTyping},
+			Typing{i: 9, Price: 45, Low: 15, High: 45, Type: UpTyping},
 		},
 		[]Typing{
-			Typing{I: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping, Case1: true},
-			Typing{I: 2, Price: 35, Low: 5, High: 35, Type: TopTyping, Case1: false},
+			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping, Case1: true},
+			Typing{i: 2, Price: 35, Low: 5, High: 35, Type: TopTyping, Case1: false},
 		},
 	},
 }
@@ -186,7 +186,7 @@ func test_line_i_price_type_equal(a, b []Typing) bool {
 		return false
 	}
 	for i, c := 0, len(a); i < c; i++ {
-		if a[i].I != b[i].I || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
+		if a[i].i != b[i].i || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
 			return false
 		}
 		if a[i].Case1 != b[i].Case1 {

@@ -37,15 +37,15 @@ func text2Tdatas(text []byte) Tdatas {
 
 			switch c {
 			case 'L':
-				tline = append(tline, Typing{I: i, Type: TopTyping})
+				tline = append(tline, Typing{i: i, Type: TopTyping})
 			case 'l':
-				tline = append(tline, Typing{I: i, Type: BottomTyping})
+				tline = append(tline, Typing{i: i, Type: BottomTyping})
 			case '^':
-				typing = append(typing, Typing{I: i, Type: TopTyping})
+				typing = append(typing, Typing{i: i, Type: TopTyping})
 			case '.':
 				fallthrough
 			case 'v':
-				typing = append(typing, Typing{I: i, Type: BottomTyping})
+				typing = append(typing, Typing{i: i, Type: BottomTyping})
 			case '|':
 				if td[i].High == 0 {
 					td[i].High = base * 3
@@ -66,12 +66,12 @@ func text2Tdatas(text []byte) Tdatas {
 	}
 	tds.Data = td
 	for i, c := 0, len(typing); i < c; i++ {
-		typing[i].High = td[typing[i].I].High
-		typing[i].Low = td[typing[i].I].Low
+		typing[i].High = td[typing[i].i].High
+		typing[i].Low = td[typing[i].i].Low
 		if typing[i].Type == TopTyping {
-			typing[i].Price = td[typing[i].I].High
+			typing[i].Price = td[typing[i].i].High
 		} else if typing[i].Type == BottomTyping {
-			typing[i].Price = td[typing[i].I].Low
+			typing[i].Price = td[typing[i].i].Low
 		}
 	}
 	sort.Sort(TypingSlice(typing))
@@ -80,8 +80,8 @@ func text2Tdatas(text []byte) Tdatas {
 	if llen := len(tline); llen > 0 {
 		sort.Sort(TypingSlice(tline))
 		for i := llen - 1; i > -1; i-- {
-			tline[i].High = td[tline[i].I].High
-			tline[i].Low = td[tline[i].I].Low
+			tline[i].High = td[tline[i].i].High
+			tline[i].Low = td[tline[i].i].Low
 			if tline[i].Type == TopTyping {
 				tline[i].Price = tline[i].High
 				tline[i].Type = DownTyping
@@ -126,7 +126,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 			Tdata{High: 15, Low: 5},
 		},
 		[]Typing{
-			Typing{I: 0, Price: 15, Type: TopTyping},
+			Typing{i: 0, Price: 15, Type: TopTyping},
 		}, nil,
 	},
 	{`
@@ -138,7 +138,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 			Tdata{High: 15, Low: 5},
 		},
 		[]Typing{
-			Typing{I: 1, Price: 15, Type: TopTyping},
+			Typing{i: 1, Price: 15, Type: TopTyping},
 		}, nil,
 	},
 	{`
@@ -149,7 +149,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 			Tdata{High: 15, Low: 5},
 		},
 		[]Typing{
-			Typing{I: 0, Price: 5, Type: BottomTyping},
+			Typing{i: 0, Price: 5, Type: BottomTyping},
 		}, nil,
 	},
 	{`
@@ -180,11 +180,11 @@ var tests_text_tdata = []test_text_tdata_pair{
 			Tdata{High: 35, Low: 15},
 		},
 		[]Typing{
-			Typing{I: 4, Price: 65, Type: TopTyping},
-			Typing{I: 6, Price: 5, Type: BottomTyping},
+			Typing{i: 4, Price: 65, Type: TopTyping},
+			Typing{i: 6, Price: 5, Type: BottomTyping},
 		},
 		[]Typing{
-			Typing{I: 4, Price: 65, Type: DownTyping},
+			Typing{i: 4, Price: 65, Type: DownTyping},
 		},
 	},
 }
@@ -206,7 +206,7 @@ func test_typing_i_price_type_equal(a, b []Typing) bool {
 		return false
 	}
 	for i, c := 0, len(a); i < c; i++ {
-		if a[i].I != b[i].I || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
+		if a[i].i != b[i].i || a[i].Type != b[i].Type || a[i].Price != b[i].Price {
 			return false
 		}
 	}
@@ -348,7 +348,7 @@ func test_is_typing_equal(t *testing.T, a, b []Typing) bool {
 		return true
 	}
 	for i := 0; i < len(a); i++ {
-		if a[i].I != b[i].I || a[i].Price != b[i].Price || a[i].Type != b[i].Type {
+		if a[i].i != b[i].i || a[i].Price != b[i].Price || a[i].Type != b[i].Type {
 			return false
 		}
 	}

@@ -57,7 +57,7 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 	if l < 1 {
 		panic("should not be here, len(Data) < 1")
 	}
-	start := p.Data[l-1].I
+	start := p.Data[l-1].i
 	p.Data = p.Data[:l-1]
 	return start
 }
@@ -67,7 +67,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	tp := typing_parser_node{}
 	tp.t = line[i]
 	tp.t.begin = i
-	tp.t.I = i
+	tp.t.i = i
 	tp.t.end = i
 	tp.t.assertETimeMatchEndLine(line, "new_node")
 
@@ -178,7 +178,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int, line *Typing)
 	if prev.t.Type == UpTyping {
 		a = DownContainMerge(&prev.d, a)
 		if prev.d.Low != a.Low {
-			prev.t.I = i
+			prev.t.i = i
 		}
 	} else {
 		if prev.t.Type != DownTyping {
@@ -186,7 +186,7 @@ func merge_contain_node(prev *typing_parser_node, a *Tdata, i int, line *Typing)
 		}
 		a = UpContainMerge(&prev.d, a)
 		if prev.d.High != a.High {
-			prev.t.I = i
+			prev.t.i = i
 		}
 	}
 	glog.V(SegmentD).Infof("merge prev t %+v with line[%d] %+v", prev.t, i, line)
@@ -219,7 +219,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 			if pprev.d.High < a.High {
 				a = DownContainMerge(&prev.d, a)
 				if prev.d.Low != a.Low {
-					prev.t.I = i
+					prev.t.i = i
 				}
 				prev.d = *a
 				prev.t.end = i
@@ -231,7 +231,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 			if pprev.d.Low > a.Low {
 				a = UpContainMerge(&prev.d, a)
 				if prev.d.High != a.High {
-					prev.t.I = i
+					prev.t.i = i
 				}
 				prev.d = *a
 				prev.t.end = i
