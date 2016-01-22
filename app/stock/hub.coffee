@@ -35,17 +35,23 @@ class KLineHub
     dataset = KLine.filter data, kdata
     rect = @_ui.svg.selectAll("rect.hub-#{k}")
       .data(dataset)
+    hover =
+      'stroke': 'green'
+      'stroke-width': '1'
+      'stroke-opacity': '1'
+    hout =
+      'stroke': 'steelblue'
+      'stroke-width': '1'
+      'stroke-opacity': '.3'
     rect
       .enter()
       .append("rect")
       .attr("class", "hub-#{k}")
-      .attr("fill", 'steelblue')
-      .style("stroke", 'green')
-      .style("stroke-width", '0')
-      .style("fill-opacity", ".1")
-      .on("mouseover.stroke", -> d3.select(@).style("stroke-width", "1"))
+      .attr("fill", 'transparent')
+      .style(hout)
+      .on("mouseover.stroke", -> d3.select(@).style(hover))
       .on("mouseover.tip", (d, i) -> dispatch.tip @, 'hub', d, i)
-      .on("mouseout", -> d3.select(@).style("stroke-width", "0"))
+      .on("mouseout.stroke", -> d3.select(@).style(hout))
 
     rect.exit().transition().remove()
     rect.transition()
