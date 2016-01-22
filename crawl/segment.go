@@ -252,23 +252,39 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 	return false, i
 }
 
+func isLineUp(line []Typing, length, begin int) bool {
+	i, l := begin, length
+	if i+2 < l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
+		return true
+	}
+
+	if i+4 < l && line[i+4].High > line[i].High && line[i+4].Low > line[i].Low {
+		return true
+	}
+	return false
+}
+
+func isLineDown(line []Typing, length, begin int) bool {
+	i, l := begin, length
+	if i+2 < l && line[i+2].High < line[i].High && line[i+2].Low < line[i].Low {
+		return true
+	}
+	if i+4 < l && line[i+4].High < line[i].High && line[i+4].Low < line[i].Low {
+		return true
+	}
+	return false
+}
+
 func findLineDir(line []Typing, l int) int {
 	for i := 0; i < l; i++ {
 		if line[i].Type == UpTyping {
 			// Up yes
-			if i+2 < l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
-				return i + 1
-			}
-
-			if i+4 < l && line[i+4].High > line[i].High && line[i+4].Low > line[i].Low {
+			if isLineUp(line, l, i) {
 				return i + 1
 			}
 		} else if line[i].Type == DownTyping {
 			// Down yes
-			if i+2 < l && line[i+2].High < line[i].High && line[i+2].Low < line[i].Low {
-				return i + 1
-			}
-			if i+4 < l && line[i+4].High < line[i].High && line[i+4].Low < line[i].Low {
+			if isLineDown(line, l, i) {
 				return i + 1
 			}
 		}
