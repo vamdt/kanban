@@ -31,9 +31,7 @@ func (p *Tdatas) ParseHub() {
 				zd := hub.Low
 
 				// [dn, gn] # [ZD, ZG]
-				if dn > zg {
-				} else if gn < zd {
-					i++
+				if dn > zg || gn < zd {
 				} else {
 					hub.end = i + 2
 					hub.ETime = line[i+2].ETime
