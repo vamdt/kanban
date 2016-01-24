@@ -26,6 +26,7 @@ class KLineHub
       if dataset[d]
         hubdata = dataset[d].Hub.Data
       @draw(k, hubdata, data)
+      return if k is ksel
 
   draw: (k, data, kdata) ->
     x = @_ui.x
