@@ -33,6 +33,7 @@ Vue.directive 'kanpan',
         49: 'nmas'
         50: 'nc'
         51: 'nvolume'
+        52: 'nmacd'
       name = handles[e.keyCode] || off
       if name
         param = {}

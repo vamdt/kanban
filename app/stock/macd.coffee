@@ -73,14 +73,19 @@ class KLineMacd
     candleWidth = @root.options.candle.width
     svg = @svg
 
-    svg.selectAll("rect").remove()
-    svg.selectAll("rect")
+    rect = svg.selectAll("rect.macd")
       .data(data)
+    rect
       .enter()
       .append("rect")
+      .attr("class", "macd")
+      .attr("width", candleWidth)
+
+    rect.exit().transition().remove()
+
+    rect.transition()
       .attr("x", (d, i) -> x(i) - candleWidth / 2)
       .attr("y", (d, i) -> y(Math.max(d.MACD, 0)))
-      .attr("width", (d, i) -> candleWidth)
       .attr("height", (d, i) -> Math.abs(y(0) - y(d.MACD)))
       .attr("stroke", bColor)
       .attr("fill", bColor)

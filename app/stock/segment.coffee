@@ -26,7 +26,7 @@ class KLineSegment
       .enter()
       .append('circle')
       .attr("class", "segment")
-      .attr('r', 6)
+      .attr('r', 4)
       .on('mouseover', (d, i) -> dispatch.tip @, 'segment', d, i)
 
     c.exit().transition().remove()
