@@ -67,7 +67,7 @@ merge_with_key = (o, n, k) ->
     if odate < ndate
       console.log 'merge_data with concat () + ()'
       o[k] = o[k].concat n[k]
-    else if o0date > ndate
+    else if o0date >= ndate
       o[k] = n[k]
     else
       bisect = d3.bisector((d) -> +d.date)

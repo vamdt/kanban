@@ -42,10 +42,14 @@ class KLine
     @_data = @_data || []
     if not arguments.length
       return @_data.slice(@_left, @_left+@options.size+1)
+
     return unless data and data.id
     s = data.id
     return if s != @param 's'
     @_dataset = @_dataset || off
+    id = @_dataset.id || off
+    if id != data.id
+      @_dataset = off
     data = util.merge_data(@_dataset, data)
     @_dataset = data
     k = @param 'k'
@@ -79,15 +83,14 @@ class KLine
     @initUI()
     @initPlugins()
 
-    @on_event 'kdata', (data) =>
+    redraw = (data) =>
+      return unless data and data.id
       @data data
       @draw()
+    @on_event 'kdata', redraw
+
     @dispatch.on 'param.core', (o) =>
-      return if o.s and @param('s') != o.s
-      d3.timer =>
-        return unless @_dataset and @_dataset.id
-        @data @_dataset
-        @draw()
+      redraw(@_dataset)
 
   add_plugin_obj: (plugin) ->
     @plugins.push plugin
