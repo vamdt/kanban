@@ -1,4 +1,5 @@
 d3 = require 'd3'
+util = require './util'
 KLine = require './kline'
 defaults =
   tmpl : '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.high%><br/>最低价：<%- p.low%>'
@@ -58,7 +59,7 @@ class KLineToolTip
         when 'typing', 'segment'
           "#{d.date}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
         when 'hub'
-          "#{d.Time} -- #{d.ETime}<br/>#{name}"
+          "#{d.Time} -- #{d.ETime}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
         when 'mas'
           e = d3.select(@)
           "#{e.attr('id')}<div style='background-color:#{e.style('stroke')}'>#{e.attr('id')}</div>#{name}"
@@ -66,9 +67,16 @@ class KLineToolTip
     @root.dispatch.on 'tip', (e) ->
       args = Array.prototype.slice.call(arguments)
       args.shift() if args.length && args[0] == e
+      left = ->
+        w = util.w()
+        tw = tips[0][0].clientWidth
+        if w - tw - d3.event.pageX - 10 < 0
+          (d3.event.pageX - tw - 10) + "px"
+        else
+          (d3.event.pageX+10) + "px"
       tips
         .style('display', '')
-        .style("left", (d3.event.pageX+10) + "px")
+        .style("left", left)
         .style("top", (d3.event.pageY+10) + "px")
         .html(templ.apply(e, args))
         .transition()

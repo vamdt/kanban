@@ -117,7 +117,14 @@ kColor = (d, i, data) ->
     return cdown
   cup
 
+w = ->
+  window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+h = ->
+  window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+
 module.exports =
+  w: w
+  h: h
   kColor: kColor
   parseDate: parseDate
   extend: extend
