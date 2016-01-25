@@ -187,9 +187,10 @@ class KLine
       @zs = n
 
       x1 = zoom.translate()[0]
-      @zx = @zx || 0
+      @zx = @zx || x1
       x0 = @zx
       @zx = x1
+      return if Math.abs(x1) - Math.abs(x0) < 2
 
       nsize = @options.size
       nleft = @_left
