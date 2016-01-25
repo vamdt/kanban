@@ -2,8 +2,8 @@ defaults =
   nc: false
   nmas: false
   ocl: false
-  nvolume: false
-  nmacd: false
+  nvolume: true
+  nmacd: true
   mas: [
     interval: 5
     interval: 10

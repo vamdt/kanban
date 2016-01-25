@@ -46,7 +46,7 @@ class KLineVolume
     @svg.transition().style('display', '')
 
   updateAxis: (data) ->
-    if @root.param 'nmacd'
+    if @root.param 'nvolume'
       @hide()
       return off
     else
@@ -57,8 +57,6 @@ class KLineVolume
       axis = svg.append("g")
         .attr("class", "y axis")
         .attr("id", "volume_y_axis")
-      @y = d3.scale.linear()
-        .range([@height, 0])
       @yAxis = d3.svg.axis()
         .scale(@y)
         .orient("left")
