@@ -114,10 +114,10 @@ class KLine
     container.html('')
     width = parseInt container.style('width')
     if width < 1
-      width = window.screen.availWidth
+      width = util.w()
     height = parseInt container.style('height')
     if height < 1
-      height = window.screen.availHeight * 0.618
+      height = util.h() * 0.618
     @options.width = width - @options.margin.left - @options.margin.right
     @options.height = height - @options.margin.top - @options.margin.bottom
     width = @options.width
