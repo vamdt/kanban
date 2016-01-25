@@ -2,10 +2,12 @@ d3 = require 'd3'
 KLine = require './kline'
 defaults = [ {interval: 5, color: 'silver'}, {interval: 10, color: 'gray'} ]
 
+ref = 0
 class KLineMas
   constructor: (@root, @svg, @y, @d) ->
     @y = @y || @root._ui.y
     @d = @d || (d) -> d.close
+    @ref = ++ref
 
   init: ->
 
@@ -19,14 +21,14 @@ class KLineMas
     dispatch = @root.dispatch
     for ma in mas
       interval = +ma.interval
-      e = svg.select("path#ma#{interval}")
+      e = svg.select("path#ma#{interval}-#{@ref}")
       if e.empty()
         e = svg.append("path")
           .attr("class", "mas")
-          .attr("id", "ma#{interval}")
-          .style("stroke", ma.color||color interval)
-          .style("stroke-width", "1")
-          .style("fill", "none")
+          .attr("id", "ma#{interval}-#{@ref}")
+          .attr("stroke", ma.color||color interval)
+          .attr("stroke-width", "1")
+          .attr("fill", "none")
       e.data([data])
         .on('mouseover', (d, i) -> dispatch.tip @, 'mas', d, i)
       @drawMA(data, interval, e)
