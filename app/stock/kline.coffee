@@ -104,7 +104,7 @@ class KLine
 
   resize: (w, h) ->
     w = w || @_ui.container[0][0].clientWidth
-    h = h || window.screen.availHeight * 0.618
+    h = h || util.h() * 0.85
     @options.width = w - @options.margin.left - @options.margin.right
     @options.height = h - @options.margin.top - @options.margin.bottom
     @dispatch.resize()
@@ -117,7 +117,7 @@ class KLine
       width = util.w()
     height = parseInt container.style('height')
     if height < 1
-      height = util.h() * 0.618
+      height = util.h() * 0.85
     @options.width = width - @options.margin.left - @options.margin.right
     @options.height = height - @options.margin.top - @options.margin.bottom
     width = @options.width
