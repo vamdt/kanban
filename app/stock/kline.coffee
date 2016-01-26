@@ -86,7 +86,7 @@ class KLine
     redraw = (data) =>
       return unless data and data.id
       @data data
-      @draw()
+      @delay_draw()
     @on_event 'kdata', redraw
 
     @dispatch.on 'param.core', (o) =>
@@ -189,8 +189,6 @@ class KLine
       x1 = zoom.translate()[0]
       @zx = @zx || x1
       x0 = @zx
-      @zx = x1
-      return if Math.abs(x1) - Math.abs(x0) < 2
 
       nsize = @options.size
       nleft = @_left
@@ -199,6 +197,9 @@ class KLine
       else if n > o
         nsize = parseInt nsize * 0.9
       else
+        return if Math.abs(Math.abs(x1) - Math.abs(x0)) < 2
+        @zx = x1
+
         if x0 > x1
           nleft = nleft + Math.max(20, parseInt nsize * 0.05)
         else if x0 < x1
@@ -207,8 +208,7 @@ class KLine
           return
       @update_size(nsize, nleft)
 
-      fn = => @draw()
-      d3.timer fn
+      @delay_draw()
 
     zoom = d3.behavior.zoom()
       .on("zoom", zoomed)
@@ -235,8 +235,10 @@ class KLine
       svg.select('rect.pane')
         .attr("width", width)
         .attr("height", height)
-      fn = => @draw()
-      d3.timer fn
+      @delay_draw()
+
+  delay_draw: ->
+    d3.timer => @draw()
 
   draw: ->
     x = @_ui.x
