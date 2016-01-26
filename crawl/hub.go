@@ -6,6 +6,10 @@ type hub_parser struct {
 	typing_parser
 }
 
+// 娇注
+// 判断盘整延伸结束是产生3买卖。
+// 判断趋势延伸结束是同级别走势回拉中枢--3买卖后扩展或者非标准趋势延伸9段成大中枢
+
 func (p *Tdatas) ParseHub() {
 	line := p.Segment.Line
 	p.Hub.drop_last_5_data()
