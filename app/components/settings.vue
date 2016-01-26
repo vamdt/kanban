@@ -81,23 +81,29 @@ module.exports =
       color = off
     color: color
     cur_mas: 0
-    settings: {mas:[]}
+    settings: {mas:[], fxck: off}
   route:
     data: ->
-      @settings[k] = v for k,v of config.load()
+      @settings = config.load()
 
   methods:
     submit: (val, oldVal) ->
-      return unless oldVal
+      return unless val and oldVal
+      return if val.hasOwnProperty('fxck')
+      return if oldVal.hasOwnProperty('fxck')
       config.save @settings
     add_mas: ->
-      mas = @settings.mas = @settings.mas || []
+      unless Array.isArray(@settings.mas)
+        @settings.mas = []
+      mas = @settings.mas
       n = interval: 5
       if mas.length
         n.interval = +mas[mas.length-1].interval + 1
       mas.push n
     del_mas: (mas) ->
-      mass = @settings.mas = @settings.mas || []
+      unless Array.isArray(@settings.mas)
+        @settings.mas = []
+      mass = @settings.mas
       index = mass.indexOf mas
       return if index is -1
       mass.splice(index, 1)
