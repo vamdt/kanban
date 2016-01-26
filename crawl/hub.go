@@ -21,21 +21,19 @@ func (p *Tdatas) ParseHub() {
 	glog.Infoln(p.tag, "for hub start", start)
 
 	for i, l := start, len(line); i+2 < l; i++ {
-		lhub := len(p.Hub.Data)
-		if lhub > 0 {
+		if lhub := len(p.Hub.Data); lhub > 0 {
 			hub := &p.Hub.Data[lhub-1]
 			if hub.end == i {
-				gn := g(line[i+2])
-				dn := d(line[i+2])
+				gn := g(line[i+1])
+				dn := d(line[i+1])
 				zg := hub.High
 				zd := hub.Low
 
 				// [dn, gn] # [ZD, ZG]
 				if dn > zg || gn < zd {
 				} else {
-					hub.end = i + 2
-					hub.ETime = line[i+2].ETime
-					i++
+					hub.end = i + 1
+					hub.ETime = line[i+1].ETime
 				}
 				continue
 			} else if hub.end > i {
@@ -153,6 +151,13 @@ func DD(line []Typing, t Typing) int {
 	return v
 }
 
+func hasHighHub(t Typing) bool { return t.end-t.begin > 7 }
+
+// 2:
+// GG1 < DD0 Down
+// DD1 > GG0 Up
+// ZG1 < ZD0 && GG1 >= DD0 New Hub
+// ZD1 > ZG0 && DD1 <= GG0 New Hub
 func (p *Tdatas) LinkHub(next *Tdatas) {
 	hub := p.Hub
 	hub.drop_last_5_line()
@@ -165,12 +170,57 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 	if l := len(line); l > 0 {
 		start = line[l-1].end + 1
 		prev = &line[l-1]
+	} else {
+		begin := findLineDir(segline, len(segline))
+		if begin > 0 {
+			t := segline[begin-1]
+			t.begin = begin - 1
+			t.end = begin - 1
+			t.High = GG(segline, t)
+			t.Low = DD(segline, t)
+			if t.Type == UpTyping {
+				t.High = t.Low
+			} else if t.Type == DownTyping {
+				t.Low = t.High
+			}
+			line = append(line, t)
+			prev = &line[0]
+		}
 	}
 
 	for i := start; i < ldata; i++ {
+
+		if t := hub.Data[i]; hasHighHub(t) {
+			if l := len(line); l > 0 {
+				end := t.begin - 1
+				prev = &line[l-1]
+				prev.end = end
+				if prev.Type == UpTyping && segline[end].High > prev.High {
+					prev.High = segline[end].High
+				} else if prev.Type == DownTyping && segline[end].Low < prev.Low {
+					prev.Low = segline[end].Low
+				}
+			}
+			for j := t.begin; j < t.end; j++ {
+				tl := segline[j]
+				tl.begin = j
+				tl.end = j + 2
+				if t.end-tl.end < 5 {
+					tl.end = t.end
+				}
+				tl.High = GG(segline, tl)
+				tl.Low = DD(segline, tl)
+				line = append(line, tl)
+				j = tl.end
+			}
+			prev = &line[len(line)-1]
+			continue
+		}
+
 		t := hub.Data[i]
 		t.High = GG(segline, t)
 		t.Low = DD(segline, t)
+
 		t.begin = i
 		t.end = i
 		if prev == nil {
