@@ -237,6 +237,18 @@ class KLine
         .attr("height", height)
       @delay_draw()
 
+  move_to: (dir) ->
+    switch dir
+      when 'left'
+        dir = @_left - 100
+      when 'right'
+        dir = @_left + 100
+      when 'home'
+        dir = -1
+      when 'end'
+        dir = 100000
+    @update_size(0, +dir)
+    @delay_draw()
   delay_draw: ->
     d3.timer => @draw()
 
