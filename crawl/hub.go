@@ -15,7 +15,7 @@ func (p *Tdatas) ParseHub() {
 	p.Hub.drop_last_5_data()
 	start := 0
 	if l := len(p.Hub.Data); l > 0 {
-		start = p.Hub.Data[l-1].end + 1
+		start = p.Hub.Data[l-1].end
 	} else {
 		start = findLineDir(line, len(line))
 	}
@@ -28,17 +28,18 @@ func (p *Tdatas) ParseHub() {
 		if lhub := len(p.Hub.Data); lhub > 0 {
 			hub := &p.Hub.Data[lhub-1]
 			if hub.end == i {
-				gn := g(line[i+1])
-				dn := d(line[i+1])
+				gn := g(line[i+2])
+				dn := d(line[i+2])
 				zg := hub.High
 				zd := hub.Low
 
 				// [dn, gn] # [ZD, ZG]
-				if dn > zg || gn < zd {
+				if dn >= zg || gn <= zd {
 				} else {
-					hub.end = i + 1
-					hub.ETime = line[i+1].ETime
+					hub.end = i + 2
+					hub.ETime = line[hub.end].ETime
 				}
+				i++
 				continue
 			} else if hub.end > i {
 				continue
