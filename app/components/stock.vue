@@ -40,6 +40,18 @@ Vue.directive 'kanpan',
         param[name] = not @kl.param name
         config.update param
         @kl.param param
+    window.addEventListener 'keydown', (e) =>
+      return unless e.target.tagName == 'BODY'
+      return unless @kl
+      kl = @kl
+      move_handles =
+        35: -> kl.move_to('end')
+        36: -> kl.move_to('home')
+        37: -> kl.move_to('left')
+        39: -> kl.move_to('right')
+      ctl = move_handles[e.keyCode] || ->
+      ctl()
+
   update: (value, oldValue) ->
     return unless value
     return unless value.s
