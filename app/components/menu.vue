@@ -62,6 +62,11 @@
 d3 = require 'd3'
 param = (hash, key) -> (hash||{})[key]
 module.exports =
+  watch:
+    cur_stock_name: (v) ->
+      t = document.title.split('/')
+      t[0] = v
+      document.title = t.join('/')
   data: ->
     try
       stocks = JSON.parse localStorage.getItem 'stocks'

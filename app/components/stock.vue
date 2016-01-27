@@ -77,6 +77,10 @@ Vue.directive 'kanpan',
     , 500
 
 module.exports =
+  watch:
+    'opt.k': (v) ->
+      return unless v
+      document.title = document.title.split('/')[0] + '/' + v
   data: ->
     levels: ['1', '5', '30', 'day', 'week', 'month']
     opt:{}
