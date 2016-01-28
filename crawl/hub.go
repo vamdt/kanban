@@ -172,85 +172,87 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 	line := hub.Line
 	var prev *Typing
 
+	DD1, GG1, ZD1, ZG1 := 0, 0, 0, 0
+	DD0, GG0, ZD0, ZG0 := DD1, GG1, ZD1, ZG1
+
 	if l := len(line); l > 0 {
 		start = line[l-1].end + 1
 		prev = &line[l-1]
-	} else {
-		begin := findLineDir(segline, len(segline))
-		if begin > 0 {
-			t := segline[begin-1]
-			t.begin = begin - 1
-			t.end = begin - 1
-			t.High = GG(segline, t)
-			t.Low = DD(segline, t)
-			if t.Type == UpTyping {
-				t.High = t.Low
-			} else if t.Type == DownTyping {
-				t.Low = t.High
-			}
-			line = append(line, t)
-			prev = &line[0]
+		if start-1 < ldata {
+			h := hub.Data[start-1]
+			ZD0, ZG0 = h.Low, h.High
+			DD0, GG0 = prev.Low, prev.High
 		}
+	}
+
+	make_prev_line_end := func(end int) {
+		l := len(line)
+		if l < 1 {
+			return
+		}
+		prev := &line[l-1]
+		if prev.Type == UpTyping && segline[end].High > prev.High {
+			prev.High = segline[end].High
+		} else if prev.Type == DownTyping && segline[end].Low < prev.Low {
+			prev.Low = segline[end].Low
+		}
+		glog.Infoln("make prev line end", prev, end)
 	}
 
 	for i := start; i < ldata; i++ {
 
-		if t := hub.Data[i]; hasHighHub(t) {
-			if l := len(line); l > 0 {
-				end := t.begin - 1
-				prev = &line[l-1]
-				prev.end = end
-				if prev.Type == UpTyping && segline[end].High > prev.High {
-					prev.High = segline[end].High
-				} else if prev.Type == DownTyping && segline[end].Low < prev.Low {
-					prev.Low = segline[end].Low
-				}
-			}
-			for j := t.begin; j < t.end; j++ {
-				tl := segline[j]
-				tl.begin = j
-				tl.end = j + 2
-				if t.end-tl.end < 5 {
-					tl.end = t.end
-				}
-				tl.High = GG(segline, tl)
-				tl.Low = DD(segline, tl)
-				line = append(line, tl)
-				j = tl.end
-			}
-			prev = &line[len(line)-1]
-			continue
-		}
-
 		t := hub.Data[i]
+		ZD1, ZG1 = t.Low, t.High
+		begin, end := t.begin, t.end
+		width := begin - end
 		t.High = GG(segline, t)
 		t.Low = DD(segline, t)
-
 		t.begin = i
 		t.end = i
+		DD1, GG1 = t.Low, t.High
+
 		if prev == nil {
 			line = append(line, t)
-		} else if t.Low > prev.High {
-			// UpTyping
+		} else if width > 7 {
+			if l := len(line); l > 0 {
+				make_prev_line_end(begin - 1)
+				glog.Infoln("found width>7 hub", i, prev, t)
+			}
+			line = append(line, t)
+			t = line[len(line)-1]
+		} else if DD1 > GG0 { // DD1 > GG0 Up
 			l := len(line)
-			line[l-1].High = t.High
+			line[l-1].High = GG1
 			line[l-1].end = t.end
 			line[l-1].ETime = t.ETime
 			line[l-1].Type = UpTyping
+			glog.Infoln("found up", i, prev, t)
 			t = line[l-1]
-		} else if t.High < prev.Low {
-			// DownTyping
+		} else if GG1 < DD0 { // GG1 < DD0 Down
 			l := len(line)
-			line[l-1].Low = t.Low
+			line[l-1].Low = DD1
 			line[l-1].end = t.end
 			line[l-1].ETime = t.ETime
 			line[l-1].Type = DownTyping
+			glog.Infoln("found down", i, prev, t)
 			t = line[l-1]
+		} else if ZG1 < ZD0 && GG1 >= DD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
+			make_prev_line_end(begin - 1)
+			glog.Infoln("found ZG1 < ZD0 && GG1 >= DD0 New Hub")
+			t.Type = DullTyping
+			line = append(line, t)
+		} else if ZD1 > ZG0 && DD1 <= GG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
+			make_prev_line_end(begin - 1)
+			glog.Infoln("found ZD1 > ZG0 && DD1 <= GG0")
+			t.Type = DullTyping
+			line = append(line, t)
 		} else {
+			t.Type = DullTyping
 			line = append(line, t)
 		}
 
 		prev = &t
+		DD0, GG0, ZD0, ZG0 = DD1, GG1, ZD1, ZG1
 	}
 
 	hub.Line = line
