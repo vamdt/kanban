@@ -1,8 +1,6 @@
 d3 = require 'd3'
 KLine = require './kline'
 
-colors = ["#000", "#000", "#f00", "#080", "#f00", "#080"]
-
 class KLineTyping
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.typing
@@ -29,6 +27,9 @@ class KLineTyping
       .on('mouseover', (d, i) -> dispatch.tip @, 'typing', d, i)
 
     circle.exit().transition().remove()
+
+    [eq, up, down] = [KLine.color.eq, KLine.color.up, KLine.color.down]
+    colors = [eq, eq, up, down, up, down]
 
     circle
       .transition()

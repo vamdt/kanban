@@ -1,8 +1,6 @@
 d3 = require 'd3'
 KLine = require './kline'
 
-colors = ["#000", "#000", "#f00", "#080", "#f00", "#080"]
-
 class KLineTypingLine
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.typing

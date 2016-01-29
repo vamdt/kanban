@@ -1,8 +1,6 @@
 d3 = require 'd3'
 KLine = require './kline'
 
-colors = ["#000", "#000", "#f00", "#080", "#f00", "#080"]
-
 class KLineSegment
   constructor: (@root) ->
     @options = KLine.extend {}, @root.options.segment
@@ -17,6 +15,9 @@ class KLineSegment
     dispatch = @root.dispatch
     sdata = datasel.Segment.Data
     dataset = KLine.filter sdata, data
+
+    [eq, up, down] = [KLine.color.eq, KLine.color.up, KLine.color.down]
+    colors = [eq, eq, up, down, up, down]
     color = (d, i) -> colors[d.Type] || colors[0]
 
     c = @_ui.svg.selectAll("circle.segment")

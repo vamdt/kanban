@@ -377,8 +377,24 @@ class KLine
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
+color =
+  up: "#f00"
+  down: "#080"
+  eq: "#000"
+kColor = (d, i, data) ->
+  if d.open == d.close
+    if i and data
+      if data[i] and data[i-1]
+        return color.up if data[i].open >= data[i-1].close
+        return color.down if data[i].open < data[i-1].close
+    return color.eq
+  if d.open > d.close
+    return color.down
+  color.up
+
 KLine.extend = util.extend
-KLine.kColor = util.kColor
+KLine.color = color
+KLine.kColor = kColor
 KLine.filter = util.filter
 KLine.merge_data = util.merge_data
 KLine.merge_with_key = util.merge_with_key

@@ -103,20 +103,6 @@ merge_data = (o, n) ->
           o[k][name] = merge_with_key o[k][name], n[k][name], dn
   o
 
-
-[cup, cdown, ceq] = ["#f00", "#080", "#000"]
-
-kColor = (d, i, data) ->
-  if d.open == d.close
-    if i and data
-      if data[i] and data[i-1]
-        return cup if data[i].open >= data[i-1].close
-        return cdown if data[i].open < data[i-1].close
-    return ceq
-  if d.open > d.close
-    return cdown
-  cup
-
 w = ->
   window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
 h = ->
@@ -125,7 +111,6 @@ h = ->
 module.exports =
   w: w
   h: h
-  kColor: kColor
   parseDate: parseDate
   extend: extend
   filter: filter
