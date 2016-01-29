@@ -9,6 +9,10 @@ defaults =
     interval: 10
     interval: 20
   ]
+  color:
+    up: "#f00"
+    down: "#080"
+    eq: "#000"
 
 load = ->
   s = try

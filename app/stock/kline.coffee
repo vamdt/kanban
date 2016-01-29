@@ -72,6 +72,8 @@ class KLine
           if @_param[k] and @_param[k] != v
             o[k] = @_param[k]
           @_param[k] = v
+        if @_param.color
+          color[c] = v for c,v of @_param.color
         @dispatch.param(o)
       when 'string'
         return @_param[p]
