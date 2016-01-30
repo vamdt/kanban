@@ -23,7 +23,7 @@ class KLineTyping
       .enter()
       .append('circle')
       .attr('class', 'typing')
-      .attr('r', 2)
+      .attr('r', 1)
       .on('mouseover', (d, i) -> dispatch.tip @, 'typing', d, i)
 
     circle.exit().transition().remove()

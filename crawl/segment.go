@@ -311,6 +311,7 @@ func (p *Tdatas) ParseSegment() bool {
 		if i == -1 {
 			return hasnew
 		}
+		p.Segment.make_start_with(p.Typing.Line, i-1)
 		start = i
 	}
 
@@ -444,4 +445,17 @@ func (p *segment_parser) parse_top_bottom() bool {
 
 	p.add_typing(typing, !hasGap(a, b))
 	return true
+}
+
+func (p *segment_parser) make_start_with(lines []Typing, i int) {
+	t := lines[i]
+	t.begin = i
+	t.i = i
+	t.end = i
+	if t.Type == UpTyping {
+		t.Type = BottomTyping
+	} else {
+		t.Type = TopTyping
+	}
+	p.add_typing(t, true)
 }
