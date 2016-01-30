@@ -35,11 +35,16 @@ func (p *Tdatas) ParseHub() {
 
 				// [dn, gn] # [ZD, ZG]
 				if dn > zg || gn < zd {
+					if hub.Type == DownTyping && gn < zd { // change direction
+					} else if hub.Type == UpTyping && dn > zg { // change direction
+					} else {
+						i++
+					}
 				} else {
 					hub.end = i + 2
 					hub.ETime = line[hub.end].ETime
+					i++
 				}
-				i++
 				continue
 			} else if hub.end > i {
 				continue
