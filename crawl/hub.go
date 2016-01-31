@@ -36,8 +36,11 @@ func (p *Tdatas) ParseHub() {
 				// [dn, gn] # [ZD, ZG]
 				if dn > zg || gn < zd {
 					if hub.Type == DownTyping && gn < zd { // change direction
+						hub.Case1 = true
 					} else if hub.Type == UpTyping && dn > zg { // change direction
+						hub.Case1 = true
 					} else {
+						hub.Case1 = false
 						i++
 					}
 				} else {
@@ -186,7 +189,25 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		if start-1 < ldata {
 			h := hub.Data[start-1]
 			ZD0, ZG0 = h.Low, h.High
-			DD0, GG0 = prev.Low, prev.High
+			DD0 = DD(segline, h)
+			GG0 = GG(segline, h)
+		}
+	}
+
+	fix_first_line_begin := func() {
+		l := len(line)
+		if l < 1 {
+			return
+		}
+		prev := &line[0]
+		if segline[0].High > prev.High {
+			prev.High = segline[0].High
+			prev.begin = 0
+			prev.Time = segline[0].Time
+		} else if segline[0].Low < prev.Low {
+			prev.Low = segline[0].Low
+			prev.begin = 0
+			prev.Time = segline[0].Time
 		}
 	}
 
@@ -201,6 +222,8 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		} else if prev.Type == DownTyping && segline[end].Low < prev.Low {
 			prev.Low = segline[end].Low
 		}
+		prev.end = end
+		prev.ETime = segline[end].ETime
 		glog.Infoln("make prev line end", prev, end)
 	}
 
@@ -216,13 +239,17 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		t.end = i
 		DD1, GG1 = t.Low, t.High
 
+		t.Type = DullTyping
+		t.Case1 = false
 		if prev == nil {
 			line = append(line, t)
+			fix_first_line_begin()
 		} else if width > 7 {
 			if l := len(line); l > 0 {
 				make_prev_line_end(begin - 1)
 				glog.Infoln("found width>7 hub", i, prev, t)
 			}
+			t.Case1 = true
 			line = append(line, t)
 			t = line[len(line)-1]
 		} else if DD1 > GG0 { // DD1 > GG0 Up
@@ -254,6 +281,7 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 		} else {
 			t.Type = DullTyping
 			line = append(line, t)
+			glog.Infoln("found normal dull typing")
 		}
 
 		prev = &t
