@@ -235,7 +235,7 @@ func TestParseSegment(t *testing.T) {
 		td := Tdatas{}
 		td.Typing.Line = lines
 		td.ParseSegment()
-		if !test_line_i_price_type_equal(segments, td.Segment.Data) {
+		if !test_line_i_price_type_equal(segments, td.Segment.Data[1:]) {
 			t.Error(
 				"\nExample", i,
 				"\nFor", d.Desc,
