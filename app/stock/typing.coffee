@@ -23,7 +23,6 @@ class KLineTyping
       .enter()
       .append('circle')
       .attr('class', 'typing')
-      .attr('r', 1)
       .on('mouseover', (d, i) -> dispatch.tip @, 'typing', d, i)
 
     circle.exit().transition().remove()
@@ -31,8 +30,11 @@ class KLineTyping
     [eq, up, down] = [KLine.color.eq, KLine.color.up, KLine.color.down]
     colors = [eq, eq, up, down, up, down]
 
+    rsize = @root.param('typing_circle_size') || 3
+
     circle
       .transition()
+      .attr('r', rsize)
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
       .style("fill", (d,i) -> colors[d.Type] || colors[0])

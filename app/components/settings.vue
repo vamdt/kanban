@@ -60,6 +60,22 @@
         <button class="pure-button" @click="reset_mas">Reset</button>
       </div>
     </fieldset>
+
+    <fieldset>
+      <legend>Size</legend>
+      <div class="pure-control-group">
+        <label for="typing_circle_size">
+        typing_circle_size
+        </label>
+        <input id="typing_circle_size" v-model="settings.typing_circle_size" placeholder="1" type="number">
+      </div>
+      <div class="pure-control-group">
+        <label for="segment_circle_size">
+        segment_circle_size
+        </label>
+        <input id="segment_circle_size" v-model="settings.segment_circle_size" placeholder="3" type="number">
+      </div>
+    </fieldset>
   </form>
 </template>
 

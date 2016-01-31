@@ -27,12 +27,14 @@ class KLineSegment
       .enter()
       .append('circle')
       .attr("class", "segment")
-      .attr('r', 3)
       .on('mouseover', (d, i) -> dispatch.tip @, 'segment', d, i)
 
     c.exit().transition().remove()
 
+    rsize = @root.param('segment_circle_size') || 3
+
     c.transition()
+      .attr('r', rsize)
       .attr('cx', (d) -> x d.i)
       .attr('cy', (d) -> y d.Price)
       .style("stroke", color)
