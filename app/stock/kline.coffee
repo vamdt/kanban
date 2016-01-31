@@ -32,6 +32,7 @@ class KLine
     left = left || @_left
     atrightedge = @_left == @_max_left
     @_max_left = Math.max(0, @_data.length - 1 - @options.size)
+    @options.size = @_data.length - 1 - @_max_left
 
     if atrightedge and left is @_left
       @_left = @_max_left
