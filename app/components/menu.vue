@@ -60,7 +60,7 @@
 
 <script lang="coffee">
 d3 = require 'd3'
-param = (hash, key) -> (hash||{})[key]
+param = (hash, key) -> (hash=hash||{})[key]
 module.exports =
   watch:
     cur_stock_name: (v) ->
@@ -103,9 +103,10 @@ module.exports =
       @sugg = off
       @cur_stock_name = to.name || to.sid
       @lru to
+      k = param(@$route.params, 'k') || 1
       @$route.router.go
         name: 'stock'
-        params: { sid: to.sid, k: 1}
+        params: { sid: to.sid, k: k}
         replace: @$route.name is 'stock'
 
     cancle_sugg: ->
