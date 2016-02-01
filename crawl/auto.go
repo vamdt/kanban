@@ -330,8 +330,8 @@ func (p *Stock) Merge(day bool) {
 	p.M5s.Macd(m5_fresh_index)
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
 	p.M30s.Macd(m30_fresh_index)
-	p.M1s.ParseChan(true, &p.M5s)
-	p.M5s.ParseChan(false, &p.M30s)
+	p.M1s.ParseChan(true, nil)
+	p.M5s.ParseChan(true, &p.M30s)
 	p.M30s.ParseChan(false, &p.Days)
 
 	if day {
