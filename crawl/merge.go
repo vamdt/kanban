@@ -8,7 +8,7 @@ import (
 var jhjj_k bool
 
 func init() {
-	flag.BoolVar(&jhjj_k, "auction_as_a_k", false, "集合竞价作为一个独立K线")
+	flag.BoolVar(&jhjj_k, "auction_as_a_k", true, "集合竞价作为一个独立K线")
 }
 
 func (p *Stock) Ticks2M1s() int {
