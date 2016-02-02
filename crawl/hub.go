@@ -24,6 +24,7 @@ func (p *Tdatas) ParseHub() {
 	}
 	glog.Infoln(p.tag, "for hub start", start)
 
+	change_direction := false
 	for i, l := start, len(line); i+2 < l; i++ {
 		if lhub := len(p.Hub.Data); lhub > 0 {
 			hub := &p.Hub.Data[lhub-1]
@@ -42,6 +43,13 @@ func (p *Tdatas) ParseHub() {
 					} else {
 						hub.Case1 = false
 						i++
+					}
+
+					if hub.Case1 && !change_direction {
+						change_direction = true
+						p.Hub.Data = p.Hub.Data[:lhub-1]
+						i = hub.begin
+						continue
 					}
 				} else {
 					hub.end = i + 2
@@ -65,6 +73,8 @@ func (p *Tdatas) ParseHub() {
 		hub.begin = i
 		hub.end = i + 2
 		hub.ETime = line[i+2].ETime
+		hub.Case1 = false
+		change_direction = false
 		p.Hub.Data = append(p.Hub.Data, hub)
 		i++
 	}
