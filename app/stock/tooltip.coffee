@@ -70,14 +70,14 @@ class KLineToolTip
       left = ->
         w = util.w()
         tw = tips[0][0].clientWidth
-        if w - tw - d3.event.pageX - 10 < 0
+        if w - tw - d3.event.pageX - 30 < 0
           (d3.event.pageX - tw - 10) + "px"
         else
-          (d3.event.pageX+10) + "px"
+          (d3.event.pageX) + "px"
       tips
         .style('display', '')
         .style("left", left)
-        .style("top", (d3.event.pageY+10) + "px")
+        .style("top", (d3.event.pageY+30) + "px")
         .html(templ.apply(e, args))
         .transition()
         .duration(5000)
