@@ -175,26 +175,24 @@ func (p *typing_parser) parse_top_bottom() bool {
 	typing.Time = b.Time
 
 	if len(p.Data) > 0 {
+		prev := p.Data[len(p.Data)-1]
 		// 新笔定义 第2条 Lesson 81 答疑部分
-		if typing.i-p.Data[len(p.Data)-1].i < 4 {
+		if typing.i-prev.i < 4 {
 			return false
 		}
 
-		if typing.Type == TopTyping && p.Data[len(p.Data)-1].Type == BottomTyping {
+		if typing.Type != prev.Type {
 			// Lesson 77
-			if typing.High <= p.Data[len(p.Data)-1].High {
+			if typing.Type == TopTyping && typing.High <= prev.High {
+				return false
+			}
+
+			if typing.Type == BottomTyping && typing.High >= prev.High {
 				return false
 			}
 		}
 
-		if typing.Type == BottomTyping && p.Data[len(p.Data)-1].Type == TopTyping {
-			// Lesson 77
-			if typing.High >= p.Data[len(p.Data)-1].High {
-				return false
-			}
-		}
-
-		if typing.Type == p.Data[len(p.Data)-1].Type {
+		if typing.Type == prev.Type {
 			if pos, ok := TypingSlice(p.Data).MergeTyping(typing); ok {
 				if pos < len(p.Data)-1 {
 					p.Data = p.Data[:pos+1]
@@ -204,7 +202,6 @@ func (p *typing_parser) parse_top_bottom() bool {
 		}
 	}
 	p.Data = append(p.Data, typing)
-	p.parser_reset()
 	return true
 }
 
@@ -262,7 +259,7 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 	return i
 }
 
-// Lesson 62, 65
+// Lesson 62, 65, <b>77</b>
 func (p *Tdatas) ParseTyping() bool {
 	hasnew := false
 	start := 0
