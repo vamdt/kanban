@@ -331,8 +331,8 @@ func (p *Stock) Merge(day bool) {
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
 	p.M30s.Macd(m30_fresh_index)
 	p.M1s.ParseChan(true, nil)
-	p.M5s.ParseChan(true, &p.M30s)
-	p.M30s.ParseChan(false, &p.Days)
+	p.M5s.ParseChan(true, nil)
+	p.M30s.ParseChan(true, nil)
 
 	if day {
 		p.Weeks.MergeFrom(&p.Days, true, Weekend)
@@ -340,11 +340,10 @@ func (p *Stock) Merge(day bool) {
 		p.Days.Macd(0)
 		p.Weeks.Macd(0)
 		p.Months.Macd(0)
+		p.Days.ParseChan(true, nil)
+		p.Weeks.ParseChan(true, nil)
+		p.Months.ParseChan(true, nil)
 	}
-
-	p.Days.ParseChan(false, &p.Weeks)
-	p.Weeks.ParseChan(false, &p.Months)
-	p.Months.ParseChan(false, nil)
 }
 
 func (p *Tdatas) ParseChan(base bool, next *Tdatas) {
