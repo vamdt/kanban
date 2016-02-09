@@ -74,10 +74,17 @@ class KLineToolTip
           (d3.event.pageX - tw - 10) + "px"
         else
           (d3.event.pageX) + "px"
+      top = ->
+        h = util.h()
+        th = tips[0][0].clientHeight
+        if h - th - d3.event.pageY - 30 < 0
+          (d3.event.pageY - th - 30) + "px"
+        else
+          (d3.event.pageY+30) + "px"
       tips
         .style('display', '')
         .style("left", left)
-        .style("top", (d3.event.pageY+30) + "px")
+        .style("top", top)
         .html(templ.apply(e, args))
         .transition()
         .duration(5000)
