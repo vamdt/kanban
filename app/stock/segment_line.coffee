@@ -35,19 +35,4 @@ class KLineSegmentLine
 
     path.transition().attr("d", line)
 
-    # TODO opt for last line of path
-    if dataset.length and dataset[dataset.length-1] == ldata[ldata.length-1]
-      d = dataset[dataset.length-1]
-      if not d.ei
-        return
-      l = g.append("line")
-        .style("fill", "none")
-        .style("stroke", '#abc')
-        .style("stroke-width", "2")
-        .attr("x1", x(d.i)).attr("x2", x(d.ei))
-      if d.Type is 5
-        l.attr("y1", y(d.High)).attr("y2", y(d.Low))
-      else
-        l.attr("y1", y(d.Low)).attr("y2", y(d.High))
-
 KLine.register_plugin 'segment_line', KLineSegmentLine
