@@ -27,7 +27,7 @@ Vue.directive 'kanpan',
     window.addEventListener 'resize', =>
       @kl.resize() if @kl
     window.addEventListener 'keyup', (e) =>
-      return unless e.target.tagName == 'BODY'
+      return if e.target.tagName == 'INPUT'
       return unless @kl
       handles =
         49: 'nmas'
@@ -41,7 +41,7 @@ Vue.directive 'kanpan',
         config.update param
         @kl.param param
     window.addEventListener 'keydown', (e) =>
-      return unless e.target.tagName == 'BODY'
+      return if e.target.tagName == 'INPUT'
       return unless @kl
       kl = @kl
       move_handles =
