@@ -9,6 +9,13 @@ import (
 type QQRobot struct {
 }
 
+func init() {
+	for i := 6; i > -1; i-- {
+		robot := &QQRobot{}
+		Registry(robot)
+	}
+}
+
 func (p *QQRobot) Day_url(id string, t time.Time) string {
 	return fmt.Sprintf("http://data.gtimg.cn/flashdata/hushen/daily/%s/%s.js",
 		t.Format("06"), id)

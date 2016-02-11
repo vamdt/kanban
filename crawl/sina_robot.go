@@ -10,6 +10,13 @@ import (
 type SinaRobot struct {
 }
 
+func init() {
+	for i := 6; i > -1; i-- {
+		robot := &SinaRobot{}
+		Registry(robot)
+	}
+}
+
 func (p *SinaRobot) Day_url(id string, t time.Time) string {
 	return fmt.Sprintf("http://biz.finance.sina.com.cn/stock/flash_hq/kline_data.php?&rand=9000&symbol=%s&end_date=&begin_date=%s&type=plain",
 		id, t.Format("2006-01-02"))
