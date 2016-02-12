@@ -378,8 +378,7 @@ func (p *Stock) Update(store Store, play bool) bool {
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
-	sina := SinaRobot{}
-	tds, err := sina.Days_download(p.Id, t)
+	tds, err := Days_download(p.Id, t)
 	if err != nil {
 		return false, err
 	}
