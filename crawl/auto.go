@@ -94,22 +94,6 @@ type Stocks struct {
 	min_hub_height int
 }
 
-func getStore(s string) Store {
-	var store Store
-	var err error
-	if s == "mongo" {
-		store, err = NewMongoStore()
-	} else if s == "mysql" {
-		store, err = NewMysqlStore()
-	} else {
-		store, err = NewMemStore()
-	}
-	if err != nil {
-		glog.Fatalln("new [", s, "] store", err)
-	}
-	return store
-}
-
 func NewStocks(storestr string, play, min_hub_height int) *Stocks {
 	store := getStore(storestr)
 	if min_hub_height < 0 {

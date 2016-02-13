@@ -10,6 +10,10 @@ import (
 	"github.com/golang/glog"
 )
 
+const (
+	categoryTable = "category"
+)
+
 var mysql string
 
 func init() {
@@ -143,6 +147,119 @@ func (p *MysqlStore) SaveTick(table string, tick *Tick) (err error) {
 	}
 	if err != nil {
 		glog.Warningf("insert tick error %+v %+v", err, *tick)
+	}
+	return
+}
+
+func (p *MysqlStore) createCategorieTable() {
+	table := categoryTable
+	sql := "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
+		"`id` INT(11) NOT NULL AUTO_INCREMENT," +
+		"`pid` INT(11) NOT NULL DEFAULT 0," +
+		"`factor` INT(11) NOT NULL DEFAULT 0," +
+		"`name` VARCHAR(128) NOT NULL DEFAULT ''," +
+		"PRIMARY KEY (`id`)," +
+		"UNIQUE KEY (`pid`, `name`)" +
+		")"
+	_, err := p.db.Exec(sql)
+	if err != nil {
+		glog.Warningln("create table err", table, err)
+	}
+}
+
+func (p *MysqlStore) LoadCategories() (res TopCategory, err error) {
+	table := categoryTable
+	rows, err := p.db.Query("SELECT `id`,`name`,`pid` FROM `" + table + "` ORDER BY id")
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	defer rows.Close()
+	id, pid, name := 0, 0, ""
+	top_category := make(map[int]Category)
+	categorys := make(map[int]CategoryItem)
+	for rows.Next() {
+		if err = rows.Scan(&id, &name, &pid); err != nil {
+			glog.Warningln(err)
+			continue
+		}
+
+		if _, ok := categorys[id]; !ok {
+			categorys[id] = *NewCategoryItem(name)
+		}
+		cate := categorys[id]
+
+		if item, ok := categorys[pid]; ok {
+			item.Id = append(item.Id, name)
+		}
+
+		if pid == 0 {
+			top_category[id] = *NewCategory()
+
+			if _, ok := categorys[pid]; ok {
+				res[categorys[pid].Name] = top_category[id]
+			}
+			continue
+		}
+
+		if tc, ok := top_category[pid]; ok {
+			tc[name] = cate
+		}
+	}
+	if err = rows.Err(); err != nil {
+		glog.Warningln(err)
+	}
+	return
+}
+
+func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int) (id int, err error) {
+	table := categoryTable
+	for i := 0; i < 2; i++ {
+		err = p.db.QueryRow("SELECT `id` FROM `"+table+"` WHERE pid=? AND name=?",
+			pid, name).Scan(&id)
+
+		if err == sql.ErrNoRows {
+			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`) values(?,?)",
+				pid, name)
+			continue
+		}
+	}
+	return
+}
+
+func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error) {
+	id := 0
+	id, err = p.GetOrInsertCategoryItem(c.Name, pid)
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+
+	if pid == 0 {
+		return
+	}
+
+	for _, sid := range c.Id {
+		p.GetOrInsertCategoryItem(sid, id)
+	}
+	return
+}
+
+func (p *MysqlStore) SaveCategoryWithPid(c Category, pid int) (err error) {
+	for _, cate := range c {
+		err = p.SaveCategoryItemWithPid(cate, pid)
+	}
+	return
+}
+
+func (p *MysqlStore) SaveCategories(c TopCategory) (err error) {
+	if c == nil {
+		return
+	}
+
+	p.createCategorieTable()
+	for _, cate := range c {
+		err = p.SaveCategoryWithPid(cate, 0)
 	}
 	return
 }

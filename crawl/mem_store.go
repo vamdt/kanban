@@ -26,3 +26,6 @@ func (p *MemStore) LoadTicks(table string) (res []Tick, err error) {
 func (p *MemStore) SaveTick(table string, tick *Tick) (err error) {
 	return
 }
+
+func (p *MemStore) LoadCategories() (res TopCategory, err error) { return }
+func (p *MemStore) SaveCategories(c TopCategory) (err error)     { return }

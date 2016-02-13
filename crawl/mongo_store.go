@@ -121,3 +121,6 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 	nsec := int64(binary.BigEndian.Uint16([]byte(id[4:6]))) * int64(time.Millisecond)
 	return time.Unix(secs, nsec).UTC()
 }
+
+func (p *MongoStore) LoadCategories() (res TopCategory, err error) { return }
+func (p *MongoStore) SaveCategories(c TopCategory) (err error)     { return }

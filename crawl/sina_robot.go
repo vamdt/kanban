@@ -43,3 +43,12 @@ func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err 
 	}
 	return
 }
+
+func (p *SinaRobot) Cate(tc TopCategory) (err error) {
+	p.top_cate(tc)
+	return
+}
+
+func (p *SinaRobot) top_cate(tc TopCategory) (err error) {
+	return
+}

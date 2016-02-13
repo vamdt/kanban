@@ -7,15 +7,19 @@ import (
 	//_ "net/http/pprof"
 	"os"
 
+	"./crawl"
 	"./dev"
 	"github.com/golang/glog"
 )
 
 type Opt struct {
 	debug bool
+	serve bool
 	play  int
 	https bool
 	store string
+
+	update_cate bool
 
 	min_hub_height int
 }
@@ -25,6 +29,8 @@ var opt Opt
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
+	flag.BoolVar(&opt.serve, "serve", true, "serve mode")
+	flag.BoolVar(&opt.update_cate, "update_cate", false, "update cate")
 	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.store, "store", "mem", "back store with")
@@ -65,6 +71,17 @@ func main() {
 	flag.Parse()
 	if opt.debug {
 		flag.Lookup("logtostderr").Value.Set("true")
+		glog.Infoln("debug on")
+	}
+
+	if opt.update_cate {
+		glog.Infoln("update_cate on")
+		crawl.UpdateCate(opt.store)
+	}
+
+	glog.Infoln("serve mode", opt.serve)
+	if !opt.serve {
+		return
 	}
 
 	defer func() {
