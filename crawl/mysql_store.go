@@ -223,6 +223,9 @@ func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int) (id int, err 
 				pid, name)
 			continue
 		}
+		if err == nil {
+			break
+		}
 	}
 	return
 }
@@ -258,8 +261,12 @@ func (p *MysqlStore) SaveCategories(c TopCategory) (err error) {
 	}
 
 	p.createCategorieTable()
-	for _, cate := range c {
-		err = p.SaveCategoryWithPid(cate, 0)
+	for name, cate := range c {
+		id, err := p.GetOrInsertCategoryItem(name, 0)
+		if err != nil {
+			continue
+		}
+		err = p.SaveCategoryWithPid(cate, id)
 	}
 	return
 }

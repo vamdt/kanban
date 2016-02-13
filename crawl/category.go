@@ -30,6 +30,9 @@ func UpdateCate(storestr string) {
 	if err != nil {
 		glog.Infoln("load categories err", err)
 	}
+	if tc == nil {
+		tc = *NewTopCategory()
+	}
 	robot := SinaRobot{}
 	robot.Cate(tc)
 	store.SaveCategories(tc)
