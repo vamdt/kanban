@@ -1,3 +1,5 @@
+// +build ignore
+
 package crawl
 
 import (
@@ -16,14 +18,19 @@ var mongo string
 
 func init() {
 	flag.StringVar(&mongo, "mongo", "mongodb://127.0.0.1/stock", "mongo uri")
+	RegisterStore("mongo", &MongoStore{})
 }
 
-func NewMongoStore() (ms *MongoStore, err error) {
+func (p *MongoStore) Open() (err error) {
+	if p.session != nil {
+		p.Close()
+	}
+
 	session, err := mgo.Dial(mongo)
 	if err != nil {
 		return
 	}
-	ms = &MongoStore{session: session}
+	p.session = session
 	return
 }
 
@@ -34,6 +41,7 @@ type MongoStore struct {
 func (p *MongoStore) Close() {
 	if p.session != nil {
 		p.session.Close()
+		p.session = nil
 	}
 }
 

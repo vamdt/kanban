@@ -18,9 +18,14 @@ var mysql string
 
 func init() {
 	flag.StringVar(&mysql, "mysql", "root@/stock", "mysql uri")
+	RegisterStore("mysql", &MysqlStore{})
 }
 
-func NewMysqlStore() (ms *MysqlStore, err error) {
+func (p *MysqlStore) Open() (err error) {
+	if p.db != nil {
+		p.Close()
+	}
+
 	dsn := mysql
 	if !strings.Contains(dsn, "?") {
 		dsn = dsn + "?"
@@ -35,7 +40,7 @@ func NewMysqlStore() (ms *MysqlStore, err error) {
 	if err != nil {
 		return
 	}
-	ms = &MysqlStore{db: db}
+	p.db = db
 	return
 }
 
@@ -46,6 +51,7 @@ type MysqlStore struct {
 func (p *MysqlStore) Close() {
 	if p.db != nil {
 		p.db.Close()
+		p.db = nil
 	}
 }
 

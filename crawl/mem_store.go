@@ -1,12 +1,13 @@
 package crawl
 
-func NewMemStore() (ms *MemStore, err error) {
-	ms = &MemStore{}
-	return
+func init() {
+	RegisterStore("mem", &MemStore{})
 }
 
 type MemStore struct {
 }
+
+func (p *MemStore) Open() error { return nil }
 
 func (p *MemStore) Close() {
 }
