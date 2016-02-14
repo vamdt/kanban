@@ -130,5 +130,5 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 	return time.Unix(secs, nsec).UTC()
 }
 
-func (p *MongoStore) LoadCategories() (res TopCategory, err error) { return }
-func (p *MongoStore) SaveCategories(c TopCategory) (err error)     { return }
+func (p *MongoStore) LoadCategories() (res Category, err error) { return }
+func (p *MongoStore) SaveCategories(c Category) (err error)     { return }

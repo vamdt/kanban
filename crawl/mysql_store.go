@@ -163,6 +163,7 @@ func (p *MysqlStore) createCategorieTable() {
 		"`id` INT(11) NOT NULL AUTO_INCREMENT," +
 		"`pid` INT(11) NOT NULL DEFAULT 0," +
 		"`factor` INT(11) NOT NULL DEFAULT 0," +
+		"`leaf` TINYINT(1) NOT NULL DEFAULT 0," +
 		"`name` VARCHAR(128) NOT NULL DEFAULT ''," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY (`pid`, `name`)" +
@@ -173,60 +174,95 @@ func (p *MysqlStore) createCategorieTable() {
 	}
 }
 
-func (p *MysqlStore) LoadCategories() (res TopCategory, err error) {
+type sqlCategoryData struct {
+	id   int
+	pid  int
+	leaf bool
+	name string
+}
+
+func assembly_category_item(c CategoryItem, data []sqlCategoryData) CategoryItem {
+	for i := len(data) - 1; i > -1; i-- {
+		if c.Id != data[i].pid {
+			continue
+		}
+
+		id := data[i].id
+		name := data[i].name
+
+		if data[i].leaf {
+			c.AddStock(name)
+		} else {
+			if c.Sub == nil {
+				c.Sub = *NewCategory()
+			}
+
+			if _, ok := c.Sub[name]; !ok {
+				item := NewCategoryItem(name)
+				item.Id = id
+				c.Sub[name] = *item
+			}
+			c.Sub[name] = assembly_category_item(c.Sub[name], data)
+		}
+	}
+	return c
+}
+
+func assembly_category(c Category, pid int, data []sqlCategoryData) Category {
+	for i := len(data) - 1; i > -1; i-- {
+		if pid != data[i].pid {
+			continue
+		}
+
+		name := data[i].name
+		if _, ok := c[name]; !ok {
+			item := NewCategoryItem(name)
+			item.Id = data[i].id
+			c[name] = *item
+		}
+
+		c[name] = assembly_category_item(c[name], data)
+	}
+	return c
+}
+
+func (p *MysqlStore) LoadCategories() (res Category, err error) {
 	table := categoryTable
-	rows, err := p.db.Query("SELECT `id`,`name`,`pid` FROM `" + table + "` ORDER BY id")
+	cols := "`id`,`name`,`pid`,`leaf`"
+	rows, err := p.db.Query("SELECT " + cols + " FROM `" + table + "` ORDER BY id")
 	if err != nil {
 		glog.Warningln(err)
 		return
 	}
 	defer rows.Close()
-	id, pid, name := 0, 0, ""
-	top_category := make(map[int]Category)
-	categorys := make(map[int]CategoryItem)
+
+	data := []sqlCategoryData{}
 	for rows.Next() {
-		if err = rows.Scan(&id, &name, &pid); err != nil {
+		d := sqlCategoryData{}
+		if err = rows.Scan(&d.id, &d.name, &d.pid, &d.leaf); err != nil {
 			glog.Warningln(err)
 			continue
 		}
-
-		if _, ok := categorys[id]; !ok {
-			categorys[id] = *NewCategoryItem(name)
-		}
-		cate := categorys[id]
-
-		if item, ok := categorys[pid]; ok {
-			item.Id = append(item.Id, name)
-		}
-
-		if pid == 0 {
-			top_category[id] = *NewCategory()
-
-			if _, ok := categorys[pid]; ok {
-				res[categorys[pid].Name] = top_category[id]
-			}
-			continue
-		}
-
-		if tc, ok := top_category[pid]; ok {
-			tc[name] = cate
-		}
+		data = append(data, d)
 	}
 	if err = rows.Err(); err != nil {
 		glog.Warningln(err)
 	}
+
+	res = *NewCategory()
+	res = assembly_category(res, 0, data)
 	return
 }
 
-func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int) (id int, err error) {
+func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int, leaf bool) (id int, err error) {
 	table := categoryTable
 	for i := 0; i < 2; i++ {
 		err = p.db.QueryRow("SELECT `id` FROM `"+table+"` WHERE pid=? AND name=?",
 			pid, name).Scan(&id)
 
 		if err == sql.ErrNoRows {
-			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`) values(?,?)",
-				pid, name)
+			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`,`leaf`) values(?,?,?)",
+				pid, name, leaf)
 			continue
 		}
 		if err == nil {
@@ -238,7 +274,7 @@ func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int) (id int, err 
 
 func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error) {
 	id := 0
-	id, err = p.GetOrInsertCategoryItem(c.Name, pid)
+	id, err = p.GetOrInsertCategoryItem(c.Name, pid, false)
 	if err != nil {
 		glog.Warningln(err)
 		return
@@ -248,8 +284,10 @@ func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error
 		return
 	}
 
-	for _, sid := range c.Id {
-		p.GetOrInsertCategoryItem(sid, id)
+	if c.Sid != nil {
+		for _, sid := range *c.Sid {
+			p.GetOrInsertCategoryItem(sid, id, true)
+		}
 	}
 	return
 }
@@ -261,18 +299,20 @@ func (p *MysqlStore) SaveCategoryWithPid(c Category, pid int) (err error) {
 	return
 }
 
-func (p *MysqlStore) SaveCategories(c TopCategory) (err error) {
+func (p *MysqlStore) SaveCategories(c Category) (err error) {
 	if c == nil {
 		return
 	}
 
 	p.createCategorieTable()
 	for name, cate := range c {
-		id, err := p.GetOrInsertCategoryItem(name, 0)
+		id, err := p.GetOrInsertCategoryItem(name, 0, false)
 		if err != nil {
 			continue
 		}
-		err = p.SaveCategoryWithPid(cate, id)
+		if cate.Sub != nil {
+			err = p.SaveCategoryWithPid(cate.Sub, id)
+		}
 	}
 	return
 }

@@ -21,6 +21,8 @@ type Opt struct {
 
 	update_cate bool
 
+	update_factor bool
+
 	min_hub_height int
 }
 
@@ -31,6 +33,7 @@ func init() {
 	flag.BoolVar(&opt.debug, "debug", false, "debug")
 	flag.BoolVar(&opt.serve, "serve", true, "serve mode")
 	flag.BoolVar(&opt.update_cate, "update_cate", false, "update cate")
+	flag.BoolVar(&opt.update_factor, "update_factor", false, "update factor")
 	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.store, "store", "mem", "back store with")
@@ -77,6 +80,11 @@ func main() {
 	if opt.update_cate {
 		glog.Infoln("update_cate on")
 		crawl.UpdateCate(opt.store)
+	}
+
+	if opt.update_factor {
+		glog.Infoln("update_factor on")
+		crawl.UpdateFactor(opt.store)
 	}
 
 	glog.Infoln("serve mode", opt.serve)

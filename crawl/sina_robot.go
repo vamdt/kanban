@@ -44,11 +44,6 @@ func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err 
 	return
 }
 
-func (p *SinaRobot) Cate(tc TopCategory) {
-	p.top_cate(tc)
-	return
-}
-
 func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 	for i := 1; ; i++ {
 		url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=%d&num=80&sort=symbol&asc=1&node=%s&symbol=&_s_r_a=page",
@@ -58,7 +53,7 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 			break
 		}
 
-		n := len(item.Id)
+		n := item.LeafCount()
 		for len(c) > 0 {
 			end := []byte(`symbol`)
 			if i := bytes.Index(c, end); i > -1 {
@@ -79,15 +74,15 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 			if len(id) < 1 {
 				break
 			}
-			item.Id = append(item.Id, id)
+			item.AddStock(id)
 		}
-		if len(item.Id)-n < 80 {
+		if item.LeafCount()-n < 80 {
 			break
 		}
 	}
 }
 
-func (p *SinaRobot) real_cate(c Category, cont []byte) {
+func (p *SinaRobot) sub_cate(c CategoryItem, cont []byte) {
 	cont = bytes.Trim(cont, `[],"`)
 	cont = bytes.Replace(cont, []byte(`","","`), []byte(","), -1)
 	cont = bytes.Replace(cont, []byte(`"`), []byte(""), -1)
@@ -98,13 +93,19 @@ func (p *SinaRobot) real_cate(c Category, cont []byte) {
 			break
 		}
 		name, code := string(kv[0]), string(kv[1])
-		citem := NewCategoryItem(name)
-		p.stock_in_cate(citem, code)
-		c[name] = *citem
+		if c.Sub == nil {
+			c.Sub = *NewCategory()
+		}
+		if _, ok := c.Sub[name]; !ok {
+			c.Sub[name] = *NewCategoryItem(name)
+		}
+		sc := c.Sub[name]
+		p.stock_in_cate(&sc, code)
+		c.Sub[name] = sc
 	}
 }
 
-func (p *SinaRobot) top_cate(tc TopCategory) {
+func (p *SinaRobot) Cate(tc Category) {
 	url := "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodes"
 	c, err := Http_get_gbk(url, nil)
 	if err != nil {
@@ -159,9 +160,9 @@ func (p *SinaRobot) top_cate(tc TopCategory) {
 		}
 
 		if _, ok := tc[key]; !ok {
-			tc[key] = *NewCategory()
+			tc[key] = *NewCategoryItem(key)
 		}
-		p.real_cate(tc[key], cont)
+		p.sub_cate(tc[key], cont)
 	}
 
 }
