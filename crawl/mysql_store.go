@@ -229,7 +229,7 @@ func assembly_category(c Category, pid int, data []sqlCategoryData) Category {
 func (p *MysqlStore) LoadCategories() (res Category, err error) {
 	table := categoryTable
 	cols := "`id`,`name`,`pid`,`leaf`"
-	rows, err := p.db.Query("SELECT " + cols + " FROM `" + table + "` ORDER BY id")
+	rows, err := p.db.Query("SELECT " + cols + " FROM `" + table + "`")
 	if err != nil {
 		glog.Warningln(err)
 		return
