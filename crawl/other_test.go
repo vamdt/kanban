@@ -45,6 +45,25 @@ func TestTimeParseLayout(t *testing.T) {
 	}
 }
 
+func TestQQTimeParseLayout(t *testing.T) {
+	fmt := "06-01-02"
+	date := []string{"99-01-02", "00-01-02"}
+	year := []int{1999, 2000}
+
+	for i, s := range date {
+		d, _ := time.Parse(fmt, s)
+		t.Log(s, d)
+
+		if d.Year() != year[i] {
+			t.Error(
+				"For", date,
+				"expected", "year", year[i],
+				"got", d.Year(),
+			)
+		}
+	}
+}
+
 func TestTimeNowHour(t *testing.T) {
 	now := time.Now().UTC()
 	t.Logf("now utc hour %d", now.Hour())
