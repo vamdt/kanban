@@ -1,6 +1,7 @@
 package crawl
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -10,22 +11,33 @@ import (
 	"golang.org/x/text/transform"
 )
 
-func Http_get(url string, referer *string) (*http.Response, error) {
+func Http_get(url string, referer *string) (res *http.Response, err error) {
 	glog.V(HttpV).Infoln("http get", url)
-	client := &http.Client{Timeout: time.Duration(3 * time.Second)}
+	for i := 0; i < 2; i++ {
+		client := &http.Client{Timeout: time.Second * 5}
 
-	req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			continue
+		}
+
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9")
+		if referer != nil {
+			req.Header.Set("Referer", *referer)
+		}
+
+		res, err = client.Do(req)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
-		glog.Warningln("http get fail", err)
-		return nil, err
+		glog.Warningln("http get fail", url, err)
 	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9")
-	if referer != nil {
-		req.Header.Set("Referer", *referer)
+	if res == nil && err == nil {
+		err = errors.New("req fail")
 	}
-
-	return client.Do(req)
+	return
 }
 
 func Http_get_raw(url string, referer *string) ([]byte, error) {
