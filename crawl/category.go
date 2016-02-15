@@ -2,10 +2,18 @@ package crawl
 
 import "github.com/golang/glog"
 
+type CategoryItemInfo struct {
+	Id     int
+	Pid    int
+	Factor int
+	Leaf   bool
+	Name   string
+}
+
 type CategoryItem struct {
 	Id   int
 	Name string
-	Sid  []string
+	Info []CategoryItemInfo
 	Sub  Category
 }
 
@@ -20,20 +28,60 @@ func NewCategoryItem(name string) *CategoryItem {
 	return &CategoryItem{Name: name}
 }
 
+func (p *CategoryItem) Assembly(data []CategoryItemInfo) {
+	for i := len(data) - 1; i > -1; i-- {
+		if p.Id != data[i].Pid {
+			continue
+		}
+
+		name := data[i].Name
+
+		if data[i].Leaf {
+			p.Info = append(p.Info, data[i])
+		} else {
+			if p.Sub == nil {
+				p.Sub = *NewCategory()
+			}
+
+			if _, ok := p.Sub[name]; !ok {
+				item := NewCategoryItem(name)
+				item.Id = data[i].Id
+				p.Sub[name] = *item
+			}
+			item := p.Sub[name]
+			item.Assembly(data)
+			p.Sub[name] = item
+		}
+	}
+}
+
 func (p *CategoryItem) AddStock(id string) {
-	p.Sid = append(p.Sid, id)
+	info := CategoryItemInfo{Name: id}
+	p.Info = append(p.Info, info)
 }
 
 func (p *CategoryItem) LeafCount() int {
-	return len(p.Sid)
+	return len(p.Info)
+}
+
+func LoadCategories(store Store) Category {
+	data, err := store.LoadCategories()
+	if err != nil {
+		glog.Infoln("load categories err", err)
+	}
+
+	if len(data) < 1 {
+		return nil
+	}
+
+	item := NewCategoryItem("")
+	item.Assembly(data)
+	return item.Sub
 }
 
 func UpdateCate(storestr string) {
 	store := getStore(storestr)
-	tc, err := store.LoadCategories()
-	if err != nil {
-		glog.Infoln("load categories err", err)
-	}
+	tc := LoadCategories(store)
 	if tc == nil {
 		tc = *NewCategory()
 	}
@@ -44,11 +92,7 @@ func UpdateCate(storestr string) {
 
 func UpdateFactor(storestr string) {
 	store := getStore(storestr)
-	tc, err := store.LoadCategories()
-	if err != nil {
-		glog.Infoln("load categories err", err)
-		return
-	}
+	tc := LoadCategories(store)
 	if tc == nil {
 		glog.Infoln("load categories empty")
 		return
@@ -59,9 +103,9 @@ func UpdateFactor(storestr string) {
 		if v.Sub != nil {
 			for name, item := range v.Sub {
 				glog.Infoln(">> ", name)
-				if item.Sid != nil {
-					for _, id := range item.Sid {
-						glog.Infoln("\t\t>>> ", id)
+				if item.Info != nil {
+					for _, info := range item.Info {
+						glog.Infoln("\t\t>>> ", info)
 					}
 				}
 			}

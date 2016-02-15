@@ -174,61 +174,9 @@ func (p *MysqlStore) createCategorieTable() {
 	}
 }
 
-type sqlCategoryData struct {
-	id   int
-	pid  int
-	leaf bool
-	name string
-}
-
-func assembly_category_item(c CategoryItem, data []sqlCategoryData) CategoryItem {
-	for i := len(data) - 1; i > -1; i-- {
-		if c.Id != data[i].pid {
-			continue
-		}
-
-		id := data[i].id
-		name := data[i].name
-
-		if data[i].leaf {
-			c.AddStock(name)
-		} else {
-			if c.Sub == nil {
-				c.Sub = *NewCategory()
-			}
-
-			if _, ok := c.Sub[name]; !ok {
-				item := NewCategoryItem(name)
-				item.Id = id
-				c.Sub[name] = *item
-			}
-			c.Sub[name] = assembly_category_item(c.Sub[name], data)
-		}
-	}
-	return c
-}
-
-func assembly_category(c Category, pid int, data []sqlCategoryData) Category {
-	for i := len(data) - 1; i > -1; i-- {
-		if pid != data[i].pid {
-			continue
-		}
-
-		name := data[i].name
-		if _, ok := c[name]; !ok {
-			item := NewCategoryItem(name)
-			item.Id = data[i].id
-			c[name] = *item
-		}
-
-		c[name] = assembly_category_item(c[name], data)
-	}
-	return c
-}
-
-func (p *MysqlStore) LoadCategories() (res Category, err error) {
+func (p *MysqlStore) LoadCategories() (res []CategoryItemInfo, err error) {
 	table := categoryTable
-	cols := "`id`,`name`,`pid`,`leaf`"
+	cols := "`id`,`name`,`pid`,`leaf`,`factor`"
 	rows, err := p.db.Query("SELECT " + cols + " FROM `" + table + "`")
 	if err != nil {
 		glog.Warningln(err)
@@ -236,33 +184,29 @@ func (p *MysqlStore) LoadCategories() (res Category, err error) {
 	}
 	defer rows.Close()
 
-	data := []sqlCategoryData{}
 	for rows.Next() {
-		d := sqlCategoryData{}
-		if err = rows.Scan(&d.id, &d.name, &d.pid, &d.leaf); err != nil {
+		d := CategoryItemInfo{}
+		if err = rows.Scan(&d.Id, &d.Name, &d.Pid, &d.Leaf, &d.Factor); err != nil {
 			glog.Warningln(err)
 			continue
 		}
-		data = append(data, d)
+		res = append(res, d)
 	}
 	if err = rows.Err(); err != nil {
 		glog.Warningln(err)
 	}
-
-	res = *NewCategory()
-	res = assembly_category(res, 0, data)
 	return
 }
 
-func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int, leaf bool) (id int, err error) {
+func (p *MysqlStore) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err error) {
 	table := categoryTable
 	for i := 0; i < 2; i++ {
 		err = p.db.QueryRow("SELECT `id` FROM `"+table+"` WHERE pid=? AND name=?",
-			pid, name).Scan(&id)
+			info.Pid, info.Name).Scan(&id)
 
 		if err == sql.ErrNoRows {
 			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`,`leaf`) values(?,?,?)",
-				pid, name, leaf)
+				info.Pid, info.Name, info.Leaf)
 			continue
 		}
 		if err == nil {
@@ -274,14 +218,17 @@ func (p *MysqlStore) GetOrInsertCategoryItem(name string, pid int, leaf bool) (i
 
 func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error) {
 	id := 0
-	id, err = p.GetOrInsertCategoryItem(c.Name, pid, false)
+	info := CategoryItemInfo{Name: c.Name, Pid: pid, Leaf: false}
+	id, err = p.GetOrInsertCategoryItem(&info)
 	if err != nil {
 		glog.Warningln(err)
 		return
 	}
 
-	for _, sid := range c.Sid {
-		p.GetOrInsertCategoryItem(sid, id, true)
+	for _, info := range c.Info {
+		info.Pid = id
+		info.Leaf = true
+		p.GetOrInsertCategoryItem(&info)
 	}
 
 	p.SaveCategoryWithPid(c.Sub, id)

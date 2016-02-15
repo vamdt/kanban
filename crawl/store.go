@@ -40,7 +40,7 @@ type Store interface {
 	SaveTData(table string, data *Tdata) error
 	LoadTicks(table string) ([]Tick, error)
 	SaveTick(table string, tick *Tick) error
-	LoadCategories() (Category, error)
+	LoadCategories() ([]CategoryItemInfo, error)
 	SaveCategories(Category) error
 }
 
