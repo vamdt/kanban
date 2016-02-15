@@ -26,6 +26,9 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 		url := p.Day_url(id, t)
 		t = t.AddDate(1, 0, 0)
 		body := Download(url)
+		if !bytes.HasPrefix(body, []byte(`daily_data_`)) {
+			continue
+		}
 		lines := bytes.Split(body, []byte("\\n\\"))
 
 		for i, count := 0, len(lines); i < count; i++ {

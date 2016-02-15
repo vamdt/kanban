@@ -115,10 +115,15 @@ func (p *MysqlStore) SaveTData(table string, data *Tdata) (err error) {
 		if err == nil {
 			break
 		}
-		if strings.Index(err.Error(), "re-prepared") > 0 {
+		e := err.Error()
+		if strings.Index(e, "re-prepared") > 0 {
 			i--
 			time.Sleep(time.Millisecond * 10)
 			continue
+		}
+		if strings.Index(e, "Error 1062") > -1 {
+			err = nil
+			break
 		}
 		p.createDayTdataTable(table)
 	}
@@ -281,4 +286,16 @@ func (p *MysqlStore) SaveCategories(c Category) (err error) {
 	p.createCategorieTable()
 	p.SaveCategoryWithPid(c, 0)
 	return
+}
+
+func (p *MysqlStore) SaveCategoryItemInfoFactor(c []CategoryItemInfo) {
+	table := categoryTable
+	p.db.Exec("UPDATE `" + table + "` SET `factor`=0")
+	for _, info := range c {
+		if info.Factor < 1 {
+			continue
+		}
+		p.db.Exec("UPDATE `"+table+"` SET `factor`=? WHERE `id`=?",
+			info.Factor, info.Id)
+	}
 }

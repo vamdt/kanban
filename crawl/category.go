@@ -1,6 +1,10 @@
 package crawl
 
-import "github.com/golang/glog"
+import (
+	"sync"
+
+	"github.com/golang/glog"
+)
 
 type CategoryItemInfo struct {
 	Id     int
@@ -92,23 +96,77 @@ func UpdateCate(storestr string) {
 
 func UpdateFactor(storestr string) {
 	store := getStore(storestr)
-	tc := LoadCategories(store)
-	if tc == nil {
+	data, err := store.LoadCategories()
+	if err != nil {
+		glog.Infoln("load categories err", err)
+	}
+
+	if len(data) < 1 {
 		glog.Infoln("load categories empty")
 		return
 	}
 
-	for _, v := range tc {
-		glog.Infoln("top ", v.Name, v.Id)
-		if v.Sub != nil {
-			for name, item := range v.Sub {
-				glog.Infoln(">> ", name)
-				if item.Info != nil {
-					for _, info := range item.Info {
-						glog.Infoln("\t\t>>> ", info)
-					}
-				}
+	for i, _ := range data {
+		data[i].Factor = 0
+	}
+
+	stocks := Stocks{store: store}
+	var wg sync.WaitGroup
+	for i, info := range data {
+		if !info.Leaf {
+			continue
+		}
+		_, s, ok := stocks.Insert(info.Name)
+		if !ok {
+			continue
+		}
+
+		wg.Add(1)
+		go func(s *Stock, i int) {
+			defer wg.Done()
+			s.Days_update(store)
+			data[i].Factor = s.Days.Factor()
+		}(s, i)
+	}
+	wg.Wait()
+
+	factor := make(map[string]int)
+	for _, info := range data {
+		if info.Leaf && info.Factor > 0 {
+			factor[info.Name] = info.Factor
+		}
+	}
+
+	for i, info := range data {
+		if info.Leaf && info.Factor == 0 {
+			if f, ok := factor[info.Name]; ok {
+				data[i].Factor = f
 			}
 		}
 	}
+
+	for i, info := range data {
+		if info.Leaf {
+			continue
+		}
+		pid := info.Id
+		num := 0
+		factor := 0
+
+		for _, item := range data {
+			if item.Leaf && item.Pid == pid {
+				if item.Factor == 0 {
+					glog.Warningln("found an 0 factor", item)
+					continue
+				}
+				num++
+				factor += item.Factor
+			}
+		}
+		if num > 0 {
+			data[i].Factor = factor / num
+		}
+	}
+
+	store.SaveCategoryItemInfoFactor(data)
 }

@@ -84,13 +84,13 @@ func (p *RobotBox) Work(once bool) {
 		p.mjob.Lock()
 		l := p.jobs.Len()
 		p.mjob.Unlock()
-		if once {
-			if l < 1 {
+		if l < 1 {
+			if once {
 				break
+			} else {
+				time.Sleep(time.Millisecond * 100)
+				continue
 			}
-		} else {
-			time.Sleep(time.Millisecond * 100)
-			continue
 		}
 
 		p.mrobot.Lock()

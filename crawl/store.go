@@ -42,6 +42,7 @@ type Store interface {
 	SaveTick(table string, tick *Tick) error
 	LoadCategories() ([]CategoryItemInfo, error)
 	SaveCategories(Category) error
+	SaveCategoryItemInfoFactor([]CategoryItemInfo)
 }
 
 func getStore(s string) Store {
