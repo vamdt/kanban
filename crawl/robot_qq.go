@@ -10,7 +10,7 @@ type QQRobot struct {
 }
 
 func init() {
-	for i := 6; i > -1; i-- {
+	for i := 4; i > 0; i-- {
 		robot := &QQRobot{}
 		Registry(robot)
 	}
@@ -19,6 +19,37 @@ func init() {
 func (p *QQRobot) Day_url(id string, t time.Time) string {
 	return fmt.Sprintf("http://data.gtimg.cn/flashdata/hushen/daily/%s/%s.js",
 		t.Format("06"), id)
+}
+
+func (p *QQRobot) Day_latest_url(id string) string {
+	return fmt.Sprintf("http://data.gtimg.cn/flashdata/hushen/latest/daily/%s.js",
+		id)
+}
+
+func (p *QQRobot) Days_latest_download(id string, start time.Time) (res []Tdata, err error) {
+	url := p.Day_latest_url(id)
+	body := Download(url)
+	if !bytes.HasPrefix(body, []byte(`latest_daily_data`)) {
+		return
+	}
+	lines := bytes.Split(body, []byte("\\n\\"))
+	if len(lines) < 3 {
+		return
+	}
+
+	for i, count := 2, len(lines)-1; i < count; i++ {
+		line := bytes.TrimSpace(lines[i])
+		infos := bytes.Split(line, []byte(" "))
+		if len(infos) != 6 {
+			continue
+		}
+
+		td := Tdata{}
+		//timestr, open, high, cloze, low, volume
+		td.FromBytes(infos[0], infos[1], infos[3], infos[2], infos[4], infos[5])
+		res = append(res, td)
+	}
+	return
 }
 
 func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
@@ -31,7 +62,7 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 		}
 		lines := bytes.Split(body, []byte("\\n\\"))
 
-		for i, count := 0, len(lines); i < count; i++ {
+		for i, count := 1, len(lines)-1; i < count; i++ {
 			line := bytes.TrimSpace(lines[i])
 			infos := bytes.Split(line, []byte(" "))
 			if len(infos) != 6 {
