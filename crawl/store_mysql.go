@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -41,7 +42,23 @@ func (p *MysqlStore) Open() (err error) {
 		return
 	}
 	p.db = db
+	p.SetMaxOpenConns(100)
 	return
+}
+
+func (p *MysqlStore) SetMaxOpenConns(n int) {
+	num := p.getMaxConnections()
+	if n < 0 {
+		n = 0
+	} else {
+		if n > num {
+			n = num / 2
+		}
+		if n < 1 {
+			n = 1
+		}
+	}
+	p.db.SetMaxOpenConns(n)
 }
 
 type MysqlStore struct {
@@ -97,6 +114,11 @@ func (p *MysqlStore) SaveTData(table string, data *Tdata) (err error) {
 			data.Time, data.Open, data.High, data.Low, data.Close, data.Volume)
 		if err == nil {
 			break
+		}
+		if strings.Index(err.Error(), "re-prepared") > 0 {
+			i--
+			time.Sleep(time.Millisecond * 10)
+			continue
 		}
 		p.createDayTdataTable(table)
 	}
@@ -196,6 +218,12 @@ func (p *MysqlStore) LoadCategories() (res []CategoryItemInfo, err error) {
 		glog.Warningln(err)
 	}
 	return
+}
+
+func (p *MysqlStore) getMaxConnections() int {
+	num := 0
+	p.db.QueryRow("SELECT @@max_connections").Scan(&num)
+	return num
 }
 
 func (p *MysqlStore) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err error) {
