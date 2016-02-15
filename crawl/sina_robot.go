@@ -82,7 +82,7 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 	}
 }
 
-func (p *SinaRobot) sub_cate(c CategoryItem, cont []byte) {
+func (p *SinaRobot) sub_cate(c *CategoryItem, cont []byte) {
 	cont = bytes.Trim(cont, `[],"`)
 	cont = bytes.Replace(cont, []byte(`","","`), []byte(","), -1)
 	cont = bytes.Replace(cont, []byte(`"`), []byte(""), -1)
@@ -162,7 +162,9 @@ func (p *SinaRobot) Cate(tc Category) {
 		if _, ok := tc[key]; !ok {
 			tc[key] = *NewCategoryItem(key)
 		}
-		p.sub_cate(tc[key], cont)
+		item := tc[key]
+		p.sub_cate(&item, cont)
+		tc[key] = item
 	}
 
 }
