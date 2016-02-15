@@ -11,6 +11,7 @@ router = new VueRouter()
 App = require('./components/app.vue')
 Stock = require('./components/stock.vue')
 Settings = require('./components/settings.vue')
+Plate = require('./components/plate.vue')
 
 router.map
   '/s/:sid/:k':
@@ -18,5 +19,10 @@ router.map
     component: Stock
   '/settings':
     component: Settings
+  '/plate':
+    component: Plate
+    subRoutes:
+      '/:pid':
+        component: Plate
 
 router.start(App, '#app')

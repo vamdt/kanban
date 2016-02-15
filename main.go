@@ -48,6 +48,7 @@ func serve() {
 	go h.run()
 	http.HandleFunc("/socket.io/", serveWs)
 	http.HandleFunc("/search", search_handle)
+	http.HandleFunc("/plate", plates_handle)
 
 	port := os.Getenv("PORT")
 

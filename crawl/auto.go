@@ -106,6 +106,8 @@ func NewStocks(storestr string, play, min_hub_height int) *Stocks {
 	}
 }
 
+func (p *Stocks) Store() Store { return p.store }
+
 func (p *Stocks) Run() {
 	if p.play > minPlay {
 		for {

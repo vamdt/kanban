@@ -34,6 +34,9 @@
               </li>
             </ul>
         </li>
+        <li class="pure-menu-item pure-menu-selected">
+          <a v-link="{ path: '/plate' }" class="pure-menu-link">Plate</a>
+        </li>
         <li class="pure-menu-item pure-menu-selected"><a v-link="{ path:
         '/settings' }" class="pure-menu-link">Settings</a></li>
         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
