@@ -113,6 +113,10 @@ func UpdateFactor(storestr string) {
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup
 	for i, info := range data {
+
+		if i%100 == 0 {
+			wg.Wait()
+		}
 		if !info.Leaf {
 			continue
 		}
