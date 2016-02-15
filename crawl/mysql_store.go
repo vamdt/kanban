@@ -280,19 +280,18 @@ func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error
 		return
 	}
 
-	if pid == 0 {
-		return
+	for _, sid := range c.Sid {
+		p.GetOrInsertCategoryItem(sid, id, true)
 	}
 
-	if c.Sid != nil {
-		for _, sid := range *c.Sid {
-			p.GetOrInsertCategoryItem(sid, id, true)
-		}
-	}
+	p.SaveCategoryWithPid(c.Sub, id)
 	return
 }
 
 func (p *MysqlStore) SaveCategoryWithPid(c Category, pid int) (err error) {
+	if c == nil {
+		return
+	}
 	for _, cate := range c {
 		err = p.SaveCategoryItemWithPid(cate, pid)
 	}
@@ -305,14 +304,6 @@ func (p *MysqlStore) SaveCategories(c Category) (err error) {
 	}
 
 	p.createCategorieTable()
-	for name, cate := range c {
-		id, err := p.GetOrInsertCategoryItem(name, 0, false)
-		if err != nil {
-			continue
-		}
-		if cate.Sub != nil {
-			err = p.SaveCategoryWithPid(cate.Sub, id)
-		}
-	}
+	p.SaveCategoryWithPid(c, 0)
 	return
 }

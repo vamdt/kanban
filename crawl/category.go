@@ -5,7 +5,7 @@ import "github.com/golang/glog"
 type CategoryItem struct {
 	Id   int
 	Name string
-	Sid  *[]string
+	Sid  []string
 	Sub  Category
 }
 
@@ -21,19 +21,11 @@ func NewCategoryItem(name string) *CategoryItem {
 }
 
 func (p *CategoryItem) AddStock(id string) {
-	if p.Sid == nil {
-		p.Sid = &[]string{}
-	}
-	sid := *p.Sid
-	sid = append(sid, id)
-	p.Sid = &sid
+	p.Sid = append(p.Sid, id)
 }
 
 func (p *CategoryItem) LeafCount() int {
-	if p.Sid == nil {
-		return 0
-	}
-	return len(*p.Sid)
+	return len(p.Sid)
 }
 
 func UpdateCate(storestr string) {
@@ -68,7 +60,7 @@ func UpdateFactor(storestr string) {
 			for name, item := range v.Sub {
 				glog.Infoln(">> ", name)
 				if item.Sid != nil {
-					for _, id := range *item.Sid {
+					for _, id := range item.Sid {
 						glog.Infoln("\t\t>>> ", id)
 					}
 				}
