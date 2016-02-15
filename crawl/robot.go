@@ -34,6 +34,10 @@ func NewRobotBox() *RobotBox         { return &RobotBox{} }
 
 var DefaultRobotBox = NewRobotBox()
 
+func init() {
+	go DefaultRobotBox.Work(false)
+}
+
 func Registry(robot Robot) {
 	DefaultRobotBox.Registry(robot)
 }
@@ -75,19 +79,33 @@ func (p *Worker) Do(job *jobItem) {
 	job.res <- data
 }
 
-func (p *RobotBox) work() {
-	p.mrobot.Lock()
-	defer p.mrobot.Unlock()
-	p.robots.Do(func(v interface{}) {
-		if v == nil {
-			return
+func (p *RobotBox) Work(once bool) {
+	for {
+		p.mjob.Lock()
+		l := p.jobs.Len()
+		p.mjob.Unlock()
+		if once {
+			if l < 1 {
+				break
+			}
+		} else {
+			time.Sleep(time.Millisecond * 100)
+			continue
 		}
-		w := v.(*Worker)
-		if !atomic.CompareAndSwapInt32(&w.busy, robotIdle, robotBusy) {
-			return
-		}
-		go w.Do(p.GetJob())
-	})
+
+		p.mrobot.Lock()
+		p.robots.Do(func(v interface{}) {
+			if v == nil {
+				return
+			}
+			w := v.(*Worker)
+			if !atomic.CompareAndSwapInt32(&w.busy, robotIdle, robotBusy) {
+				return
+			}
+			go w.Do(p.GetJob())
+		})
+		p.mrobot.Unlock()
+	}
 }
 
 func (p *RobotBox) Days_download(id string, start time.Time) ([]Tdata, error) {
@@ -96,7 +114,6 @@ func (p *RobotBox) Days_download(id string, start time.Time) ([]Tdata, error) {
 	p.mjob.Lock()
 	p.jobs.PushBack(&job)
 	p.mjob.Unlock()
-	go p.work()
 	res := <-job.res
 	return res, nil
 }
