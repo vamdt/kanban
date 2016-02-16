@@ -290,12 +290,16 @@ func (p *MysqlStore) SaveCategories(c Category) (err error) {
 
 func (p *MysqlStore) SaveCategoryItemInfoFactor(c []CategoryItemInfo) {
 	table := categoryTable
-	p.db.Exec("UPDATE `" + table + "` SET `factor`=0")
+	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=? WHERE `id`=?")
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	defer stmt.Close()
 	for _, info := range c {
 		if info.Factor < 1 {
 			continue
 		}
-		p.db.Exec("UPDATE `"+table+"` SET `factor`=? WHERE `id`=?",
-			info.Factor, info.Id)
+		stmt.Exec(info.Factor, info.Id)
 	}
 }
