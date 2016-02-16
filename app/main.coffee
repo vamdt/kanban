@@ -19,10 +19,7 @@ router.map
     component: Stock
   '/settings':
     component: Settings
-  '/plate':
+  '/plate/:pid/:id':
     component: Plate
-    subRoutes:
-      '/:pid':
-        component: Plate
 
 router.start(App, '#app')
