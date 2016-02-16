@@ -41,6 +41,7 @@ module.exports =
       return unless plate.Sub
       return unless plate.Sub.length
       @stocks = plate.Sub
+      e.preventDefault()
 
     rdata: (pid, cb) ->
       pid = +pid
