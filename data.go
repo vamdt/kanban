@@ -18,7 +18,9 @@ var stocks *crawl.Stocks
 
 func jsonp(w http.ResponseWriter, r *http.Request, data interface{}) {
 	cb := r.FormValue("cb")
-	cb = strings.Fields(cb)[0]
+	if len(cb) > 0 {
+		cb = strings.Fields(cb)[0]
+	}
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if len(cb) > 0 {
