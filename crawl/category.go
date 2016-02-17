@@ -112,15 +112,15 @@ func UpdateFactor(storestr string) {
 
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup
-	for i, info := range data {
+	for i, _ := range data {
 
-		if i%100 == 0 {
+		if i%50 == 0 {
 			wg.Wait()
 		}
-		if !info.Leaf {
+		if !data[i].Leaf {
 			continue
 		}
-		_, s, ok := stocks.Insert(info.Name)
+		_, s, ok := stocks.Insert(data[i].Name)
 		if !ok {
 			continue
 		}
@@ -132,7 +132,10 @@ func UpdateFactor(storestr string) {
 			data[i].Factor = s.Days.Factor()
 		}(s, i)
 	}
+
+	glog.Infoln("wait all update done")
 	wg.Wait()
+	glog.Infoln("all update done")
 
 	factor := make(map[string]int)
 	for _, info := range data {
