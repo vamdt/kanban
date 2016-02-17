@@ -378,11 +378,7 @@ func (p *Stock) Days_update(store Store) int {
 	c := Day_collection_name(p.Id)
 	p.Days.Data, _ = store.LoadTDatas(c)
 	t := p.Days.latest_time()
-	now := time.Now().UTC()
-	if now.Hour() < 8 {
-		now = now.AddDate(0, 0, -1)
-	}
-	now = now.Truncate(time.Hour * 24)
+	now := time.Now().AddDate(0, 0, -1).UTC().Truncate(time.Hour * 24)
 	if t.Equal(now) || t.After(now) {
 		return 0
 	}
@@ -391,9 +387,7 @@ func (p *Stock) Days_update(store Store) int {
 	p.days_download(t)
 	count := len(p.Days.Data)
 	if count > l {
-		for i, j := l, count; i < j; i++ {
-			store.SaveTData(c, &p.Days.Data[i])
-		}
+		store.SaveTDatas(c, p.Days.Data[l:])
 	}
 	return count - l
 }
@@ -436,9 +430,7 @@ func (p *Stock) Ticks_update(store Store) int {
 
 	count := len(p.Ticks.Data)
 	if count > l {
-		for i, j := l, count; i < j; i++ {
-			store.SaveTick(c, &p.Ticks.Data[i])
-		}
+		store.SaveTicks(c, p.Ticks.Data[l:])
 	}
 	glog.V(LogV).Infoln("download ticks", count-l)
 	return count - l
