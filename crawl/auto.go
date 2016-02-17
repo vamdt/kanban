@@ -378,6 +378,15 @@ func (p *Stock) Days_update(store Store) int {
 	c := Day_collection_name(p.Id)
 	p.Days.Data, _ = store.LoadTDatas(c)
 	t := p.Days.latest_time()
+	now := time.Now().UTC()
+	if now.Hour() < 8 {
+		now = now.AddDate(0, 0, -1)
+	}
+	now = now.Truncate(time.Hour * 24)
+	if t.Equal(now) || t.After(now) {
+		return 0
+	}
+
 	l := len(p.Days.Data)
 	p.days_download(t)
 	count := len(p.Days.Data)
