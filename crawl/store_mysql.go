@@ -108,6 +108,30 @@ func (p *MysqlStore) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
+func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
+	p.createDayTdataTable(table)
+	stmt, err := p.db.Prepare("INSERT INTO `" + table + "`(`time`,`open`,`high`,`low`,`close`,`volume`) values(?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+
+	for i, _ := range datas {
+		data := &datas[i]
+		_, e := stmt.Exec(data.Time, data.Open, data.High, data.Low, data.Close, data.Volume)
+		if e != nil {
+			if strings.Index(e.Error(), "Error 1062") > -1 {
+				continue
+			}
+			err = e
+		}
+	}
+
+	if err != nil {
+		glog.Warningln("insert tdata error", err)
+	}
+	return err
+}
+
 func (p *MysqlStore) SaveTData(table string, data *Tdata) (err error) {
 	for i := 0; i < 2; i++ {
 		_, err = p.db.Exec("INSERT INTO `"+table+"`(`time`,`open`,`high`,`low`,`close`,`volume`) values(?,?,?,?,?,?)",
@@ -167,6 +191,28 @@ func (p *MysqlStore) LoadTicks(table string) (res []Tick, err error) {
 		glog.Warningln(err)
 	}
 	return
+}
+
+func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
+	p.createTickTable(table)
+	stmt, err := p.db.Prepare("INSERT INTO `" + table + "`(`time`,`price`,`change`,`volume`,`turnover`,`type`) values(?,?,?,?,?,?)")
+	if err == nil {
+		return err
+	}
+	for i, _ := range ticks {
+		tick := &ticks[i]
+		_, e := stmt.Exec(tick.Time, tick.Price, tick.Change, tick.Volume, tick.Turnover, tick.Type)
+		if e != nil {
+			if strings.Index(e.Error(), "Error 1062") > -1 {
+				continue
+			}
+			err = e
+		}
+	}
+	if err != nil {
+		glog.Warningf("insert tick error %v", err)
+	}
+	return err
 }
 
 func (p *MysqlStore) SaveTick(table string, tick *Tick) (err error) {

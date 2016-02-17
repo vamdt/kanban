@@ -68,6 +68,27 @@ func data2BsonM(data interface{}) (m bson.M, err error) {
 	return
 }
 
+func (p *MongoStore) SaveTDatas(table string, datas []Tdata) (err error) {
+	c := p.session.DB("").C(table)
+	b := c.Bulk()
+	for i, _ := range datas {
+		data := &datas[i]
+		id := Time2ObjectId(data.Time)
+		m, err := data2BsonM(*data)
+		if err != nil {
+			glog.Warningln("convert tdata error", err, *data)
+			continue
+		}
+		m["_id"] = id
+		b.Upsert(bson.M{"_id": id}, m)
+	}
+	_, err = b.Run()
+	if err != nil {
+		glog.Warningln("insert tdatas error", err)
+	}
+	return
+}
+
 func (p *MongoStore) SaveTData(table string, data *Tdata) (err error) {
 	c := p.session.DB("").C(table)
 	id := Time2ObjectId(data.Time)
@@ -93,6 +114,27 @@ func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
 	}
 	if err := iter.Close(); err != nil {
 		glog.Warningln(err)
+	}
+	return
+}
+
+func (p *MongoStore) SaveTicks(table string, ticks []Tick) (err error) {
+	c := p.session.DB("").C(table)
+	b := c.Bulk()
+	for i, _ := range ticks {
+		tick := &ticks[i]
+		id := Time2ObjectId(tick.Time)
+		m, err := data2BsonM(*tick)
+		if err != nil {
+			glog.Warningln("convert tick error", err, *tick)
+			continue
+		}
+		m["_id"] = id
+		b.Upsert(bson.M{"_id": id}, m)
+	}
+	_, err = b.Run()
+	if err != nil {
+		glog.Warningln("insert ticks error", err)
 	}
 	return
 }

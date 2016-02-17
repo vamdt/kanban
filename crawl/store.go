@@ -38,8 +38,10 @@ type Store interface {
 	Close()
 	LoadTDatas(table string) ([]Tdata, error)
 	SaveTData(table string, data *Tdata) error
+	SaveTDatas(string, []Tdata) error
 	LoadTicks(table string) ([]Tick, error)
 	SaveTick(table string, tick *Tick) error
+	SaveTicks(string, []Tick) error
 	LoadCategories() ([]CategoryItemInfo, error)
 	SaveCategories(Category) error
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)
