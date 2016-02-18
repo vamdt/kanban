@@ -10,6 +10,10 @@ import (
 var line_files_flag = flag.String("lines", "", "the line test files")
 var typing_files_flag = flag.String("typings", "", "the typing test files")
 
+func hl(high, low int) HL { return HL{High: high, Low: low} }
+
+func hltd(high, low int) Tdata { return Tdata{HL: HL{High: high, Low: low}} }
+
 func text2Tdatas(text []byte) Tdatas {
 	tds := Tdatas{}
 	base := 5
@@ -107,7 +111,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 |
       `,
 		[]Tdata{
-			Tdata{High: 15, Low: 5},
+			hltd(15, 5),
 		}, nil, nil,
 	},
 	{`
@@ -115,7 +119,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 |
       `,
 		[]Tdata{
-			Tdata{High: 25, Low: 5},
+			hltd(25, 5),
 		}, nil, nil,
 	},
 	{`
@@ -123,7 +127,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 |
       `,
 		[]Tdata{
-			Tdata{High: 15, Low: 5},
+			hltd(15, 5),
 		},
 		[]Typing{
 			Typing{i: 0, Price: 15, Type: TopTyping},
@@ -134,8 +138,8 @@ var tests_text_tdata = []test_text_tdata_pair{
 ||
       `,
 		[]Tdata{
-			Tdata{High: 25, Low: 5},
-			Tdata{High: 15, Low: 5},
+			hltd(25, 5),
+			hltd(15, 5),
 		},
 		[]Typing{
 			Typing{i: 1, Price: 15, Type: TopTyping},
@@ -146,7 +150,7 @@ var tests_text_tdata = []test_text_tdata_pair{
 .
       `,
 		[]Tdata{
-			Tdata{High: 15, Low: 5},
+			hltd(15, 5),
 		},
 		[]Typing{
 			Typing{i: 0, Price: 5, Type: BottomTyping},
@@ -165,19 +169,19 @@ var tests_text_tdata = []test_text_tdata_pair{
       l
       `,
 		[]Tdata{
-			Tdata{High: 35, Low: 25},
-			Tdata{High: 45, Low: 15},
-			Tdata{High: 30, Low: 30},
-			Tdata{High: 25, Low: 25},
-			Tdata{High: 65, Low: 15},
+			hltd(35, 25),
+			hltd(45, 15),
+			hltd(30, 30),
+			hltd(25, 25),
+			hltd(65, 15),
 
-			Tdata{High: 35, Low: 25},
-			Tdata{High: 55, Low: 5},
-			Tdata{High: 35, Low: 35},
-			Tdata{High: 45, Low: 15},
-			Tdata{High: 35, Low: 25},
+			hltd(35, 25),
+			hltd(55, 5),
+			hltd(35, 35),
+			hltd(45, 15),
+			hltd(35, 25),
 
-			Tdata{High: 35, Low: 15},
+			hltd(35, 15),
 		},
 		[]Typing{
 			Typing{i: 4, Price: 65, Type: TopTyping},
@@ -244,7 +248,7 @@ func TestText2Tdata(t *testing.T) {
 }
 
 type test_typing_pair struct {
-	tdata      [3]Tdata
+	tdata      [3]HL
 	is_top     bool
 	is_bottom  bool
 	is_contain bool
@@ -252,50 +256,50 @@ type test_typing_pair struct {
 
 var tests_typing = []test_typing_pair{
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 100, Low: 90},
-			Tdata{High: 200, Low: 100},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(100, 90),
+			hl(200, 100),
+			hl(150, 80),
 		},
 		true, false, false,
 	},
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 100, Low: 90},
-			Tdata{High: 100, Low: 100},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(100, 90),
+			hl(100, 100),
+			hl(150, 80),
 		},
 		false, false, true,
 	},
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 100, Low: 90},
-			Tdata{High: 200, Low: 90},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(100, 90),
+			hl(200, 90),
+			hl(150, 80),
 		},
 		false, false, true,
 	},
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 100, Low: 90},
-			Tdata{High: 200, Low: 70},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(100, 90),
+			hl(200, 70),
+			hl(150, 80),
 		},
 		false, false, true,
 	},
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 100, Low: 90},
-			Tdata{High: 90, Low: 70},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(100, 90),
+			hl(90, 70),
+			hl(150, 80),
 		},
 		false, true, false,
 	},
 	test_typing_pair{
-		[3]Tdata{
-			Tdata{High: 200, Low: 90},
-			Tdata{High: 140, Low: 100},
-			Tdata{High: 150, Low: 80},
+		[3]HL{
+			hl(200, 90),
+			hl(140, 100),
+			hl(150, 80),
 		},
 		false, false, true,
 	},
@@ -303,7 +307,7 @@ var tests_typing = []test_typing_pair{
 
 func TestIsTopTyping(t *testing.T) {
 	for i, td := range tests_typing {
-		if td.is_top != IsTopTyping(&td.tdata[0], &td.tdata[1], &td.tdata[2]) {
+		if td.is_top != IsTopTyping(td.tdata[0], td.tdata[1], td.tdata[2]) {
 			t.Error(
 				"Test", i,
 				"For", td.tdata,
@@ -316,7 +320,7 @@ func TestIsTopTyping(t *testing.T) {
 
 func TestIsBottomTyping(t *testing.T) {
 	for i, td := range tests_typing {
-		if td.is_bottom != IsBottomTyping(&td.tdata[0], &td.tdata[1], &td.tdata[2]) {
+		if td.is_bottom != IsBottomTyping(td.tdata[0], td.tdata[1], td.tdata[2]) {
 			t.Error(
 				"Test", i,
 				"For", td.tdata,
@@ -329,7 +333,7 @@ func TestIsBottomTyping(t *testing.T) {
 
 func TestContain(t *testing.T) {
 	for i, td := range tests_typing {
-		if td.is_contain != Contain(&td.tdata[0], &td.tdata[1]) {
+		if td.is_contain != Contain(td.tdata[0], td.tdata[1]) {
 			t.Error(
 				"Test", i,
 				"For", td.tdata,
