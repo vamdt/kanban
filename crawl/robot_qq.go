@@ -26,7 +26,7 @@ func (p *QQRobot) Day_latest_url(id string) string {
 		id)
 }
 
-func (p *QQRobot) Days_latest_download(id string, start time.Time) (res []Tdata, err error) {
+func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_latest_url(id)
 	body := Download(url)
 	if !bytes.HasPrefix(body, []byte(`latest_daily_data`)) {
@@ -35,6 +35,13 @@ func (p *QQRobot) Days_latest_download(id string, start time.Time) (res []Tdata,
 	lines := bytes.Split(body, []byte("\\n\\"))
 	if len(lines) < 3 {
 		return
+	}
+
+	// start:901219
+	start_str := string(ParseParamByte(lines[1], []byte("start"), []byte(" "), []byte(":")))
+	start_date, _ := time.Parse(qqmt, start_str)
+	if start.Before(start_date) {
+		start = start_date
 	}
 
 	for i, count := 2, len(lines)-1; i < count; i++ {
@@ -49,10 +56,21 @@ func (p *QQRobot) Days_latest_download(id string, start time.Time) (res []Tdata,
 		td.FromBytes(infos[0], infos[1], infos[3], infos[2], infos[4], infos[5])
 		res = append(res, td)
 	}
+
+	i, ok := (TdataSlice(res)).Search(start.Truncate(time.Hour * 24))
+	if !ok {
+		return p.years_download(id, start)
+	}
+
+	if i >= len(res) {
+		res = []Tdata{}
+	} else {
+		res = res[i:]
+	}
 	return
 }
 
-func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
+func (p *QQRobot) years_download(id string, start time.Time) (res []Tdata, err error) {
 	for t, ys, ye := start, start.Year(), time.Now().Year()+1; ys < ye; ys++ {
 		url := p.Day_url(id, t)
 		t = t.AddDate(1, 0, 0)
