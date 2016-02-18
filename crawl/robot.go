@@ -88,7 +88,7 @@ func (p *RobotBox) Work(once bool) {
 			if once {
 				break
 			} else {
-				time.Sleep(time.Millisecond * 100)
+				time.Sleep(time.Second)
 				continue
 			}
 		}
