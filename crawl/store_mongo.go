@@ -175,3 +175,5 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 func (p *MongoStore) LoadCategories() (res []CategoryItemInfo, err error) { return }
 
 func (p *MongoStore) SaveCategories(c Category) (err error) { return }
+
+func (p *MongoStore) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}

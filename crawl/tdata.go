@@ -19,9 +19,8 @@ type Tdata struct {
 	Time   time.Time `json:"time"`
 	Open   int       `json:"open"`
 	Close  int       `json:"close"`
-	High   int       `json:"high"`
-	Low    int       `json:"low"`
 	Volume int       `json:"volume"`
+	HL     `bson:",inline"`
 	emas   int
 	emal   int
 	DIFF   int

@@ -19,6 +19,11 @@ const (
 	DullTyping
 )
 
+type HL struct {
+	High int
+	Low  int
+}
+
 type Typing struct {
 	end   int
 	i     int
@@ -26,8 +31,7 @@ type Typing struct {
 	Time  time.Time
 	Price int
 	Type  int
-	High  int
-	Low   int
+	HL    `bson:",inline"`
 	ETime time.Time
 	Case1 bool
 }
@@ -160,10 +164,10 @@ func (p *typing_parser) parse_top_bottom() bool {
 	a := &p.tp[len(p.tp)-3].d
 	b := &p.tp[len(p.tp)-2].d
 	c := &p.tp[len(p.tp)-1].d
-	if IsTopTyping(a, b, c) {
+	if IsTopTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.High
 		typing.Type = TopTyping
-	} else if IsBottomTyping(a, b, c) {
+	} else if IsBottomTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
 	} else {
@@ -285,7 +289,7 @@ func (p *Tdatas) ParseTyping() bool {
 		}
 
 		prev := &p.Typing.tp[ltp-1]
-		if Contain(&prev.d, a) {
+		if Contain(prev.d.HL, a.HL) {
 			var base *Tdata
 			if ltp > 1 {
 				base = &p.Typing.tp[ltp-2].d
@@ -293,11 +297,11 @@ func (p *Tdatas) ParseTyping() bool {
 				base = &Tdata{}
 			}
 			a = ContainMerge(base, &prev.d, a)
-			if IsUpTyping(base, &prev.d) {
+			if IsUpTyping(base.HL, prev.d.HL) {
 				if prev.d.High != a.High {
 					prev.t.i = i
 				}
-			} else if IsDownTyping(base, &prev.d) {
+			} else if IsDownTyping(base.HL, prev.d.HL) {
 				if prev.d.Low != a.Low {
 					prev.t.i = i
 				}
@@ -318,29 +322,23 @@ func (p *Tdatas) ParseTyping() bool {
 	return hasnew
 }
 
-func IsTopTyping(a, b, c *Tdata) bool {
+func IsTopTyping(a, b, c HL) bool {
 	return IsUpTyping(a, b) && IsDownTyping(b, c)
 }
 
-func IsBottomTyping(a, b, c *Tdata) bool {
+func IsBottomTyping(a, b, c HL) bool {
 	return IsDownTyping(a, b) && IsUpTyping(b, c)
 }
 
-func IsUpTyping(a, b *Tdata) bool {
+func IsUpTyping(a, b HL) bool {
 	return !Contain(a, b) && b.High > a.High
 }
 
-func IsDownTyping(a, b *Tdata) bool {
+func IsDownTyping(a, b HL) bool {
 	return !Contain(a, b) && b.Low < a.Low
 }
 
-func LineContain(a, b *Typing) bool {
-	ta := Tdata{High: a.High, Low: a.Low}
-	tb := Tdata{High: b.High, Low: b.Low}
-	return Contain(&ta, &tb)
-}
-
-func Contain(a, b *Tdata) bool {
+func Contain(a, b HL) bool {
 	// Fuzzy Lesson 67 答疑 2007-08-02 16:19:25
 	// 缠中说禅：只要有一端相同，那必然是包含，
 	// 两端相同那更是了，
@@ -373,9 +371,9 @@ func UpContainMerge(a, b *Tdata) *Tdata {
 }
 
 func ContainMerge(pra, a, b *Tdata) *Tdata {
-	if IsUpTyping(pra, a) {
+	if IsUpTyping(pra.HL, a.HL) {
 		return UpContainMerge(a, b)
-	} else if IsDownTyping(pra, a) {
+	} else if IsDownTyping(pra.HL, a.HL) {
 		return DownContainMerge(a, b)
 	}
 	return nil

@@ -146,7 +146,7 @@ func (p *segment_parser) handle_special_case1(i int, a *Tdata) bool {
 	}
 	pprev := &p.tp[ltp-2]
 	prev := &p.tp[ltp-1]
-	if !Contain(&pprev.d, &prev.d) {
+	if !Contain(pprev.d.HL, prev.d.HL) {
 		return false
 	}
 
@@ -214,7 +214,7 @@ func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
 	}
 	prev := &p.Segment.tp[ltp-1]
 	pprev := &p.Segment.tp[ltp-2]
-	if Contain(&prev.d, a) {
+	if Contain(prev.d.HL, a.HL) {
 		if prev.t.Type == UpTyping {
 			if pprev.d.High < a.High {
 				a = DownContainMerge(&prev.d, a)
@@ -345,7 +345,7 @@ func (p *Tdatas) ParseSegment() bool {
 		//continue
 		//}
 
-		if Contain(&prev.d, a) {
+		if Contain(prev.d.HL, a.HL) {
 			if !p.Segment.need_sure() {
 				if p.Segment.break_index == ltp-1 {
 					// case   |  or |
@@ -420,10 +420,10 @@ func (p *segment_parser) parse_top_bottom() bool {
 	a := &p.tp[len(p.tp)-3].d
 	b := &p.tp[len(p.tp)-2].d
 	c := &p.tp[len(p.tp)-1].d
-	if typing.Type == UpTyping && IsBottomTyping(a, b, c) {
+	if typing.Type == UpTyping && IsBottomTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
-	} else if typing.Type == DownTyping && IsTopTyping(a, b, c) {
+	} else if typing.Type == DownTyping && IsTopTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.High
 		typing.Type = TopTyping
 	} else {

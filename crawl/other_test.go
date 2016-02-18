@@ -1,6 +1,7 @@
 package crawl
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -93,6 +94,31 @@ func TestTimeBefore(t *testing.T) {
 			"For", "now Before before",
 			"expected", true,
 			"got", false,
+		)
+	}
+}
+
+func TestJSON(t *testing.T) {
+	type A struct {
+		High, Low int
+	}
+	type B struct {
+		A
+	}
+	b := B{}
+	b.High = 1
+	b.Low = 1
+	buf, err := json.Marshal(b)
+	if err != nil {
+		t.Error("For", "json marchal fail", err)
+	}
+	s := string(buf)
+	exp := `{"High":1,"Low":1}`
+	if s != exp {
+		t.Error(
+			"For", "json marchal",
+			"expected", exp,
+			"got", s,
 		)
 	}
 }

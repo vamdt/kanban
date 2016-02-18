@@ -64,14 +64,14 @@ func text2Segment(text []byte) (tline, segment []Typing) {
 			case '\\':
 				k := findDownLine(i, j)
 				if k < 0 {
-					tline = append(tline, Typing{i: j, Type: DownTyping, High: base * 3})
+					tline = append(tline, downT(j, 0, base*3))
 					k = len(tline) - 1
 				}
 				tline[k].Low = base
 			case '/':
 				k := findUpLine(i, j)
 				if k < 0 {
-					tline = append(tline, Typing{i: j, Type: UpTyping, High: base * 3})
+					tline = append(tline, upT(j, 0, base*3))
 					k = len(tline) - 1
 				}
 				tline[k].Low = base
@@ -121,20 +121,54 @@ type test_text_data_pair struct {
 	segment []Typing
 }
 
+func upT(i, low, high int) Typing {
+	t := Typing{i: i, Type: UpTyping}
+	t.Low = low
+	t.High = high
+	t.Price = high
+	return t
+}
+
+func downT(i, low, high int) Typing {
+	t := Typing{i: i, Type: DownTyping}
+	t.Low = low
+	t.High = high
+	t.Price = low
+	return t
+}
+
+func topT(i, low, high int, case1 bool) Typing {
+	t := Typing{i: i, Type: TopTyping}
+	t.Low = low
+	t.High = high
+	t.Price = high
+	t.Case1 = case1
+	return t
+}
+
+func bottomT(i, low, high int, case1 bool) Typing {
+	t := Typing{i: i, Type: BottomTyping}
+	t.Low = low
+	t.High = high
+	t.Price = low
+	t.Case1 = case1
+	return t
+}
+
 var tests_text_segment = []test_text_data_pair{
 	{`
  /
 /
       `,
 		[]Typing{
-			Typing{i: 1, Price: 25, Low: 5, High: 25, Type: UpTyping},
+			upT(1, 5, 25),
 		}, nil,
 	},
 	{`
 \
       `,
 		[]Typing{
-			Typing{i: 0, Price: 5, Low: 5, High: 15, Type: DownTyping},
+			downT(0, 5, 15),
 		}, nil,
 	},
 	{`
@@ -142,8 +176,8 @@ var tests_text_segment = []test_text_data_pair{
  \/
       `,
 		[]Typing{
-			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
-			Typing{i: 2, Price: 15, Low: 5, High: 15, Type: UpTyping},
+			downT(1, 5, 25),
+			upT(2, 5, 15),
 		}, nil,
 	},
 	{`
@@ -155,10 +189,10 @@ var tests_text_segment = []test_text_data_pair{
 /
       `,
 		[]Typing{
-			Typing{i: 2, Price: 35, Low: 5, High: 35, Type: UpTyping},
-			Typing{i: 4, Price: 15, Low: 15, High: 35, Type: DownTyping},
-			Typing{i: 9, Price: 65, Low: 15, High: 65, Type: UpTyping},
-			Typing{i: 13, Price: 25, Low: 25, High: 65, Type: DownTyping},
+			upT(2, 5, 35),
+			downT(4, 15, 35),
+			upT(9, 15, 65),
+			downT(13, 25, 65),
 		}, nil,
 	},
 	{`
@@ -169,14 +203,14 @@ var tests_text_segment = []test_text_data_pair{
  *
       `,
 		[]Typing{
-			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: DownTyping},
-			Typing{i: 4, Price: 35, Low: 5, High: 35, Type: UpTyping},
-			Typing{i: 6, Price: 15, Low: 15, High: 35, Type: DownTyping},
-			Typing{i: 9, Price: 45, Low: 15, High: 45, Type: UpTyping},
+			downT(1, 5, 25),
+			upT(4, 5, 35),
+			downT(6, 15, 35),
+			upT(9, 15, 45),
 		},
 		[]Typing{
-			Typing{i: 1, Price: 5, Low: 5, High: 25, Type: BottomTyping, Case1: true},
-			Typing{i: 2, Price: 35, Low: 5, High: 35, Type: TopTyping, Case1: false},
+			bottomT(1, 5, 25, true),
+			topT(2, 5, 35, false),
 		},
 	},
 }
