@@ -115,11 +115,18 @@ func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
 		return err
 	}
 
-	for i, _ := range datas {
+	for i, c := 0, len(datas); i < c; i++ {
 		data := &datas[i]
 		_, e := stmt.Exec(data.Time, data.Open, data.High, data.Low, data.Close, data.Volume)
 		if e != nil {
-			if strings.Index(e.Error(), "Error 1062") > -1 {
+			msg := e.Error()
+			if strings.Index(msg, "Error 1062:") > -1 {
+				// duplicate
+				continue
+			}
+			if strings.Index(msg, "Error 1615:") > -1 {
+				// Prepared statement needs to be re-prepared
+				i--
 				continue
 			}
 			err = e
@@ -199,11 +206,19 @@ func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
 	if err == nil {
 		return err
 	}
-	for i, _ := range ticks {
+
+	for i, c := 0, len(ticks); i < c; i++ {
 		tick := &ticks[i]
 		_, e := stmt.Exec(tick.Time, tick.Price, tick.Change, tick.Volume, tick.Turnover, tick.Type)
 		if e != nil {
-			if strings.Index(e.Error(), "Error 1062") > -1 {
+			msg := e.Error()
+			if strings.Index(msg, "Error 1062:") > -1 {
+				// duplicate
+				continue
+			}
+			if strings.Index(msg, "Error 1615:") > -1 {
+				// Prepared statement needs to be re-prepared
+				i--
 				continue
 			}
 			err = e
@@ -334,7 +349,7 @@ func (p *MysqlStore) SaveCategories(c Category) (err error) {
 	return
 }
 
-func (p *MysqlStore) SaveCategoryItemInfoFactor(c []CategoryItemInfo) {
+func (p *MysqlStore) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	table := categoryTable
 	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=? WHERE `id`=?")
 	if err != nil {
@@ -342,10 +357,22 @@ func (p *MysqlStore) SaveCategoryItemInfoFactor(c []CategoryItemInfo) {
 		return
 	}
 	defer stmt.Close()
-	for _, info := range c {
-		if info.Factor < 1 {
+	for i, c := 0, len(datas); i < c; i++ {
+		if datas[i].Factor < 1 {
 			continue
 		}
-		stmt.Exec(info.Factor, info.Id)
+		_, e := stmt.Exec(datas[i].Factor, datas[i].Id)
+		if e != nil {
+			msg := e.Error()
+			if strings.Index(msg, "Error 1062:") > -1 {
+				// duplicate
+				continue
+			}
+			if strings.Index(msg, "Error 1615:") > -1 {
+				// Prepared statement needs to be re-prepared
+				i--
+				continue
+			}
+		}
 	}
 }
