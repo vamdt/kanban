@@ -174,3 +174,8 @@ num:100 total:5958 start:901219 90:9 91:247 92:90 93:257 94:252 95:251 96:247 97
 
 http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol=sh000001&scale=5&ma=no&datalen=1023
 
+
+### 同花顺
+
+http://d.10jqka.com.cn/v2/line/hs_600000/01/last.js
+http://d.10jqka.com.cn/v2/line/hs_600000/01/2015.js
