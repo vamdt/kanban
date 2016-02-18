@@ -2,7 +2,7 @@ d3 = require 'd3'
 util = require './util'
 KLine = require './kline'
 defaults =
-  tmpl : '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.high%><br/>最低价：<%- p.low%>'
+  tmpl : '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.High%><br/>最低价：<%- p.Low%>'
   margin : [0, 10, 0, 10]
   style:
     'padding': '6px 10px 4px'
@@ -55,7 +55,7 @@ class KLineToolTip
     templ = (name, d, i) ->
       switch name
         when 'k'
-          "#{d.time}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.high)}<br/>low: #{fmtCent(d.low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
+          "#{d.time}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
         when 'typing', 'segment'
           "#{d.Time}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
         when 'hub'

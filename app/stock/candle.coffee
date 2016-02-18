@@ -70,9 +70,9 @@ class KLineCandle
       .transition()
       .style("stroke", kColor)
       .attr("x1", (d, i) -> x(i))
-      .attr("y1", (d, i) -> y(d.high))
+      .attr("y1", (d, i) -> y(d.High))
       .attr("x2", (d, i) -> x(i))
-      .attr("y2", (d, i) -> y(d.low - Math.max(1, Math.min(d.high - d.low, 0))))
+      .attr("y2", (d, i) -> y(d.Low - Math.max(1, Math.min(d.High - d.Low, 0))))
 
     opacity = @root.param 'opacity'
     if opacity

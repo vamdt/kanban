@@ -261,7 +261,7 @@ class KLine
     data = @data()
 
     x.domain([0, data.length-1])
-    y.domain([d3.min(data, (d)->d.low) * 0.99, d3.max(data, (d)->d.high)])
+    y.domain([d3.min(data, (d)->d.Low) * 0.99, d3.max(data, (d)->d.High)])
 
     @update data, @_datasel, @_dataset
 
