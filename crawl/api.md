@@ -177,5 +177,7 @@ http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.ge
 
 ### 同花顺
 
+//timestr, open,   high,   low,    close,  volume
+//20160217,2829.76,2868.70,2824.36,2867.34,21690992000,225964250000.00,
 http://d.10jqka.com.cn/v2/line/hs_600000/01/last.js
 http://d.10jqka.com.cn/v2/line/hs_600000/01/2015.js

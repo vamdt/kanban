@@ -10,9 +10,11 @@ const (
 	lmt    = "2006-01-02 15:04:05"
 	smt    = "2006-01-02"
 	qqmt   = "060102"
+	jqkamt = "20060102"
 	l_lmt  = len(lmt)
 	l_smt  = len(smt)
 	l_qqmt = len(qqmt)
+	l_jqka = len(jqkamt)
 )
 
 type Tdata struct {
@@ -183,6 +185,8 @@ func (p *Tdata) FromString(timestr, open, high, cloze, low, volume string) {
 		p.Time, _ = time.Parse(smt, timestr)
 	case l_qqmt:
 		p.Time, _ = time.Parse(qqmt, timestr)
+	case l_jqka:
+		p.Time, _ = time.Parse(jqkamt, timestr)
 	}
 	p.Open = ParseCent(open)
 	p.High = ParseCent(high)

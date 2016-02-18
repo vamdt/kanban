@@ -13,6 +13,8 @@ const (
 	robotBusy
 )
 
+const defaultRobotConcurrent int = 4
+
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
 }
@@ -23,7 +25,7 @@ type Worker struct {
 }
 
 type RobotBox struct {
-	robots ring.Ring
+	robots *ring.Ring
 	jobs   list.List
 	mrobot sync.Mutex
 	mjob   sync.Mutex
@@ -47,7 +49,11 @@ func (p *RobotBox) Registry(robot Robot) {
 	defer p.mrobot.Unlock()
 	s := ring.New(1)
 	s.Value = NewWorker(robot)
-	p.robots.Link(s)
+	if p.robots == nil {
+		p.robots = s
+	} else {
+		p.robots.Link(s)
+	}
 }
 
 func (p *RobotBox) GetJob() *jobItem {
@@ -104,6 +110,7 @@ func (p *RobotBox) Work(once bool) {
 			}
 			go w.Do(p.GetJob())
 		})
+		p.robots = p.robots.Move(defaultRobotConcurrent)
 		p.mrobot.Unlock()
 	}
 }

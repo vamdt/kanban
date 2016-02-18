@@ -112,10 +112,12 @@ func UpdateFactor(storestr string) {
 
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup
+	c := 0
 	for i, _ := range data {
 
-		if i%50 == 0 {
+		if c == 50 {
 			wg.Wait()
+			c = 0
 		}
 		if !data[i].Leaf {
 			continue
@@ -126,6 +128,7 @@ func UpdateFactor(storestr string) {
 		}
 
 		wg.Add(1)
+		c++
 		go func(s *Stock, i int) {
 			defer wg.Done()
 			s.Days_update(store)

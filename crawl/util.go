@@ -98,6 +98,24 @@ func Minute30end(t time.Time) time.Time {
 	return t.Truncate(30 * time.Minute).Add(30 * time.Minute)
 }
 
+func ParseParamBeginEnd(s, begin, end []byte) []byte {
+	i := bytes.Index(s, begin)
+	if i < 0 {
+		return nil
+	}
+	s = s[i+len(begin):]
+
+	if end == nil {
+		return s
+	}
+
+	i = bytes.Index(s, end)
+	if i < 0 {
+		return nil
+	}
+	return s[:i]
+}
+
 func ParseParamByte(s, name, sep, eq []byte) []byte {
 	lines := bytes.Split(s, sep)
 	for i, _ := range lines {

@@ -26,6 +26,18 @@ func (p *QQRobot) Day_latest_url(id string) string {
 		id)
 }
 
+func (p *QQRobot) tdata_from_line(td *Tdata, line []byte) bool {
+	line = bytes.TrimSpace(line)
+	infos := bytes.Split(line, []byte(" "))
+	if len(infos) != 6 {
+		return false
+	}
+
+	//timestr, open, high, cloze, low, volume
+	td.FromBytes(infos[0], infos[1], infos[3], infos[2], infos[4], infos[5])
+	return true
+}
+
 func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_latest_url(id)
 	body := Download(url)
@@ -45,15 +57,10 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 	}
 
 	for i, count := 2, len(lines)-1; i < count; i++ {
-		line := bytes.TrimSpace(lines[i])
-		infos := bytes.Split(line, []byte(" "))
-		if len(infos) != 6 {
+		td := Tdata{}
+		if !p.tdata_from_line(&td, lines[i]) {
 			continue
 		}
-
-		td := Tdata{}
-		//timestr, open, high, cloze, low, volume
-		td.FromBytes(infos[0], infos[1], infos[3], infos[2], infos[4], infos[5])
 		res = append(res, td)
 	}
 
@@ -81,15 +88,11 @@ func (p *QQRobot) years_download(id string, start time.Time) (res []Tdata, err e
 		lines := bytes.Split(body, []byte("\\n\\"))
 
 		for i, count := 1, len(lines)-1; i < count; i++ {
-			line := bytes.TrimSpace(lines[i])
-			infos := bytes.Split(line, []byte(" "))
-			if len(infos) != 6 {
+			td := Tdata{}
+			if !p.tdata_from_line(&td, lines[i]) {
 				continue
 			}
 
-			td := Tdata{}
-			//timestr, open, high, cloze, low, volume
-			td.FromBytes(infos[0], infos[1], infos[3], infos[2], infos[4], infos[5])
 			res = append(res, td)
 		}
 	}
