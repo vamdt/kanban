@@ -378,8 +378,8 @@ func TestParseTyping(t *testing.T) {
 				"\nExample", i, d.File,
 				"\nFor", d.Desc,
 				"\nText", "\n"+d.Text,
-				"\nexpected", exp.Typing,
-				"\ngot", td.Typing,
+				"\nexpected", exp.Typing.Data,
+				"\ngot", td.Typing.Data,
 			)
 		}
 	}

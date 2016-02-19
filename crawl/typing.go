@@ -1,6 +1,7 @@
 package crawl
 
 import (
+	"flag"
 	"sort"
 	"time"
 
@@ -25,15 +26,23 @@ type HL struct {
 }
 
 type Typing struct {
-	end   int
-	i     int
 	begin int
+	i     int
+	end   int
 	Time  time.Time
 	Price int
 	Type  int
 	HL    `bson:",inline"`
 	ETime time.Time
 	Case1 bool
+	b1    int
+	e3    int
+}
+
+var old_define bool = false
+
+func init() {
+	flag.BoolVar(&old_define, "old_line_define", false, "link typing with old define")
 }
 
 type TypingSlice []Typing
@@ -142,18 +151,8 @@ func (p *typing_parser) clean() {
 	}
 }
 
-func (p *typing_parser) new_node(i int, td *Tdatas) {
-	if len(p.tp) > 0 {
-		p.tp[len(p.tp)-1].t.end = i - 1
-		p.tp[len(p.tp)-1].t.ETime = td.Data[i-1].Time
-	}
-	tp := typing_parser_node{}
-	tp.t.begin = i
-	tp.t.i = i
-	tp.t.end = i
-	tp.t.ETime = td.Data[i].Time
-	tp.d = td.Data[i]
-	p.tp = append(p.tp, tp)
+func (p *typing_parser) new_node(t typing_parser_node) {
+	p.tp = append(p.tp, t)
 }
 
 func (p *typing_parser) parse_top_bottom() bool {
@@ -177,6 +176,10 @@ func (p *typing_parser) parse_top_bottom() bool {
 	typing.High = b.High
 	typing.Low = b.Low
 	typing.Time = b.Time
+	typing.b1 = p.tp[len(p.tp)-3].t.begin
+	typing.e3 = p.tp[len(p.tp)-1].t.end
+	p.Data = append(p.Data, typing)
+	return true
 
 	if len(p.Data) > 0 {
 		prev := p.Data[len(p.Data)-1]
@@ -205,7 +208,6 @@ func (p *typing_parser) parse_top_bottom() bool {
 			}
 		}
 	}
-	p.Data = append(p.Data, typing)
 	return true
 }
 
@@ -263,63 +265,87 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 	return i
 }
 
+func (p *Tdatas) ReadContainedTdata(base HL, i int) (typing_parser_node, bool) {
+	l := len(p.Data)
+	n := typing_parser_node{}
+	if i >= l {
+		return n, false
+	}
+
+	n.d = p.Data[i]
+	n.t.begin = i
+	n.t.i = i
+	n.t.end = i
+	n.t.HL = n.d.HL
+	n.t.ETime = n.d.Time
+
+	for i = i + 1; i < l; i++ {
+		a := p.Data[i]
+		if !Contain(n.t.HL, a.HL) {
+			break
+		}
+
+		n.t.end = i
+		n.t.ETime = a.Time
+		if IsUpTyping(base, n.t.HL) {
+			a.HL = UpContainMergeHL(n.t.HL, a.HL)
+			if n.t.High < a.High {
+				n.t.i = i
+				n.t.Time = a.Time
+			}
+		} else {
+			a.HL = DownContainMergeHL(n.t.HL, a.HL)
+			if n.t.Low > a.Low {
+				n.t.i = i
+				n.t.Time = a.Time
+			}
+		}
+		n.d = a
+		n.t.HL = a.HL
+	}
+	return n, true
+}
+
 // Lesson 62, 65, <b>77</b>
-func (p *Tdatas) ParseTyping() bool {
-	hasnew := false
+func (p *Tdatas) ParseTyping() {
 	start := 0
 
 	p.Typing.drop_last_5_data()
+	p.Typing.parser_reset()
 
+	base := HL{}
 	if l := len(p.Typing.Data); l > 0 {
-		start = p.Typing.Data[l-1].end + 1
-		start = 1 + p.Typing.Data[l-1].assertETimeMatchEnd(p.Data, "ParseTyping start2")
+		typing := p.Typing.Data[l-1]
+		start = typing.end + 1
+		p.Typing.Data[l-1].assertETimeMatchEnd(p.Data, "ParseTyping start2")
+
+		base = typing.HL
+		if typing.Type == TopTyping {
+			base.High = base.High - 1
+			base.Low = base.Low - 1
+		} else {
+			base.High = base.High + 1
+			base.Low = base.Low + 1
+		}
+		t, _ := p.ReadContainedTdata(base, typing.begin)
+		p.Typing.new_node(t)
 	} else {
 		start = p.findChanTypingStart()
 	}
 
-	glog.Infof("start %d", start)
-	p.Typing.parser_reset()
+	glog.Infof("start %d/%d", start, len(p.Data))
 	for i, l := start, len(p.Data); i < l; i++ {
-		a := &p.Data[i]
-
-		ltp := len(p.Typing.tp)
-		if ltp < 1 {
-			p.Typing.new_node(i, p)
-			continue
+		t, ok := p.ReadContainedTdata(base, i)
+		if !ok {
+			break
 		}
-
-		prev := &p.Typing.tp[ltp-1]
-		if Contain(prev.d.HL, a.HL) {
-			var base *Tdata
-			if ltp > 1 {
-				base = &p.Typing.tp[ltp-2].d
-			} else {
-				base = &Tdata{}
-			}
-			a = ContainMerge(base, &prev.d, a)
-			if IsUpTyping(base.HL, prev.d.HL) {
-				if prev.d.High != a.High {
-					prev.t.i = i
-				}
-			} else if IsDownTyping(base.HL, prev.d.HL) {
-				if prev.d.Low != a.Low {
-					prev.t.i = i
-				}
-			}
-			prev.d = *a
-			prev.t.end = i
-			prev.t.ETime = p.Data[i].Time
-			prev.t.assertETimeMatchEnd(p.Data, "ParseTyping Contain")
-		} else {
-			p.Typing.new_node(i, p)
-		}
-
+		i = t.t.end
+		//t.assertETimeMatchEnd(p.Data, "ParseTyping Contain")
+		p.Typing.new_node(t)
+		base = t.t.HL
+		p.Typing.parse_top_bottom()
 		p.Typing.clean()
-		if p.Typing.parse_top_bottom() {
-			hasnew = true
-		}
 	}
-	return hasnew
 }
 
 func IsTopTyping(a, b, c HL) bool {
@@ -346,6 +372,26 @@ func Contain(a, b HL) bool {
 	return a.High == b.High || a.Low == b.Low || (a.High > b.High && a.Low < b.Low) || (a.High < b.High && a.Low > b.Low)
 }
 
+func DownContainMergeHL(a, b HL) HL {
+	if b.Low < a.Low {
+		a.Low = b.Low
+	}
+	if b.High < a.High {
+		a.High = b.High
+	}
+	return a
+}
+
+func UpContainMergeHL(a, b HL) HL {
+	if b.High > a.High {
+		a.High = b.High
+	}
+	if b.Low > a.Low {
+		a.Low = b.Low
+	}
+	return a
+}
+
 func DownContainMerge(a, b *Tdata) *Tdata {
 	t := *a
 	if b.Low < a.Low {
@@ -370,22 +416,15 @@ func UpContainMerge(a, b *Tdata) *Tdata {
 	return &t
 }
 
-func ContainMerge(pra, a, b *Tdata) *Tdata {
-	if IsUpTyping(pra.HL, a.HL) {
-		return UpContainMerge(a, b)
-	} else if IsDownTyping(pra.HL, a.HL) {
-		return DownContainMerge(a, b)
-	}
-	return nil
-}
-
 // Lesson 65, 77
 func (p *typing_parser) LinkTyping() {
 	p.drop_last_5_line()
 
 	start := 0
 	if l := len(p.Line); l > 0 {
-		start = p.Line[l-1].end
+		if i, ok := TypingSlice(p.Data).SearchByETime(p.Line[l-1].ETime); ok {
+			start = i
+		}
 	}
 
 	end := len(p.Data)
@@ -394,16 +433,61 @@ func (p *typing_parser) LinkTyping() {
 		t := p.Data[i]
 		if typing.Type == UnknowTyping {
 			typing = t
-			typing.begin = i
-			typing.i = i
 			continue
 		}
 
 		if typing.Type == t.Type {
+			if t.Type == TopTyping {
+				if t.High > typing.High {
+					if l := len(p.Line); l > 0 {
+						p.Line[l-1].High = t.High
+						p.Line[l-1].end = t.end
+						p.Line[l-1].ETime = t.ETime
+					}
+					typing = t
+					continue
+				}
+			} else {
+				if t.Low < typing.Low {
+					if l := len(p.Line); l > 0 {
+						p.Line[l-1].Low = t.Low
+						p.Line[l-1].end = t.end
+						p.Line[l-1].ETime = t.ETime
+					}
+					typing = t
+					continue
+				}
+			}
 			continue
 		}
 
-		typing.end = i
+		// check typing
+		// 笔定义 第1条 分型不共用k线
+		if t.b1 <= typing.e3 {
+			continue
+		}
+
+		// 旧笔定义 有一个独立k线
+		if old_define && t.b1-typing.e3 < 2 {
+			continue
+		}
+		// 新笔定义 第2条 Lesson 81 答疑部分
+		// TODO i变量被改写，无法实现新笔定义
+		if t.i-typing.i < 4 {
+			continue
+		}
+
+		// Lesson 77
+		if t.Type == TopTyping && t.High <= typing.High {
+			continue
+		}
+
+		if t.Type == BottomTyping && t.High >= typing.High {
+			continue
+		}
+		// check typing end
+
+		typing.end = t.end
 		typing.ETime = t.ETime
 		if typing.Type == TopTyping {
 			typing.Low = t.Low
@@ -416,7 +500,6 @@ func (p *typing_parser) LinkTyping() {
 		}
 		p.Line = append(p.Line, typing)
 		typing = t
-		typing.begin = i
-		typing.i = i
+		typing.begin = t.begin
 	}
 }

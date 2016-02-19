@@ -1,11 +1,12 @@
 Lesson 77 Study Case 1, Top should have a part higher then Bottom
 
+   ^
    |
 | ||
-||||
+||||  ^
 ||||  |
 |||| |||
 ||| ||||
  |  || |
  |  |
- .
+ .  .

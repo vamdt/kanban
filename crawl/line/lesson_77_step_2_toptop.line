@@ -1,7 +1,8 @@
 Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then the second Top
 
-     ^
-     |   ^
+         L
+         ^
+     ^   |
      |   |
      ||  ||
     ||| |||||
@@ -11,4 +12,4 @@ Lesson 77 划分笔的步骤二, case TopTop the first Top should not lower then
  ||| | |        ||||||
 |||  | |         |
 ||     .         .
-|
+|                l

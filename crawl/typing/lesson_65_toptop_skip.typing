@@ -2,9 +2,9 @@ Lesson 65 Fig 4, case TopTop, should skip the first Top
 
        ^
        |
-      |||
+   ^  |||
    | || |
   ||||
  || |
-||
+||  .
 |
