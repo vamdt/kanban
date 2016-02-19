@@ -6,7 +6,6 @@ type segment_parser struct {
 	typing_parser
 
 	break_index int
-	wait_3end   bool
 }
 
 func (p *segment_parser) need_sure() bool {
@@ -23,7 +22,6 @@ func (p *segment_parser) add_typing(typing Typing, case1 bool) {
 	typing.Case1 = case1
 
 	p.Data = append(p.Data, typing)
-	p.wait_3end = true
 	glog.V(SegmentD).Infof("new segment typing [%d] case1[%t] %+v", l, case1, typing)
 }
 
@@ -207,51 +205,6 @@ func need_skip_line(prev *typing_parser_node, a *Tdata) bool {
 	return false
 }
 
-func (p *Tdatas) need_wait_3end(i int, a *Tdata, line []Typing) (bool, int) {
-	ltp := len(p.Segment.tp)
-	if ltp < 3 || !p.Segment.wait_3end {
-		return false, i
-	}
-	prev := &p.Segment.tp[ltp-1]
-	pprev := &p.Segment.tp[ltp-2]
-	if Contain(prev.d.HL, a.HL) {
-		if prev.t.Type == UpTyping {
-			if pprev.d.High < a.High {
-				a = DownContainMerge(&prev.d, a)
-				if prev.d.Low != a.Low {
-					prev.t.i = i
-				}
-				prev.d = *a
-				prev.t.end = i
-				prev.t.ETime = line[i].ETime
-				prev.t.assertETimeMatchEndLine(line, "need_wait_3end")
-				return true, i
-			}
-		} else if prev.t.Type == DownTyping {
-			if pprev.d.Low > a.Low {
-				a = UpContainMerge(&prev.d, a)
-				if prev.d.High != a.High {
-					prev.t.i = i
-				}
-				prev.d = *a
-				prev.t.end = i
-				prev.t.ETime = line[i].ETime
-				prev.t.assertETimeMatchEndLine(line, "need_wait_3end")
-				return true, i
-			}
-		}
-	}
-	p.Segment.reset()
-
-	i = pprev.t.end + 1
-	i = 1 + pprev.t.assertETimeMatchEndLine(line, "need_wait_3end")
-	p.Segment.new_node(i, &p.Typing, false)
-
-	i = prev.t.end - 1
-	p.Segment.wait_3end = false
-	return false, i
-}
-
 func isLineUp(line []Typing, length, begin int) bool {
 	i, l := begin, length
 	if i+2 < l && line[i+2].High > line[i].High && line[i+2].Low > line[i].Low {
@@ -339,11 +292,6 @@ func (p *Tdatas) ParseSegment() bool {
 			p.Segment.reset()
 			continue
 		}
-
-		//if ok, j := p.need_wait_3end(i, a, p.Typing.Line); ok {
-		//i = j
-		//continue
-		//}
 
 		if Contain(prev.d.HL, a.HL) {
 			if !p.Segment.need_sure() {
@@ -458,4 +406,46 @@ func (p *segment_parser) make_start_with(lines []Typing, i int) {
 		t.Type = TopTyping
 	}
 	p.add_typing(t, true)
+}
+
+// Lesson 65, 77
+func (p *segment_parser) LinkTyping() {
+	p.drop_last_5_line()
+
+	start := 0
+	if l := len(p.Line); l > 0 {
+		start = p.Line[l-1].end
+	}
+
+	end := len(p.Data)
+	typing := Typing{}
+	for i := start; i < end; i++ {
+		t := p.Data[i]
+		if typing.Type == UnknowTyping {
+			typing = t
+			typing.begin = i
+			typing.i = i
+			continue
+		}
+
+		if typing.Type == t.Type {
+			continue
+		}
+
+		typing.end = i
+		typing.ETime = t.ETime
+		if typing.Type == TopTyping {
+			typing.Low = t.Low
+			typing.Type = DownTyping
+		} else if typing.Type == BottomTyping {
+			typing.High = t.High
+			typing.Type = UpTyping
+		} else {
+			glog.Fatalf("%s typing.Type=%d should be %d or %d", p.tag, typing.Type, TopTyping, BottomTyping)
+		}
+		p.Line = append(p.Line, typing)
+		typing = t
+		typing.begin = i
+		typing.i = i
+	}
 }
