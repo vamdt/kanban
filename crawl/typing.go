@@ -180,35 +180,6 @@ func (p *typing_parser) parse_top_bottom() bool {
 	typing.e3 = p.tp[len(p.tp)-1].t.end
 	p.Data = append(p.Data, typing)
 	return true
-
-	if len(p.Data) > 0 {
-		prev := p.Data[len(p.Data)-1]
-		// 新笔定义 第2条 Lesson 81 答疑部分
-		if typing.i-prev.i < 4 {
-			return false
-		}
-
-		if typing.Type != prev.Type {
-			// Lesson 77
-			if typing.Type == TopTyping && typing.High <= prev.High {
-				return false
-			}
-
-			if typing.Type == BottomTyping && typing.High >= prev.High {
-				return false
-			}
-		}
-
-		if typing.Type == prev.Type {
-			if pos, ok := TypingSlice(p.Data).MergeTyping(typing); ok {
-				if pos < len(p.Data)-1 {
-					p.Data = p.Data[:pos+1]
-				}
-				return true
-			}
-		}
-	}
-	return true
 }
 
 func (p *Tdatas) findChanTypingStart() int {
