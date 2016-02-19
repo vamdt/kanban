@@ -222,6 +222,7 @@ func TestMinute30end(t *testing.T) {
 type desc_text_pair struct {
 	Desc string
 	Text string
+	File string
 }
 
 func load_test_desc_text_files(pattern string) []desc_text_pair {
@@ -245,6 +246,7 @@ func load_test_desc_text_files(pattern string) []desc_text_pair {
 			continue
 		}
 		t := desc_text_pair{Desc: string(infos[0]), Text: string(infos[1])}
+		t.File = f
 		sets = append(sets, t)
 	}
 

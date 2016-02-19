@@ -375,7 +375,7 @@ func TestParseTyping(t *testing.T) {
 		td.ParseTyping()
 		if !test_is_typing_equal(t, exp.Typing.Data, td.Typing.Data) {
 			t.Error(
-				"\nExample", i,
+				"\nExample", i, d.File,
 				"\nFor", d.Desc,
 				"\nText", "\n"+d.Text,
 				"\nexpected", exp.Typing,
@@ -402,7 +402,7 @@ func TestLinkTyping(t *testing.T) {
 		td.Typing.LinkTyping()
 		if !test_is_typing_equal(t, exp.Typing.Line, td.Typing.Line) {
 			t.Error(
-				"\nExample", i,
+				"\nExample", i, d.File,
 				"\nFor", d.Desc,
 				"\nText", "\n"+d.Text,
 				"\nexpected", exp.Typing.Line,
