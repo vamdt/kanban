@@ -39,10 +39,10 @@ type Typing struct {
 	e3    int
 }
 
-var old_define bool = false
+var strict_line bool = true
 
 func init() {
-	flag.BoolVar(&old_define, "old_line_define", false, "link typing with old define")
+	flag.BoolVar(&strict_line, "strict_line", true, "link typing with strict rule")
 }
 
 type TypingSlice []Typing
@@ -436,11 +436,10 @@ func (p *typing_parser) LinkTyping() {
 		}
 
 		// 旧笔定义 有一个独立k线
-		if old_define && t.b1-typing.e3 < 2 {
+		if strict_line && t.b1-typing.e3 < 2 {
 			continue
 		}
 		// 新笔定义 第2条 Lesson 81 答疑部分
-		// TODO i变量被改写，无法实现新笔定义
 		if t.i-typing.i < 4 {
 			continue
 		}
