@@ -160,9 +160,9 @@ func (p *typing_parser) parse_top_bottom() bool {
 		return false
 	}
 	typing := p.tp[len(p.tp)-2].t
-	a := &p.tp[len(p.tp)-3].d
-	b := &p.tp[len(p.tp)-2].d
-	c := &p.tp[len(p.tp)-1].d
+	a := &p.tp[len(p.tp)-3].t
+	b := &p.tp[len(p.tp)-2].t
+	c := &p.tp[len(p.tp)-1].t
 	if IsTopTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.High
 		typing.Type = TopTyping
@@ -173,9 +173,6 @@ func (p *typing_parser) parse_top_bottom() bool {
 		return false
 	}
 
-	typing.High = b.High
-	typing.Low = b.Low
-	typing.Time = b.Time
 	typing.b1 = p.tp[len(p.tp)-3].t.begin
 	typing.e3 = p.tp[len(p.tp)-1].t.end
 	p.Data = append(p.Data, typing)
@@ -243,12 +240,13 @@ func (p *Tdatas) ReadContainedTdata(base HL, i int) (typing_parser_node, bool) {
 		return n, false
 	}
 
-	n.d = p.Data[i]
+	a := p.Data[i]
 	n.t.begin = i
 	n.t.i = i
 	n.t.end = i
-	n.t.HL = n.d.HL
-	n.t.ETime = n.d.Time
+	n.t.Time = a.Time
+	n.t.HL = a.HL
+	n.t.ETime = a.Time
 
 	for i = i + 1; i < l; i++ {
 		a := p.Data[i]
@@ -271,7 +269,6 @@ func (p *Tdatas) ReadContainedTdata(base HL, i int) (typing_parser_node, bool) {
 				n.t.Time = a.Time
 			}
 		}
-		n.d = a
 		n.t.HL = a.HL
 	}
 	return n, true
