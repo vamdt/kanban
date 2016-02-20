@@ -51,7 +51,7 @@ class KLineCandle
         .transition()
         .attr("x", (d, i) -> x(i) - candleWidth / 2)
         .attr("y", (d, i) -> y(Math.max(d.open, d.close)))
-        .attr("height", (d, i) -> Math.max(1, Math.abs(y(d.open) - y(d.close))))
+        .attr("height", (d, i) -> Math.max(0.5, Math.abs(y(d.open) - y(d.close))))
         .attr("stroke", kColor)
         .attr("fill", kColor)
 
@@ -69,10 +69,10 @@ class KLineCandle
     line
       .transition()
       .style("stroke", kColor)
-      .attr("x1", (d, i) -> x(i))
+      .attr("x1", (d, i) -> x(i) - (if d.Low==d.High then candleWidth / 2 else 0))
       .attr("y1", (d, i) -> y(d.High))
-      .attr("x2", (d, i) -> x(i))
-      .attr("y2", (d, i) -> y(d.Low - Math.max(1, Math.min(d.High - d.Low, 0))))
+      .attr("x2", (d, i) -> x(i) + (if d.Low==d.High then candleWidth / 2 else 0))
+      .attr("y2", (d, i) -> y(d.Low))
 
     opacity = @root.param 'opacity'
     if opacity
