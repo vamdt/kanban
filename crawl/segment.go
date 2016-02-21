@@ -165,27 +165,24 @@ func (p *segment_parser) handle_special_case1(i int, a HL) bool {
 	return case1_seg_ok
 }
 
-func merge_contain_node(prev *Typing, a Typing, i int, line *Typing) {
+func merge_contain_node(prev *Typing, a Typing, i int) {
+	glog.V(SegmentD).Infof("merge prev %+v with line[%d] %+v", prev, i, a)
+	newPos := false
 	if prev.Type == UpTyping {
-		a.HL = DownContainMergeHL(prev.HL, a.HL)
-		if prev.Low != a.Low {
-			prev.i = i
-			prev.Time = a.Time
-		}
+		prev.HL, newPos = DownContainMergeHL(prev.HL, a.HL)
 	} else {
 		if prev.Type != DownTyping {
 			glog.Fatalln("prev should be a DownTyping line %+v", prev)
 		}
-		a.HL = UpContainMergeHL(prev.HL, a.HL)
-		if prev.High != a.High {
-			prev.i = i
-			prev.Time = a.Time
-		}
+		prev.HL, newPos = UpContainMergeHL(prev.HL, a.HL)
 	}
-	glog.V(SegmentD).Infof("merge prev t %+v with line[%d] %+v", prev, i, line)
-	prev.HL = a.HL
+
+	if newPos {
+		prev.i = i
+		prev.Time = a.Time
+	}
 	prev.end = i
-	prev.ETime = line.ETime
+	prev.ETime = a.ETime
 }
 
 func need_skip_line(prev *Typing, a HL) bool {
@@ -312,7 +309,7 @@ func (p *Tdatas) ParseSegment() bool {
 				}
 			}
 
-			merge_contain_node(prev, a, i, &p.Typing.Line[i])
+			merge_contain_node(prev, a, i)
 			prev.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment Contain")
 			continue
 		} else {

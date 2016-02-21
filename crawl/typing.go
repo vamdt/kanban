@@ -252,19 +252,20 @@ func (p *Tdatas) ReadContainedTdata(base HL, i int) (Typing, bool) {
 		n.end = i
 		n.ETime = a.Time
 		if IsUpTyping(base, n.HL) {
-			a.HL = UpContainMergeHL(n.HL, a.HL)
-			if n.High < a.High {
+			nHL, newPos := UpContainMergeHL(n.HL, a.HL)
+			n.HL = nHL
+			if newPos {
 				n.i = i
 				n.Time = a.Time
 			}
 		} else {
-			a.HL = DownContainMergeHL(n.HL, a.HL)
-			if n.Low > a.Low {
+			nHL, newPos := DownContainMergeHL(n.HL, a.HL)
+			n.HL = nHL
+			if newPos {
 				n.i = i
 				n.Time = a.Time
 			}
 		}
-		n.HL = a.HL
 	}
 	return n, true
 }
@@ -335,24 +336,28 @@ func Contain(a, b HL) bool {
 	return a.High == b.High || a.Low == b.Low || (a.High > b.High && a.Low < b.Low) || (a.High < b.High && a.Low > b.Low)
 }
 
-func DownContainMergeHL(a, b HL) HL {
+func DownContainMergeHL(a, b HL) (HL, bool) {
+	change_pos := false
 	if b.Low < a.Low {
 		a.Low = b.Low
+		change_pos = true
 	}
 	if b.High < a.High {
 		a.High = b.High
 	}
-	return a
+	return a, change_pos
 }
 
-func UpContainMergeHL(a, b HL) HL {
+func UpContainMergeHL(a, b HL) (HL, bool) {
+	change_pos := false
 	if b.High > a.High {
 		a.High = b.High
+		change_pos = true
 	}
 	if b.Low > a.Low {
 		a.Low = b.Low
 	}
-	return a
+	return a, change_pos
 }
 
 // Lesson 65, 77
