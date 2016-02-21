@@ -355,30 +355,6 @@ func UpContainMergeHL(a, b HL) HL {
 	return a
 }
 
-func DownContainMerge(a, b *Tdata) *Tdata {
-	t := *a
-	if b.Low < a.Low {
-		t.Low = b.Low
-		t.Time = b.Time
-	}
-	if b.High < a.High {
-		t.High = b.High
-	}
-	return &t
-}
-
-func UpContainMerge(a, b *Tdata) *Tdata {
-	t := *a
-	if b.High > a.High {
-		t.High = b.High
-		t.Time = b.Time
-	}
-	if b.Low > a.Low {
-		t.Low = b.Low
-	}
-	return &t
-}
-
 // Lesson 65, 77
 func (p *typing_parser) LinkTyping() {
 	p.drop_last_5_line()
