@@ -103,15 +103,10 @@ func (p TypingSlice) SearchByETime(t time.Time) (int, bool) {
 	return i, false
 }
 
-type typing_parser_node struct {
-	d Tdata
-	t Typing
-}
-
 type typing_parser struct {
 	Data []Typing
 	Line []Typing
-	tp   []typing_parser_node
+	tp   []Typing
 	tag  string
 }
 
@@ -142,7 +137,7 @@ func (p *typing_parser) drop_last_5_line() {
 }
 
 func (p *typing_parser) parser_reset() {
-	p.tp = []typing_parser_node{}
+	p.tp = []Typing{}
 }
 
 func (p *typing_parser) clean() {
@@ -151,7 +146,7 @@ func (p *typing_parser) clean() {
 	}
 }
 
-func (p *typing_parser) new_node(t typing_parser_node) {
+func (p *typing_parser) new_node(t Typing) {
 	p.tp = append(p.tp, t)
 }
 
@@ -159,22 +154,22 @@ func (p *typing_parser) parse_top_bottom() bool {
 	if len(p.tp) < 3 {
 		return false
 	}
-	typing := p.tp[len(p.tp)-2].t
-	a := &p.tp[len(p.tp)-3].t
-	b := &p.tp[len(p.tp)-2].t
-	c := &p.tp[len(p.tp)-1].t
-	if IsTopTyping(a.HL, b.HL, c.HL) {
+	typing := p.tp[len(p.tp)-2]
+	a := p.tp[len(p.tp)-3].HL
+	b := p.tp[len(p.tp)-2].HL
+	c := p.tp[len(p.tp)-1].HL
+	if IsTopTyping(a, b, c) {
 		typing.Price = b.High
 		typing.Type = TopTyping
-	} else if IsBottomTyping(a.HL, b.HL, c.HL) {
+	} else if IsBottomTyping(a, b, c) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
 	} else {
 		return false
 	}
 
-	typing.b1 = p.tp[len(p.tp)-3].t.begin
-	typing.e3 = p.tp[len(p.tp)-1].t.end
+	typing.b1 = p.tp[len(p.tp)-3].begin
+	typing.e3 = p.tp[len(p.tp)-1].end
 	p.Data = append(p.Data, typing)
 	return true
 }
@@ -233,43 +228,43 @@ func (p *Typing) assertETimeMatchEndLine(data TypingSlice, note string) int {
 	return i
 }
 
-func (p *Tdatas) ReadContainedTdata(base HL, i int) (typing_parser_node, bool) {
+func (p *Tdatas) ReadContainedTdata(base HL, i int) (Typing, bool) {
 	l := len(p.Data)
-	n := typing_parser_node{}
+	n := Typing{}
 	if i >= l {
 		return n, false
 	}
 
 	a := p.Data[i]
-	n.t.begin = i
-	n.t.i = i
-	n.t.end = i
-	n.t.Time = a.Time
-	n.t.HL = a.HL
-	n.t.ETime = a.Time
+	n.begin = i
+	n.i = i
+	n.end = i
+	n.HL = a.HL
+	n.Time = a.Time
+	n.ETime = a.Time
 
 	for i = i + 1; i < l; i++ {
 		a := p.Data[i]
-		if !Contain(n.t.HL, a.HL) {
+		if !Contain(n.HL, a.HL) {
 			break
 		}
 
-		n.t.end = i
-		n.t.ETime = a.Time
-		if IsUpTyping(base, n.t.HL) {
-			a.HL = UpContainMergeHL(n.t.HL, a.HL)
-			if n.t.High < a.High {
-				n.t.i = i
-				n.t.Time = a.Time
+		n.end = i
+		n.ETime = a.Time
+		if IsUpTyping(base, n.HL) {
+			a.HL = UpContainMergeHL(n.HL, a.HL)
+			if n.High < a.High {
+				n.i = i
+				n.Time = a.Time
 			}
 		} else {
-			a.HL = DownContainMergeHL(n.t.HL, a.HL)
-			if n.t.Low > a.Low {
-				n.t.i = i
-				n.t.Time = a.Time
+			a.HL = DownContainMergeHL(n.HL, a.HL)
+			if n.Low > a.Low {
+				n.i = i
+				n.Time = a.Time
 			}
 		}
-		n.t.HL = a.HL
+		n.HL = a.HL
 	}
 	return n, true
 }
@@ -307,10 +302,10 @@ func (p *Tdatas) ParseTyping() {
 		if !ok {
 			break
 		}
-		i = t.t.end
+		i = t.end
 		//t.assertETimeMatchEnd(p.Data, "ParseTyping Contain")
 		p.Typing.new_node(t)
-		base = t.t.HL
+		base = t.HL
 		p.Typing.parse_top_bottom()
 		p.Typing.clean()
 	}

@@ -62,24 +62,23 @@ func (p *segment_parser) clean_fail_unsure_typing() int {
 
 func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	line := ptyping.Line
-	tp := typing_parser_node{}
-	tp.t = line[i]
-	tp.t.begin = i
-	tp.t.i = i
-	tp.t.end = i
-	tp.t.assertETimeMatchEndLine(line, "new_node")
+	tp := line[i]
+	tp.begin = i
+	tp.i = i
+	tp.end = i
+	tp.assertETimeMatchEndLine(line, "new_node")
 
 	if l := len(p.tp); l > 0 {
-		p.tp[l-1].t.end = i - 2
-		p.tp[l-1].t.ETime = line[i-2].ETime
-		p.tp[l-1].t.assertETimeMatchEndLine(line, "new node prev")
+		p.tp[l-1].end = i - 2
+		p.tp[l-1].ETime = line[i-2].ETime
+		p.tp[l-1].assertETimeMatchEndLine(line, "new node prev")
 	} else if l = len(p.Data); l > 0 && p.Data[l-1].end == i-1 {
 		if t := p.Data[l-1]; t.begin < t.end {
-			switch tp.t.Type {
+			switch tp.Type {
 			case UpTyping:
-				tp.t.Low = minInt(t.Low, tp.t.High)
+				tp.Low = minInt(t.Low, tp.High)
 			case DownTyping:
-				tp.t.High = maxInt(t.High, tp.t.Low)
+				tp.High = maxInt(t.High, tp.Low)
 			}
 		}
 	}
@@ -94,7 +93,7 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 }
 
 func (p *segment_parser) reset() {
-	p.tp = []typing_parser_node{}
+	p.tp = []Typing{}
 	p.break_index = -1
 }
 
@@ -115,13 +114,13 @@ func (p *segment_parser) isLineBreak(lines []Typing, i int) bool {
 	}
 
 	line, nline := lines[i], lines[i+1]
-	if p.tp[0].t.Type == UpTyping {
-		if line.High > p.tp[ltp-1].t.Low {
-			return line.Low < p.tp[ltp-1].t.Low && line.Low < nline.Low
+	if p.tp[0].Type == UpTyping {
+		if line.High > p.tp[ltp-1].Low {
+			return line.Low < p.tp[ltp-1].Low && line.Low < nline.Low
 		}
-	} else if p.tp[0].t.Type == DownTyping {
-		if line.Low < p.tp[ltp-1].t.High {
-			return line.High > nline.High && line.High > p.tp[ltp-1].t.High
+	} else if p.tp[0].Type == DownTyping {
+		if line.Low < p.tp[ltp-1].High {
+			return line.High > nline.High && line.High > p.tp[ltp-1].High
 		}
 	}
 	return false
@@ -141,18 +140,18 @@ func (p *segment_parser) handle_special_case1(i int, a HL) bool {
 	}
 	pprev := &p.tp[ltp-2]
 	prev := &p.tp[ltp-1]
-	if !Contain(pprev.t.HL, prev.t.HL) {
+	if !Contain(pprev.HL, prev.HL) {
 		return false
 	}
 
-	typing := prev.t
+	typing := *prev
 	case1_seg_ok := false
-	if prev.t.Type == DownTyping && prev.t.Low > a.Low && prev.t.High > a.High {
+	if prev.Type == DownTyping && prev.Low > a.Low && prev.High > a.High {
 		// TopTyping yes
 		case1_seg_ok = true
 		typing.Type = TopTyping
 		typing.Price = typing.High
-	} else if prev.t.Type == UpTyping && prev.t.High < a.High && prev.t.Low < a.Low {
+	} else if prev.Type == UpTyping && prev.High < a.High && prev.Low < a.Low {
 		// BottomTyping yes
 		case1_seg_ok = true
 		typing.Type = BottomTyping
@@ -166,34 +165,34 @@ func (p *segment_parser) handle_special_case1(i int, a HL) bool {
 	return case1_seg_ok
 }
 
-func merge_contain_node(prev *typing_parser_node, a Typing, i int, line *Typing) {
-	if prev.t.Type == UpTyping {
-		a.HL = DownContainMergeHL(prev.t.HL, a.HL)
-		if prev.t.Low != a.Low {
-			prev.t.i = i
-			prev.t.Time = a.Time
+func merge_contain_node(prev *Typing, a Typing, i int, line *Typing) {
+	if prev.Type == UpTyping {
+		a.HL = DownContainMergeHL(prev.HL, a.HL)
+		if prev.Low != a.Low {
+			prev.i = i
+			prev.Time = a.Time
 		}
 	} else {
-		if prev.t.Type != DownTyping {
+		if prev.Type != DownTyping {
 			glog.Fatalln("prev should be a DownTyping line %+v", prev)
 		}
-		a.HL = UpContainMergeHL(prev.t.HL, a.HL)
-		if prev.t.High != a.High {
-			prev.t.i = i
-			prev.t.Time = a.Time
+		a.HL = UpContainMergeHL(prev.HL, a.HL)
+		if prev.High != a.High {
+			prev.i = i
+			prev.Time = a.Time
 		}
 	}
-	glog.V(SegmentD).Infof("merge prev t %+v with line[%d] %+v", prev.t, i, line)
-	prev.t.HL = a.HL
-	prev.t.end = i
-	prev.t.ETime = line.ETime
+	glog.V(SegmentD).Infof("merge prev t %+v with line[%d] %+v", prev, i, line)
+	prev.HL = a.HL
+	prev.end = i
+	prev.ETime = line.ETime
 }
 
-func need_skip_line(prev *typing_parser_node, a HL) bool {
-	if prev.t.Type == DownTyping && a.High < prev.t.High && a.Low < prev.t.Low {
+func need_skip_line(prev *Typing, a HL) bool {
+	if prev.Type == DownTyping && a.High < prev.High && a.Low < prev.Low {
 		return true
 	}
-	if prev.t.Type == UpTyping && a.Low > prev.t.Low && a.High > prev.t.High {
+	if prev.Type == UpTyping && a.Low > prev.Low && a.High > prev.High {
 		return true
 	}
 	return false
@@ -284,19 +283,19 @@ func (p *Tdatas) ParseSegment() bool {
 			continue
 		}
 
-		if Contain(prev.t.HL, a.HL) {
+		if Contain(prev.HL, a.HL) {
 			if !p.Segment.need_sure() {
 				if p.Segment.break_index == ltp-1 {
 					// case   |  or |
 					//       ||     |||
 					//      |||      ||
 					//      |         |
-					if prev.t.Type == DownTyping && prev.t.High < a.High {
+					if prev.Type == DownTyping && prev.High < a.High {
 						isBreak := p.Segment.isLineBreak(p.Typing.Line, i)
 						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
 					}
-					if prev.t.Type == UpTyping && prev.t.Low > a.Low {
+					if prev.Type == UpTyping && prev.Low > a.Low {
 						isBreak := p.Segment.isLineBreak(p.Typing.Line, i)
 						p.Segment.new_node(i, &p.Typing, isBreak)
 						continue
@@ -314,7 +313,7 @@ func (p *Tdatas) ParseSegment() bool {
 			}
 
 			merge_contain_node(prev, a, i, &p.Typing.Line[i])
-			prev.t.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment Contain")
+			prev.assertETimeMatchEndLine(p.Typing.Line, "ParseSegment Contain")
 			continue
 		} else {
 			if ltp > 1 {
@@ -340,7 +339,7 @@ func (p *Tdatas) ParseSegment() bool {
 		p.Segment.clean()
 		if p.Segment.parse_top_bottom() {
 			hasnew = true
-			i = p.Segment.tp[len(p.Segment.tp)-2].t.end - 1
+			i = p.Segment.tp[len(p.Segment.tp)-2].end - 1
 			p.Segment.reset()
 		}
 	}
@@ -355,10 +354,10 @@ func (p *segment_parser) parse_top_bottom() bool {
 	if len(p.tp) < 3 {
 		return false
 	}
-	typing := p.tp[len(p.tp)-2].t
-	a := &p.tp[len(p.tp)-3].t
-	b := &p.tp[len(p.tp)-2].t
-	c := &p.tp[len(p.tp)-1].t
+	typing := p.tp[len(p.tp)-2]
+	a := &p.tp[len(p.tp)-3]
+	b := &p.tp[len(p.tp)-2]
+	c := &p.tp[len(p.tp)-1]
 	if typing.Type == UpTyping && IsBottomTyping(a.HL, b.HL, c.HL) {
 		typing.Price = b.Low
 		typing.Type = BottomTyping
