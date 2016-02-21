@@ -1,7 +1,10 @@
 package crawl
 
 import (
+	"bytes"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/golang/glog"
 )
@@ -94,6 +97,69 @@ func UpdateCate(storestr string) {
 	store.SaveCategories(tc)
 }
 
+func (p *Stocks) Days_update_real() {
+	h, m, _ := time.Now().UTC().Clock()
+	if h < 1 || (h == 1 && m < 30) {
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	stocks := p.Find_need_update_tick_ids()
+	l := len(stocks)
+	if l < 1 {
+		return
+	}
+
+	for i := 0; i < l; {
+		var b bytes.Buffer
+		var pstocks PStockSlice
+		step := 50
+		if i+step < l {
+			pstocks = stocks[i : i+step]
+		} else {
+			pstocks = stocks[i:l]
+		}
+		for j := 0; j < step && i < l; i, j = i+1, j+1 {
+			if b.Len() > 0 {
+				b.WriteString(",")
+			}
+			b.WriteString(stocks[i].Id)
+		}
+		if b.Len() < 1 {
+			continue
+		}
+
+		wg.Add(1)
+		go func(ids string, pstocks PStockSlice) {
+			defer wg.Done()
+			body := Tick_download_real_from_sina(ids)
+			if body == nil {
+				return
+			}
+			for _, line := range bytes.Split(body, []byte("\";")) {
+				line = bytes.TrimSpace(line)
+				info := bytes.Split(line, []byte("=\""))
+				if len(info) != 2 {
+					continue
+				}
+				prefix := "var hq_str_"
+				if !bytes.HasPrefix(info[0], []byte(prefix)) {
+					continue
+				}
+				id := info[0][len(prefix):]
+				if idx, ok := pstocks.Search(string(id)); ok {
+					pstocks[idx].day_get_real(info[1])
+				}
+			}
+		}(b.String(), pstocks)
+
+	}
+	glog.V(LogV).Infoln("wait Days_update_real")
+	wg.Wait()
+	glog.V(LogV).Infoln("Days_update_real done")
+}
+
 func UpdateFactor(storestr string) {
 	store := getStore(storestr)
 	data, err := store.LoadCategories()
@@ -132,13 +198,28 @@ func UpdateFactor(storestr string) {
 		go func(s *Stock, i int) {
 			defer wg.Done()
 			s.Days_update(store)
-			data[i].Factor = s.Days.Factor()
+			s.loaded = int32(i) + 2
 		}(s, i)
 	}
 
 	glog.Infoln("wait all update done")
 	wg.Wait()
 	glog.Infoln("all update done")
+
+	stocks.Days_update_real()
+
+	stocks.rwmutex.RLock()
+	for i, l := 0, len(stocks.stocks); i < l; i++ {
+		if atomic.LoadInt32(&stocks.stocks[i].loaded) < 2 {
+			continue
+		}
+		s := stocks.stocks[i]
+		j := int(s.loaded) - 2
+		if j < len(data) {
+			data[j].Factor = s.Days.Factor()
+		}
+	}
+	stocks.rwmutex.RUnlock()
 
 	factor := make(map[string]int)
 	for _, info := range data {

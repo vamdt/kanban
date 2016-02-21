@@ -610,3 +610,17 @@ func (p *Stock) tick_get_real(line []byte) bool {
 	}
 	return false
 }
+
+func (p *Stock) day_get_real(line []byte) {
+	infos := bytes.Split(line, []byte(","))
+	if len(infos) < 33 {
+		log.Println("sina hq api, res format changed")
+		return
+	}
+
+	td := Tdata{}
+	// timestr, open, high, cloze, low, volume
+	td.FromBytes(infos[30], infos[1], infos[4], infos[3], infos[5], infos[8])
+	td.Volume = td.Volume / 100
+	p.Days.Add(td)
+}
