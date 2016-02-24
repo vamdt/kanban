@@ -42,6 +42,18 @@ func ParseCent(s string) int {
 	return 100*m + c
 }
 
+func LatestTradeDay() time.Time {
+	t := time.Now().UTC()
+	h, m, _ := t.Clock()
+	if h < 1 || (h == 1 && m < 30) {
+		t = t.AddDate(0, 0, -1)
+	}
+	for !IsTradeDay(t) {
+		t = t.AddDate(0, 0, -1)
+	}
+	return t
+}
+
 func IsTradeDay(t time.Time) bool {
 	switch t.Weekday() {
 	case time.Sunday:
