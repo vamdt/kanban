@@ -366,7 +366,7 @@ func (p *typing_parser) LinkTyping() {
 
 	start := 0
 	if l := len(p.Line); l > 0 {
-		if i, ok := TypingSlice(p.Data).SearchByETime(p.Line[l-1].ETime); ok {
+		if i, ok := TypingSlice(p.Data).SearchByTime(p.Line[l-1].ETime); ok {
 			start = i
 		}
 	}
@@ -386,7 +386,7 @@ func (p *typing_parser) LinkTyping() {
 					if l := len(p.Line); l > 0 {
 						p.Line[l-1].High = t.High
 						p.Line[l-1].end = t.end
-						p.Line[l-1].ETime = t.ETime
+						p.Line[l-1].ETime = t.Time
 					}
 					typing = t
 					continue
@@ -396,7 +396,7 @@ func (p *typing_parser) LinkTyping() {
 					if l := len(p.Line); l > 0 {
 						p.Line[l-1].Low = t.Low
 						p.Line[l-1].end = t.end
-						p.Line[l-1].ETime = t.ETime
+						p.Line[l-1].ETime = t.Time
 					}
 					typing = t
 					continue
@@ -431,7 +431,7 @@ func (p *typing_parser) LinkTyping() {
 		// check typing end
 
 		typing.end = t.end
-		typing.ETime = t.ETime
+		typing.ETime = t.Time
 		if typing.Type == TopTyping {
 			typing.Low = t.Low
 			typing.Type = DownTyping

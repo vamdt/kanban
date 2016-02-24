@@ -420,7 +420,7 @@ func (p *segment_parser) LinkTyping() {
 		}
 
 		typing.end = i
-		typing.ETime = t.ETime
+		typing.ETime = t.Time
 		if typing.Type == TopTyping {
 			typing.Low = t.Low
 			typing.Type = DownTyping
