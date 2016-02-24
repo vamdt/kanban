@@ -377,6 +377,55 @@ class KLine
         dir:'auto'
       notification = new Notification(id, config)
 
+  draw_path: (dataset, id, style) ->
+    style = style || {}
+    style.fill = style.fill || 'none'
+    x = @_ui.x
+    y = @_ui.y
+    path = @_ui.svg.select("path##{id}")
+    if path.empty()
+      path = @_ui.svg.append("path")
+        .attr("id", id)
+    path
+      .style(style)
+      .data([dataset])
+
+    line = d3.svg.line()
+      .x((d) -> x d.i)
+      .y((d) -> y d.Price)
+
+    path.transition().attr("d", line)
+
+  draw_line: (dataset, clazz, style) ->
+    style = style || {}
+    style.strokeWidth = style.strokeWidth || '1'
+    x = @_ui.x
+    y = @_ui.y
+    line = @_ui.svg.selectAll("line.#{clazz}")
+      .data(dataset)
+
+    line
+      .enter()
+      .append("line")
+      .attr("class", clazz)
+      .style(style)
+
+    up = 4
+    down = 5
+    yy1 = (d) ->
+      y if d.Type == up then d.Low else d.High
+    yy2 = (d) ->
+      y if d.Type == down then d.Low else d.High
+    def_stroke = (d) -> if d.Type == up then color.up else color.down
+
+    line.exit().transition().remove()
+    line.transition()
+      .attr("x1", (d) -> x d.i)
+      .attr("y1", yy1)
+      .attr("x2", (d) -> x d.ei)
+      .attr("y2", yy2)
+      .style("stroke", style.stroke || def_stroke)
+
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
