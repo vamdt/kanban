@@ -98,7 +98,12 @@ func UpdateCate(storestr string) {
 }
 
 func (p *Stocks) Days_update_real() {
-	h, m, _ := time.Now().UTC().Clock()
+	now := time.Now().UTC()
+	if !IsTradeDay(now) {
+		return
+	}
+
+	h, m, _ := now.Clock()
 	if h < 1 || (h == 1 && m < 30) {
 		return
 	}

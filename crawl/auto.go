@@ -379,6 +379,9 @@ func (p *Stock) Days_update(store Store) int {
 	p.Days.Data, _ = store.LoadTDatas(c)
 	t := p.Days.latest_time()
 	now := time.Now().AddDate(0, 0, -1).UTC().Truncate(time.Hour * 24)
+	for !IsTradeDay(now) {
+		now = now.AddDate(0, 0, -1)
+	}
 	if t.Equal(now) || t.After(now) {
 		return 0
 	}
