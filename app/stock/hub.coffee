@@ -19,17 +19,16 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
-    need = off
+    skip = off
     for level,i in levels
       k = level.level
       d = level.name
       hubdata = off
-      if dataset[d]
-        hubdata = dataset[d].Hub.Data
-      if need
-        hubdata = off
+      if not skip
+        if dataset[d]
+          hubdata = dataset[d].Hub.Data
       @draw(k, hubdata, data)
-      need = on if k is ksel
+      skip = on if k is ksel
 
   draw: (k, data, kdata) ->
     x = @_ui.x
