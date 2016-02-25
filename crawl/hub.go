@@ -10,7 +10,36 @@ type hub_parser struct {
 // 判断盘整延伸结束是产生3买卖。
 // 判断趋势延伸结束是同级别走势回拉中枢--3买卖后扩展或者非标准趋势延伸9段成大中枢
 
+func (p *Tdatas) ParseHubSimple() {
+	line := p.Segment.Line
+	p.Hub.drop_last_5_data()
+	start := 0
+	if l := len(p.Hub.Data); l > 0 {
+		start = p.Hub.Data[l-1].end
+	}
+	glog.Infoln(p.tag, "for hub start", start)
+
+	for i, l := start, len(line); i+2 < l; i++ {
+		zg := ZG(line[i], line[i+1], line[i+2])
+		zd := ZD(line[i], line[i+1], line[i+2])
+		if zg-zd < p.min_hub_height {
+			continue
+		}
+		hub := line[i]
+		hub.High = zg
+		hub.Low = zd
+		hub.begin = i
+		hub.end = i + 2
+		hub.ETime = line[i+2].ETime
+		p.Hub.Data = append(p.Hub.Data, hub)
+		i += 2
+	}
+}
+
 func (p *Tdatas) ParseHub() {
+	p.ParseHubSimple()
+	return
+
 	line := p.Segment.Line
 	p.Hub.drop_last_5_data()
 	start := 0
