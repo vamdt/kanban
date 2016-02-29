@@ -30,7 +30,7 @@
               <li v-for="s in stocks" class="pure-menu-item">
                 <a v-link="{ path: '/s/'+s.sid+'/1' }"
                 @click.prevent="show_stock(s)"
-                class="pure-menu-link">{{s.name ? s.name : s.sid}}</a>
+                class="pure-menu-link">{{s.name}}/{{s.sid}}</a>
               </li>
             </ul>
         </li>
