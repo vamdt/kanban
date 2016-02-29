@@ -18,7 +18,6 @@
 </template>
 
 <script lang="coffee">
-d3 = require 'd3'
 module.exports =
   props:
     stocks:
@@ -27,14 +26,7 @@ module.exports =
   data: ->
     sugg: []
 
-  ready: ->
-    events = [
-      'sugg'
-      'unwatch'
-      'watch'
-    ]
-    for e in events
-      @$on e, 'do_' + e
+  mixins: [require './cmd']
 
   methods:
     show_stock: (to) ->
@@ -43,61 +35,6 @@ module.exports =
 
     cancle: ->
       @sugg = off
-
-    do_watch: (opt) ->
-      unless Array.isArray opt
-        opt = [opt]
-
-      num = 0
-      for o in opt
-        s = sid:o, name:o
-        i = -1
-        i = j for ss, j in @stocks when ss.sid == o
-        if i > -1
-          s.name = ss.name
-          @stocks.splice(i, 1)
-        @stocks.unshift(s)
-        num++
-      if num
-        localStorage.setItem('stocks', JSON.stringify(@stocks))
-
-    do_unwatch: (opt) ->
-      unless Array.isArray opt
-        opt = [opt]
-
-      num = 0
-      for o in opt
-        i = -1
-        i = j for ss, j in @stocks when ss.sid == o
-        if i > -1
-          @stocks.splice(i, 1)
-          num++
-      if num
-        localStorage.setItem('stocks', JSON.stringify(@stocks))
-
-    do_sugg: (sid) ->
-      if sid.length < 1
-        return
-      if Array.isArray sid
-        sid = sid[0]
-      for s in @stocks
-        if s.sid == sid
-          @show_stock(s)
-          return
-
-      d3.text '/search?s='+sid, (error, data) =>
-        if error
-          console.log error
-          return
-        info = data.split(';')
-        info.forEach (v, i) ->
-          v = v.split(',')
-          info[i] =
-            sid: v[3]
-            name: v[4]
-        if info.length is 1
-          return @show_stock(info[0])
-        @sugg = info
 
     run: ->
       cmd = @cmd
@@ -109,5 +46,4 @@ module.exports =
       else
         cmd = opt.shift()
       @$emit cmd, opt
-
 </script>

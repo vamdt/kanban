@@ -19,6 +19,8 @@
 <script lang="coffee">
 require './kanpan'
 module.exports =
+  events:
+    'param_change': 'param_change'
   watch:
     'opt.k': (v) ->
       return unless v
@@ -32,4 +34,9 @@ module.exports =
         s: @$route.params.sid
         k: @$route.params.k
         v: +(new Date())
+  methods:
+    param_change: (opts) ->
+      for k,v of opts
+        @opt[k] = v
+      @opt.v = +(new Date())
 </script>
