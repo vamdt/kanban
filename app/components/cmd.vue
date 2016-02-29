@@ -1,6 +1,9 @@
 <template>
   <form class="pure-form" v-on:submit.prevent>
-    <input type="text" @keyup.enter.prevent="do_sugg" @keyup.esc="cancle_sugg" v-model="sid"
+    <input type="text"
+    @keyup.enter.prevent="run"
+    @keyup.esc="cancle"
+    v-model="cmd"
     placeholder="Search" class="pure-input-rounded"
     autocomplete="off" autocorrect="off" autocapitalize="off"
     spellcheck="false">
@@ -24,16 +27,55 @@ module.exports =
   data: ->
     sugg: []
 
+  events:
+    sugg: 'do_sugg'
+    unwatch: 'do_unwatch'
+    watch: 'do_watch'
+
   methods:
     show_stock: (to) ->
       @sugg = off
       @$dispatch 'show_stock', to
 
-    cancle_sugg: ->
+    cancle: ->
       @sugg = off
-    do_sugg: ->
-      sid = @sid
-      @sid = ''
+
+    do_watch: (opt) ->
+      unless Array.isArray opt
+        opt = [opt]
+
+      num = 0
+      for o in opt
+        s = sid:o, name:o
+        i = -1
+        i = j for ss, j in @stocks when ss.sid == o
+        if i > -1
+          s.name = ss.name
+          @stocks.splice(i, 1)
+        @stocks.unshift(s)
+        num++
+      if num
+        localStorage.setItem('stocks', JSON.stringify(@stocks))
+
+    do_unwatch: (opt) ->
+      unless Array.isArray opt
+        opt = [opt]
+
+      num = 0
+      for o in opt
+        i = -1
+        i = j for ss, j in @stocks when ss.sid == o
+        if i > -1
+          @stocks.splice(i, 1)
+          num++
+      if num
+        localStorage.setItem('stocks', JSON.stringify(@stocks))
+
+    do_sugg: (sid) ->
+      if sid.length < 1
+        return
+      if Array.isArray sid
+        sid = sid[0]
       for s in @stocks
         if s.sid == sid
           @show_stock(s)
@@ -52,5 +94,16 @@ module.exports =
         if info.length is 1
           return @show_stock(info[0])
         @sugg = info
+
+    run: ->
+      cmd = @cmd
+      @cmd = ''
+      opt = cmd.split ' '
+      return if opt.length < 1
+      if opt.length < 2
+        cmd = 'sugg'
+      else
+        cmd = opt.shift()
+      @$emit cmd, opt
 
 </script>
