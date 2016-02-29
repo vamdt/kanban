@@ -27,10 +27,14 @@ module.exports =
   data: ->
     sugg: []
 
-  events:
-    sugg: 'do_sugg'
-    unwatch: 'do_unwatch'
-    watch: 'do_watch'
+  ready: ->
+    events = [
+      'sugg'
+      'unwatch'
+      'watch'
+    ]
+    for e in events
+      @$on e, 'do_' + e
 
   methods:
     show_stock: (to) ->
