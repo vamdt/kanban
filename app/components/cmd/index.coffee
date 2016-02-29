@@ -3,8 +3,11 @@ cmds = [
   'unwatch'
   'watch'
   'show'
-  'begin'
-  'hub'
+]
+
+kanpan = [
+  "begin"
+  "hub"
 ]
 
 handlers = {}
@@ -18,3 +21,9 @@ module.exports =
       do (e, func) ->
         vm.$on e, (opt) ->
           func.apply vm, opt
+
+    for e in kanpan
+      do (e) ->
+        vm.$on e, (opt) ->
+          opt.unshift e
+          vm.$root.$broadcast('kline_cmd', opt)
