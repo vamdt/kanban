@@ -3,6 +3,8 @@ cmds = [
   'unwatch'
   'watch'
   'show'
+  'begin'
+  'hub'
 ]
 
 handlers = {}

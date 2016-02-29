@@ -15,7 +15,7 @@ Plugins = {}
 
 class KLine
   constructor: (@options) ->
-    @dispatch = d3.dispatch('resize', 'param', 'tip')
+    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd')
     @options = util.extend {}, @options, defaults
     @_data = []
     @_ui = {}
@@ -38,6 +38,9 @@ class KLine
       @_left = @_max_left
     else
       @_left = Math.min(@_max_left, Math.max(0, left))
+
+  cmd: ->
+    @dispatch.cmd.apply @, arguments
 
   data: (data) ->
     @_data = @_data || []

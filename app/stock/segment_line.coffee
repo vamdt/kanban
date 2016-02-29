@@ -9,7 +9,12 @@ class KLineSegmentLine
   init: ->
 
   update: (data, datasel, dataset) ->
-    dataset = KLine.filter datasel.Segment.Line, data
+    dname = 'Line'
+    handcraft = @root.param 'handcraft'
+    if handcraft and '1' != @root.param 'k'
+      dname = 'HCLine'
+
+    dataset = KLine.filter datasel.Segment[dname], data
     @root.draw_line(dataset, 'segment_line')
 
 KLine.register_plugin 'segment_line', KLineSegmentLine

@@ -1,4 +1,5 @@
 KLine = require './kline'
+require './cmd'
 require './candle'
 require './volume'
 require './macd'

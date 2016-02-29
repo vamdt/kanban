@@ -19,6 +19,10 @@ class KLineHub
       {level: 'month', name: 'months'}
     ]
 
+    dname = 'Data'
+    handcraft = @root.param 'handcraft'
+    if handcraft
+      dname = 'HCData'
     skip = off
     for level,i in levels
       k = level.level
@@ -26,7 +30,7 @@ class KLineHub
       hubdata = off
       if not skip
         if dataset[d]
-          hubdata = dataset[d].Hub.Data
+          hubdata = dataset[d].Hub[dname]
       @draw(k, hubdata, data)
       skip = on if k is ksel
 

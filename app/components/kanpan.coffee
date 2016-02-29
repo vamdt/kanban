@@ -5,6 +5,10 @@ config = require './config'
 Vue.directive 'kanpan',
   deep: true
   bind: ->
+    @$on 'kline_cmd', (opt) =>
+      return unless @kl
+      @kl.cmd.apply @kl, opt
+
     window.addEventListener 'resize', =>
       @kl.resize() if @kl
     window.addEventListener 'keyup', (e) =>
