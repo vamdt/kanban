@@ -5,6 +5,7 @@ module.exports = ->
     candle: 'nc'
     volume: 'nvolume'
     macd: 'nmacd'
+    typing: 'ntyping'
     handcraft: 'handcraft'
   args = {}
   v = off

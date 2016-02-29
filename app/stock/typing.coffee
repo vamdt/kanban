@@ -13,6 +13,8 @@ class KLineTyping
     y = @_ui.y
 
     tdata = datasel.Typing.Data
+    if @root.param 'ntyping'
+      tdata = off
     dataset = KLine.filter tdata, data
     dispatch = @root.dispatch
 
