@@ -14,7 +14,21 @@ class KLineSegmentLine
     if handcraft and '1' != @root.param 'k'
       dname = 'HCLine'
 
-    dataset = KLine.filter datasel.Segment[dname], data
+    line = datasel.Segment[dname]
+    first = 0
+    if datasel.date
+      for d,i in line
+        if d.date == datasel.date
+          first = i
+          break
+      i = first
+      num = 1
+      while i < line.length
+        line[i].no = num
+        i++
+        num++
+    dataset = KLine.filter line, data
     @root.draw_line(dataset, 'segment_line')
+    @root.draw_lineno(dataset, 'segment_line')
 
 KLine.register_plugin 'segment_line', KLineSegmentLine

@@ -9,7 +9,7 @@ cmds = [
 hd = {}
 class KLineCmd
   constructor: (@root) ->
-    @root.on 'cmd', => @cmd.apply @, arguments
+    @root.dispatch.on 'cmd', => @cmd.apply @, arguments
 
   init: ->
 
@@ -31,11 +31,11 @@ class KLineCmd
       {}
 
   begin: (sid, date) ->
-    date = d3.time.format("%Y-%m-%d %H:%M").parse(date)
+    date = d3.time.format("%Y-%m-%dT%H:%M").parse(date)
     if sid != @dataset.id
       console.log 'begin', sid, '!= dataset.id', @dataset.id
       return
-    hd[sid] = hd[sid] || @load(sid)
+    hd[sid] = hd[sid] || @load(sid) || {}
     data = hd[sid]
 
     levels = [
@@ -51,8 +51,10 @@ class KLineCmd
       data[level.name] = data[level.name] || {}
       hchub = data[level.name]
       hchub.Data = hchub.Data || []
-      hub = @dataset[level.name]
-      hub.begin = date
+      hchub.begin = date
+      dataset = @dataset[level.name]
+      dataset.begin = date
+      hub = dataset.Hub
       hub.HCData = hub.HCData || hchub.Data
 
   cmd: ->

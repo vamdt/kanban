@@ -429,6 +429,45 @@ class KLine
       .attr("y2", yy2)
       .style("stroke", style.stroke || def_stroke)
 
+  draw_lineno: (dataset, clazz, style) ->
+    style = style || {}
+    x = @_ui.x
+    y = @_ui.y
+
+    up = 4
+    down = 5
+    yy1 = (d) ->
+      y if d.Type == up then d.Low else d.High
+    yy2 = (d) ->
+      y if d.Type == down then d.Low else d.High
+    def_stroke = (d) -> if d.Type == up then color.up else color.down
+
+    data = []
+    if dataset.length > 0
+      d = dataset[0]
+      d = ei: d.i, Type: d.Type, Low: d.Low, High:d.High
+      if d.Type == up
+        d.Type = down
+      else
+        d.Type = up
+      data = [d]
+    dataset.forEach (d) -> data.push(d)
+    text = @_ui.svg.selectAll("text.#{clazz}")
+      .data(dataset)
+
+    text
+      .enter()
+      .append("text")
+      .attr("class", clazz)
+      .style(style)
+
+    text.exit().transition().remove()
+    text.transition()
+      .attr("x", (d) -> x d.ei)
+      .attr("y", yy2)
+      .text((d) -> d.no)
+      .style("stroke", style.stroke || def_stroke)
+
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
