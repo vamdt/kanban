@@ -4,6 +4,7 @@
     @keyup.enter.prevent="run"
     @keyup.esc="cancle"
     v-model="cmd"
+    id="cmd"
     placeholder="Search" class="pure-input-rounded"
     autocomplete="off" autocorrect="off" autocapitalize="off"
     spellcheck="false">
@@ -25,6 +26,17 @@ module.exports =
       twoWay: true
   data: ->
     sugg: []
+
+  ready: ->
+    window.addEventListener 'keyup', (e) =>
+      return if e.target.tagName == 'INPUT'
+      dofocus = ->
+        e.preventDefault()
+        document.getElementById('cmd').focus()
+      if e.keyCode == 80 and e.ctrlKey and e.shiftKey
+        return dofocus()
+      if e.keyCode == 186
+        return dofocus()
 
   mixins: [require './cmd']
 
