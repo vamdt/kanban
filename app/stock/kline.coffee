@@ -403,6 +403,7 @@ class KLine
     path.transition().attr("d", line)
 
   draw_line: (dataset, clazz, style) ->
+    dispatch = @dispatch
     style = style || {}
     style.strokeWidth = style.strokeWidth || '1'
     x = @_ui.x
@@ -414,6 +415,7 @@ class KLine
       .enter()
       .append("line")
       .attr("class", clazz)
+      .on("mouseover.tip", (d, i) -> dispatch.tip @, clazz, d, i)
       .style(style)
 
     up = 4

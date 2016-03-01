@@ -13,10 +13,43 @@ class KLineCmd
 
   init: ->
 
-  hub: (sid, cmd, start, remove) ->
-    if cmd != 'set'
+  hub: (start, remove) ->
+    hub = @datasel.Hub.HCData
+    line = @datasel.Segment.HCLine || @datasel.Segment.Line
+    if remove
+      if start < 0
+        return
+      while hub.length > start
+        hub.pop()
+      @save()
+      @root.dispatch.redraw()
       return
-    @k
+    begin = @datasel.begin || 0
+    begin = +begin
+    start = Math.max(start, 1)
+    index = start + begin - 1
+    if index + 2 >= line.length
+      return
+    a = line[index]
+    b = line[index+1]
+    c = line[index+2]
+    zg = Math.min(a.High, c.High)
+    zd = Math.max(a.Low, c.Low)
+    if zd > zg
+      return
+    h = JSON.parse(JSON.stringify(a))
+    h.High = zg
+    h.Low = zd
+    h.ETime = c.ETime
+    for i in ['date', 'edate', 'i', 'ei']
+      delete h[i]
+    if hub.length > 0
+      lh = hub[hub.length-1]
+      if lh.Time == h.Time
+        hub.pop()
+    hub.push h
+    @save()
+    @root.dispatch.redraw()
 
   save: ->
     sid = @dataset.id
@@ -43,15 +76,27 @@ class KLineCmd
       {level: 'month', name: 'months'}
     ]
 
+    prev = off
+    for level in levels
+      dataset = @dataset[level.name]
+      dataset.prev = prev
+      prev = dataset
+
     for level in levels when level.level == @k
       data[level.name] = data[level.name] || {}
       hchub = data[level.name]
       hchub.begin = bnum(hchub)
       hchub.Data = hchub.Data || []
+      hchub.Line = hchub.Line || []
       dataset = @dataset[level.name]
       dataset.begin = hchub.begin || 0
       hub = dataset.Hub
       hub.HCData = hub.HCData || hchub.Data
+      hub.HCLine = hub.HCLine || hchub.Line
+
+      prev = dataset.prev
+      if prev
+        dataset.Segment.HCLine = dataset.Segment.HCLine || prev.Hub.HCLine
 
   begin: (bnum) ->
     @init_hc -> bnum

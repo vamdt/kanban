@@ -22,6 +22,7 @@ class KLineHub
     dname = 'Data'
     handcraft = @root.param 'handcraft'
     if handcraft
+      console.log "handcraft", handcraft
       dname = 'HCData'
     skip = off
     for level,i in levels
