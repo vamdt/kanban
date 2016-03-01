@@ -7,15 +7,15 @@ module.exports = ->
     macd: 'nmacd'
     typing: 'ntyping'
     handcraft: 'handcraft'
-  args = {}
   v = off
   args = Array.apply(null, arguments)
   if args.length > 1
     if args[args.length-1].toLowerCase() == 'false'
       v = on
       args.pop()
+  param = {}
   for o in args
     unless opts[o]
       continue
-    args[opts[o]] = v
-  @$root.$broadcast('param_change', args)
+    param[opts[o]] = v
+  @$root.$broadcast('param_change', param)
