@@ -58,8 +58,10 @@ class KLineToolTip
           "#{d.time}<br/>open: #{fmtCent(d.open)}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>close: #{fmtCent(d.close)}<br/>volume: #{d.volume}"
         when 'typing', 'segment'
           "#{d.Time}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
-        when 'hub', 'segment_line'
+        when 'hub'
           "#{d.Time} -- #{d.ETime}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
+        when 'segment_line'
+          "#{d.Time} -- #{d.ETime}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>MACD: #{d.MACD}<br/>#{name}"
         when 'mas'
           e = d3.select(@)
           "#{e.attr('id')}<div style='background-color:#{e.style('stroke')}'>#{e.attr('id')}</div>#{name}"

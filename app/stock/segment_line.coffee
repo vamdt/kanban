@@ -16,6 +16,23 @@ class KLineSegmentLine
 
     line = datasel.Segment[dname]
     dataset = KLine.filter line, data
+    up = 4
+    down = 5
+    dataset.forEach (d) ->
+      return if d.hasOwnProperty('MACD')
+      return if d.i < 0
+      return if d.ei < 0
+      i = d.i
+      mup = 0
+      mdown = 0
+      while i < d.ei and i < data.length
+        if data[i].MACD > 0
+          mup += data[i].MACD
+        else if data[i].MACD < 0
+          mdown += data[i].MACD
+        i++
+      d.MACD = if d.Type == up then mup else mdown
+
     @_ui.draw_line(dataset, 'segment_line')
     if handcraft
       begin = datasel.begin || 0
