@@ -30,14 +30,10 @@ class KLineCmd
     catch
       {}
 
-  begin: (sid, date) ->
-    date = d3.time.format("%Y-%m-%dT%H:%M").parse(date)
-    if sid != @dataset.id
-      console.log 'begin', sid, '!= dataset.id', @dataset.id
-      return
+  init_hc: (bnum) ->
+    sid = @dataset.id
     hd[sid] = hd[sid] || @load(sid) || {}
     data = hd[sid]
-
     levels = [
       {level: '1', name: 'm1s'}
       {level: '5', name: 'm5s'}
@@ -50,12 +46,17 @@ class KLineCmd
     for level in levels when level.level == @k
       data[level.name] = data[level.name] || {}
       hchub = data[level.name]
+      hchub.begin = bnum(hchub)
       hchub.Data = hchub.Data || []
-      hchub.begin = date
       dataset = @dataset[level.name]
-      dataset.begin = date
+      dataset.begin = hchub.begin || 0
       hub = dataset.Hub
       hub.HCData = hub.HCData || hchub.Data
+
+  begin: (bnum) ->
+    @init_hc -> bnum
+    @save()
+    @root.dispatch.redraw()
 
   cmd: ->
     args = Array.apply(null, arguments)
@@ -71,5 +72,6 @@ class KLineCmd
 
   update: (@data, @datasel, @dataset) ->
     @k = @root.param('k') || '1'
+    @init_hc (hchub) -> hchub.begin || 0
 
 KLine.register_plugin 'cmd', KLineCmd

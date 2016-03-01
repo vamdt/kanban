@@ -17,7 +17,8 @@ filter = (src, range) ->
 
   for d in range
     d.date = d.date || parseDate(d.Time)
-  for d in src
+  for d,i in src
+    d.no = i
     d.date = d.date || parseDate(d.Time)
 
   start_date = range[0].date

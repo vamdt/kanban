@@ -15,7 +15,7 @@ Plugins = {}
 
 class KLine
   constructor: (@options) ->
-    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd')
+    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw')
     @options = util.extend {}, @options, defaults
     @_data = []
     @_ui = {}
@@ -96,6 +96,9 @@ class KLine
     @on_event 'kdata', redraw
 
     @dispatch.on 'param.core', (o) =>
+      redraw(@_dataset)
+
+    @dispatch.on 'redraw.core', =>
       redraw(@_dataset)
 
   add_plugin_obj: (plugin) ->
@@ -429,15 +432,13 @@ class KLine
       .attr("y2", yy2)
       .style("stroke", style.stroke || def_stroke)
 
-  draw_lineno: (dataset, clazz, style) ->
+  draw_lineno: (dataset, begin, clazz, style) ->
     style = style || {}
     x = @_ui.x
     y = @_ui.y
 
     up = 4
     down = 5
-    yy1 = (d) ->
-      y if d.Type == up then d.Low else d.High
     yy2 = (d) ->
       y if d.Type == down then d.Low else d.High
     def_stroke = (d) -> if d.Type == up then color.up else color.down
@@ -445,7 +446,7 @@ class KLine
     data = []
     if dataset.length > 0
       d = dataset[0]
-      d = ei: d.i, Type: d.Type, Low: d.Low, High:d.High
+      d = ei: d.i, Type: d.Type, Low: d.Low, High:d.High, no: d.no - 1
       if d.Type == up
         d.Type = down
       else
@@ -453,7 +454,7 @@ class KLine
       data = [d]
     dataset.forEach (d) -> data.push(d)
     text = @_ui.svg.selectAll("text.#{clazz}")
-      .data(dataset)
+      .data(data)
 
     text
       .enter()
@@ -461,11 +462,17 @@ class KLine
       .attr("class", clazz)
       .style(style)
 
+    numf = (d, i) ->
+      n = d.no + 1 - begin
+      if n > -1
+        n
+      else
+        ''
     text.exit().transition().remove()
     text.transition()
       .attr("x", (d) -> x d.ei)
       .attr("y", yy2)
-      .text((d) -> d.no)
+      .text(numf)
       .style("stroke", style.stroke || def_stroke)
 
 KLine.register_plugin = (name, clazz) ->
