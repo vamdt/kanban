@@ -1,9 +1,19 @@
 package crawl
 
-import "github.com/golang/glog"
+import (
+	"flag"
+
+	"github.com/golang/glog"
+)
 
 type hub_parser struct {
 	typing_parser
+}
+
+var simpleHub bool = false
+
+func init() {
+	flag.BoolVar(&simpleHub, "shub", false, "simple hub")
 }
 
 // 娇注
@@ -37,8 +47,10 @@ func (p *Tdatas) ParseHubSimple() {
 }
 
 func (p *Tdatas) ParseHub() {
-	p.ParseHubSimple()
-	return
+	if simpleHub {
+		p.ParseHubSimple()
+		return
+	}
 
 	line := p.Segment.Line
 	p.Hub.drop_last_5_data()
@@ -53,7 +65,7 @@ func (p *Tdatas) ParseHub() {
 	}
 	glog.Infoln(p.tag, "for hub start", start)
 
-	change_direction := false
+	//change_direction := false
 	for i, l := start, len(line); i+2 < l; i++ {
 		if lhub := len(p.Hub.Data); lhub > 0 {
 			hub := &p.Hub.Data[lhub-1]
@@ -74,12 +86,12 @@ func (p *Tdatas) ParseHub() {
 						i++
 					}
 
-					if hub.Case1 && !change_direction {
-						change_direction = true
-						p.Hub.Data = p.Hub.Data[:lhub-1]
-						i = hub.begin
-						continue
-					}
+					//if hub.Case1 && !change_direction {
+					//change_direction = true
+					//p.Hub.Data = p.Hub.Data[:lhub-1]
+					//i = hub.begin
+					//continue
+					//}
 				} else {
 					hub.end = i + 2
 					hub.ETime = line[hub.end].ETime
@@ -103,7 +115,7 @@ func (p *Tdatas) ParseHub() {
 		hub.end = i + 2
 		hub.ETime = line[i+2].ETime
 		hub.Case1 = false
-		change_direction = false
+		//change_direction = false
 		p.Hub.Data = append(p.Hub.Data, hub)
 		i++
 	}
@@ -205,12 +217,64 @@ func DD(line []Typing, t Typing) int {
 
 func hasHighHub(t Typing) bool { return t.end-t.begin > 7 }
 
+func (p *Tdatas) LinkHubSimple(next *Tdatas) {
+	hub := p.Hub
+	hub.drop_last_5_line()
+	segline := p.Segment.Line
+	start := 0
+	ldata := len(hub.Data)
+	line := hub.Line
+	var prev *Typing
+
+	DD1, GG1, ZD1, ZG1 := 0, 0, 0, 0
+	DD0, GG0, ZD0, ZG0 := DD1, GG1, ZD1, ZG1
+
+	if l := len(line); l > 0 {
+		start = line[l-1].end + 1
+		prev = &line[l-1]
+		if start-1 < ldata {
+			h := hub.Data[start-1]
+			ZD0, ZG0 = h.Low, h.High
+			DD0 = DD(segline, h)
+			GG0 = GG(segline, h)
+		}
+	}
+
+	for i := start; i < ldata; i++ {
+		t := hub.Data[i]
+		ZD1, ZG1 = t.Low, t.High
+		t.High = GG(segline, t)
+		t.Low = DD(segline, t)
+		t.begin = i
+		t.end = i
+		DD1, GG1 = t.Low, t.High
+
+		t.Type = DullTyping
+		t.Case1 = false
+		if prev == nil {
+			line = append(line, t)
+		}
+		prev = &t
+		DD0, GG0, ZD0, ZG0 = DD1, GG1, ZD1, ZG1
+	}
+	glog.Infoln(hub.tag, "hub link len(line)=", len(line))
+	hub.Line = line
+	if next != nil {
+		next.Segment.Line = hub.Line
+	}
+}
+
 // 2:
 // GG1 < DD0 Down
 // DD1 > GG0 Up
 // ZG1 < ZD0 && GG1 >= DD0 New Hub
 // ZD1 > ZG0 && DD1 <= GG0 New Hub
 func (p *Tdatas) LinkHub(next *Tdatas) {
+	if simpleHub {
+		p.LinkHubSimple(next)
+		return
+	}
+
 	hub := p.Hub
 	hub.drop_last_5_line()
 	segline := p.Segment.Line
@@ -307,20 +371,23 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 			line[l-1].Type = DownTyping
 			glog.Infoln("found down", i, prev, t)
 			t = line[l-1]
-		} else if ZG1 < ZD0 && GG1 >= DD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
-			make_prev_line_end(begin - 1)
-			glog.Infoln("found ZG1 < ZD0 && GG1 >= DD0 New Hub")
-			t.Type = DullTyping
-			line = append(line, t)
-		} else if ZD1 > ZG0 && DD1 <= GG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
-			make_prev_line_end(begin - 1)
-			glog.Infoln("found ZD1 > ZG0 && DD1 <= GG0")
-			t.Type = DullTyping
-			line = append(line, t)
 		} else {
-			t.Type = DullTyping
-			line = append(line, t)
-			glog.Infoln("found normal dull typing")
+			// GG1 >= DD0 and DD1 <= GG0 must be true
+			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
+				make_prev_line_end(begin - 1)
+				glog.Infoln("found ZG1 < ZD0 && GG1 >= DD0 New Hub")
+				t.Type = DownTyping
+				line = append(line, t)
+			} else if ZD1 > ZG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
+				make_prev_line_end(begin - 1)
+				glog.Infoln("found ZD1 > ZG0 && DD1 <= GG0")
+				t.Type = UpTyping
+				line = append(line, t)
+			} else {
+				glog.Warningf("found [ZD0/%d, ZG0/%d] mix with [ZD1/%d, ZG1/%d]",
+					ZD0, ZG0, ZD1, ZG1)
+			}
+			// Do not has other condition
 		}
 
 		prev = &t
