@@ -20,5 +20,7 @@ class KLineSegmentLine
     if handcraft
       begin = datasel.begin || 0
       @root.draw_lineno(dataset, begin, 'segment_line')
+    else
+      @root._ui.svg.selectAll("text.segment_line").remove()
 
 KLine.register_plugin 'segment_line', KLineSegmentLine

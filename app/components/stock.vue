@@ -18,6 +18,7 @@
 
 <script lang="coffee">
 require './kanpan'
+config = require './config'
 module.exports =
   events:
     'param_change': 'param_change'
@@ -36,6 +37,7 @@ module.exports =
         v: +(new Date())
   methods:
     param_change: (opts) ->
+      config.update opts
       for k,v of opts
         @opt[k] = v
       @opt.v = +(new Date())
