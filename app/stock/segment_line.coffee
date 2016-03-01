@@ -16,11 +16,11 @@ class KLineSegmentLine
 
     line = datasel.Segment[dname]
     dataset = KLine.filter line, data
-    @root.draw_line(dataset, 'segment_line')
+    @_ui.draw_line(dataset, 'segment_line')
     if handcraft
       begin = datasel.begin || 0
-      @root.draw_lineno(dataset, begin, 'segment_line')
+      @_ui.draw_lineno(dataset, begin, 'segment_line')
     else
-      @root._ui.svg.selectAll("text.segment_line").remove()
+      @_ui.svg.selectAll("text.segment_line").remove()
 
 KLine.register_plugin 'segment_line', KLineSegmentLine

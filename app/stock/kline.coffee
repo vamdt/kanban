@@ -1,5 +1,6 @@
 d3 = require 'd3'
 util = require './util'
+KUI = require './ui'
 defaults =
   container: 'body'
   margin:
@@ -18,7 +19,8 @@ class KLine
     @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw')
     @options = util.extend {}, @options, defaults
     @_data = []
-    @_ui = {}
+    @_ui = new KUI()
+    @_ui.dispatch = @dispatch
     @_left = 0
     @_max_left = 0
     @plugins = []
@@ -382,100 +384,6 @@ class KLine
         body: msg
         dir:'auto'
       notification = new Notification(id, config)
-
-  draw_path: (dataset, id, style) ->
-    style = style || {}
-    style.fill = style.fill || 'none'
-    x = @_ui.x
-    y = @_ui.y
-    path = @_ui.svg.select("path##{id}")
-    if path.empty()
-      path = @_ui.svg.append("path")
-        .attr("id", id)
-    path
-      .style(style)
-      .data([dataset])
-
-    line = d3.svg.line()
-      .x((d) -> x d.i)
-      .y((d) -> y d.Price)
-
-    path.transition().attr("d", line)
-
-  draw_line: (dataset, clazz, style) ->
-    dispatch = @dispatch
-    style = style || {}
-    style.strokeWidth = style.strokeWidth || '1'
-    x = @_ui.x
-    y = @_ui.y
-    line = @_ui.svg.selectAll("line.#{clazz}")
-      .data(dataset)
-
-    line
-      .enter()
-      .append("line")
-      .attr("class", clazz)
-      .on("mouseover.tip", (d, i) -> dispatch.tip @, clazz, d, i)
-      .style(style)
-
-    up = 4
-    down = 5
-    yy1 = (d) ->
-      y if d.Type == up then d.Low else d.High
-    yy2 = (d) ->
-      y if d.Type == down then d.Low else d.High
-    def_stroke = (d) -> if d.Type == up then color.up else color.down
-
-    line.exit().transition().remove()
-    line.transition()
-      .attr("x1", (d) -> x d.i)
-      .attr("y1", yy1)
-      .attr("x2", (d) -> x d.ei)
-      .attr("y2", yy2)
-      .style("stroke", style.stroke || def_stroke)
-
-  draw_lineno: (dataset, begin, clazz, style) ->
-    style = style || {}
-    x = @_ui.x
-    y = @_ui.y
-
-    up = 4
-    down = 5
-    yy2 = (d) ->
-      y if d.Type == down then d.Low else d.High
-    def_stroke = (d) -> if d.Type == up then color.up else color.down
-
-    data = []
-    if dataset.length > 0
-      d = dataset[0]
-      d = ei: d.i, Type: d.Type, Low: d.Low, High:d.High, no: d.no - 1
-      if d.Type == up
-        d.Type = down
-      else
-        d.Type = up
-      data = [d]
-    dataset.forEach (d) -> data.push(d)
-    text = @_ui.svg.selectAll("text.#{clazz}")
-      .data(data)
-
-    text
-      .enter()
-      .append("text")
-      .attr("class", clazz)
-      .style(style)
-
-    numf = (d, i) ->
-      n = d.no + 1 - begin
-      if n > -1
-        n
-      else
-        ''
-    text.exit().transition().remove()
-    text.transition()
-      .attr("x", (d) -> x d.ei)
-      .attr("y", yy2)
-      .text(numf)
-      .style("stroke", style.stroke || def_stroke)
 
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz

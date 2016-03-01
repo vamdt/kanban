@@ -13,6 +13,6 @@ class KLineTypingLine
     style =
       "stroke-dasharray": "7 7"
       "stroke": "#abc"
-    @root.draw_line(dataset, "typing_line", style)
+    @_ui.draw_line(dataset, "typing_line", style)
 
 KLine.register_plugin 'typing_line', KLineTypingLine
