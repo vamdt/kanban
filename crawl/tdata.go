@@ -59,6 +59,8 @@ type Tdatas struct {
 	tag     string
 
 	min_hub_height int
+
+	base, next *Tdatas
 }
 
 func (p *typing_parser) tail(s *typing_parser, tail int) {
@@ -94,12 +96,14 @@ func (p *Tdatas) tail(s *Tdatas, tail int) {
 	p.Hub.tail(&s.Hub.typing_parser, tail)
 }
 
-func (p *Tdatas) Init(hub_height int, tag string) {
+func (p *Tdatas) Init(hub_height int, tag string, base, next *Tdatas) {
 	p.min_hub_height = hub_height
 	p.tag = tag
 	p.Typing.tag = tag
 	p.Segment.tag = tag
 	p.Hub.tag = tag
+	p.base = base
+	p.next = next
 }
 
 func (p *Tdatas) First_lastday_data() int {

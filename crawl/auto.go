@@ -74,12 +74,12 @@ func NewStock(id string, hub_height int) *Stock {
 		count: 1,
 	}
 
-	p.M1s.Init(hub_height, id+" f1")
-	p.M5s.Init(hub_height, id+" f5")
-	p.M30s.Init(hub_height, id+" f30")
-	p.Days.Init(hub_height, id+" day")
-	p.Weeks.Init(hub_height, id+" week")
-	p.Months.Init(hub_height, id+" month")
+	p.M1s.Init(hub_height, id+" f1", nil, &p.M5s)
+	p.M5s.Init(hub_height, id+" f5", &p.M1s, &p.M30s)
+	p.M30s.Init(hub_height, id+" f30", &p.M5s, &p.Days)
+	p.Days.Init(hub_height, id+" day", &p.M30s, &p.Weeks)
+	p.Weeks.Init(hub_height, id+" week", &p.Days, &p.Months)
+	p.Months.Init(hub_height, id+" month", &p.Weeks, nil)
 
 	return p
 }
@@ -316,9 +316,9 @@ func (p *Stock) Merge(day bool) {
 	p.M5s.Macd(m5_fresh_index)
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
 	p.M30s.Macd(m30_fresh_index)
-	p.M1s.ParseChan(true, &p.M5s)
-	p.M5s.ParseChan(false, nil)
-	p.M30s.ParseChan(true, nil)
+	p.M1s.ParseChan()
+	p.M5s.ParseChan()
+	p.M30s.ParseChan()
 
 	if day {
 		p.Weeks.MergeFrom(&p.Days, true, Weekend)
@@ -326,22 +326,22 @@ func (p *Stock) Merge(day bool) {
 		p.Days.Macd(0)
 		p.Weeks.Macd(0)
 		p.Months.Macd(0)
-		p.Days.ParseChan(true, &p.Weeks)
-		p.Weeks.ParseChan(false, &p.Months)
-		p.Months.ParseChan(false, nil)
+		p.Days.ParseChan()
+		p.Weeks.ParseChan()
+		p.Months.ParseChan()
 	}
 }
 
-func (p *Tdatas) ParseChan(base bool, next *Tdatas) {
+func (p *Tdatas) ParseChan() {
 	p.ParseTyping()
 
-	if base {
+	if p.base == nil {
 		p.Typing.LinkTyping()
 		p.ParseSegment()
 		p.Segment.LinkTyping()
 	}
 	p.ParseHub()
-	p.LinkHub(next)
+	p.LinkHub()
 }
 
 func (p *Stock) Update(store Store, play bool) bool {

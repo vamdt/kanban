@@ -16,6 +16,22 @@ func init() {
 	flag.BoolVar(&simpleHub, "shub", false, "simple hub")
 }
 
+func (p *hub_parser) addHub(h Typing) {
+	if l := len(p.Data); l > 0 {
+		GG0 := p.Data[l-1].b1
+		DD0 := p.Data[l-1].e3
+		GG1 := h.b1
+		DD1 := h.e3
+		if Contain(p.Data[l-1].HL, h.HL) {
+			p.Data[l-1].b1 = maxInt(GG0, GG1)
+			p.Data[l-1].e3 = minInt(DD0, DD1)
+			p.Data[l-1].end = h.end
+			return
+		}
+	}
+	p.Data = append(p.Data, h)
+}
+
 // 娇注
 // 判断盘整延伸结束是产生3买卖。
 // 判断趋势延伸结束是同级别走势回拉中枢--3买卖后扩展或者非标准趋势延伸9段成大中枢
@@ -52,6 +68,14 @@ func (p *Tdatas) ParseHub() {
 		return
 	}
 
+	if p.base == nil || p.base == p {
+		p.ParseHubBase()
+	} else {
+		p.ParseHubFromBase()
+	}
+}
+
+func (p *Tdatas) ParseHubBase() {
 	line := p.Segment.Line
 	p.Hub.drop_last_5_data()
 	start := 0
@@ -95,6 +119,8 @@ func (p *Tdatas) ParseHub() {
 				} else {
 					hub.end = i + 2
 					hub.ETime = line[hub.end].ETime
+					hub.b1 = maxInt(hub.b1, line[hub.end].High)
+					hub.e3 = maxInt(hub.e3, line[hub.end].Low)
 					i++
 				}
 				continue
@@ -115,9 +141,76 @@ func (p *Tdatas) ParseHub() {
 		hub.end = i + 2
 		hub.ETime = line[i+2].ETime
 		hub.Case1 = false
+		hub.b1 = maxInt(line[i].High, line[i+1].High, line[i+2].High)
+		hub.e3 = minInt(line[i].Low, line[i+1].Low, line[i+2].Low)
 		//change_direction = false
 		p.Hub.Data = append(p.Hub.Data, hub)
 		i++
+	}
+}
+
+func (p *Tdatas) ParseHubFromBase() {
+	hub := p.Hub
+	base := p.base.Hub
+	hub.drop_last_5_data()
+	start := 0
+
+	ldata := len(base.Data)
+
+	DD1, GG1, ZD1, ZG1 := 0, 0, 0, 0
+	DD0, GG0, ZD0, ZG0 := DD1, GG1, ZD1, ZG1
+
+	if l := len(hub.Data); l > 0 {
+		start = hub.Data[l-1].end + 1
+		if start-1 < ldata {
+			h := base.Data[start-1]
+			ZD0, ZG0 = h.Low, h.High
+			DD0, GG0 = h.b1, h.e3
+		}
+	}
+
+	for i := start; i < ldata; i++ {
+
+		t := base.Data[i]
+		ZD1, ZG1 = t.Low, t.High
+		begin, end := t.begin, t.end
+		width := begin - end
+		t.begin = i
+		t.end = i
+		DD1, GG1 = t.e3, t.b1
+		t.Case1 = false
+
+		if DD1 > GG0 { // DD1 > GG0 Up
+			if width > 7 {
+				glog.Infoln("found width > 7")
+				hub.addHub(t)
+			}
+		} else if GG1 < DD0 { // GG1 < DD0 Down
+			if width > 7 {
+				glog.Infoln("found width > 7")
+				hub.addHub(t)
+			}
+		} else {
+			// GG1 >= DD0 and DD1 <= GG0 must be true
+			t.b1 = GG1
+			t.e3 = DD0
+			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
+				t.High = ZD0
+				t.Low = ZG1
+				glog.Infoln("found ZG1 < ZD0 && GG1 >= DD0 New Hub")
+				hub.addHub(t)
+			} else if ZD1 > ZG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
+				glog.Infoln("found ZD1 > ZG0 && DD1 <= GG0")
+				t.High = ZD1
+				t.Low = ZG0
+				hub.addHub(t)
+			} else {
+				glog.Warningf("found [ZD0/%d, ZG0/%d] mix with [ZD1/%d, ZG1/%d]",
+					ZD0, ZG0, ZD1, ZG1)
+			}
+		}
+
+		DD0, GG0, ZD0, ZG0 = DD1, GG1, ZD1, ZG1
 	}
 }
 
@@ -217,7 +310,7 @@ func DD(line []Typing, t Typing) int {
 
 func hasHighHub(t Typing) bool { return t.end-t.begin > 7 }
 
-func (p *Tdatas) LinkHubSimple(next *Tdatas) {
+func (p *Tdatas) LinkHubSimple() {
 	hub := p.Hub
 	hub.drop_last_5_line()
 	segline := p.Segment.Line
@@ -228,6 +321,7 @@ func (p *Tdatas) LinkHubSimple(next *Tdatas) {
 
 	DD1, GG1, ZD1, ZG1 := 0, 0, 0, 0
 	DD0, GG0, ZD0, ZG0 := DD1, GG1, ZD1, ZG1
+	_, _, _, _ = DD0, GG0, ZD0, ZG0
 
 	if l := len(line); l > 0 {
 		start = line[l-1].end + 1
@@ -259,8 +353,8 @@ func (p *Tdatas) LinkHubSimple(next *Tdatas) {
 	}
 	glog.Infoln(hub.tag, "hub link len(line)=", len(line))
 	hub.Line = line
-	if next != nil {
-		next.Segment.Line = hub.Line
+	if p.next != nil {
+		p.next.Segment.Line = hub.Line
 	}
 }
 
@@ -269,9 +363,9 @@ func (p *Tdatas) LinkHubSimple(next *Tdatas) {
 // DD1 > GG0 Up
 // ZG1 < ZD0 && GG1 >= DD0 New Hub
 // ZD1 > ZG0 && DD1 <= GG0 New Hub
-func (p *Tdatas) LinkHub(next *Tdatas) {
+func (p *Tdatas) LinkHub() {
 	if simpleHub {
-		p.LinkHubSimple(next)
+		p.LinkHubSimple()
 		return
 	}
 
@@ -396,7 +490,7 @@ func (p *Tdatas) LinkHub(next *Tdatas) {
 
 	hub.Line = line
 	glog.Infoln(hub.tag, "hub link len(line)=", len(line))
-	if next != nil {
-		next.Segment.Line = hub.Line
+	if p.next != nil {
+		p.next.Segment.Line = hub.Line
 	}
 }
