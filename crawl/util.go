@@ -7,18 +7,24 @@ import (
 	"time"
 )
 
-func minInt(a, b int) int {
-	if a > b {
-		return b
+func maxInt(a ...int) int {
+	v := a[0]
+	for i := len(a) - 1; i > 0; i-- {
+		if a[i] > v {
+			v = a[i]
+		}
 	}
-	return a
+	return v
 }
 
-func maxInt(a, b int) int {
-	if a > b {
-		return a
+func minInt(a ...int) int {
+	v := a[0]
+	for i := len(a) - 1; i > 0; i-- {
+		if a[i] < v {
+			v = a[i]
+		}
 	}
-	return b
+	return v
 }
 
 func ParseCent(s string) int {
