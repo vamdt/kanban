@@ -142,7 +142,7 @@ func (p *dev) Start(https bool, port string) {
 		go func() {
 			time.Sleep(time.Second * 2)
 			glog.Infoln("open", serve_uri)
-			err := exec.Command("open", serve_uri).Run()
+			err := exec.Command(openCmd, serve_uri).Run()
 			if err != nil {
 				glog.Warning(err)
 			}
