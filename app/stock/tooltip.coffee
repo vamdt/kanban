@@ -60,7 +60,7 @@ class KLineToolTip
           "#{d.Time}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
         when 'hub'
           "#{d.Time} -- #{d.ETime}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>#{name}"
-        when 'segment_line'
+        when 'segment_line', 'typing_line'
           "#{d.Time} -- #{d.ETime}<br/>high: #{fmtCent(d.High)}<br/>low: #{fmtCent(d.Low)}<br/>MACD: #{d.MACD}<br/>#{name}"
         when 'mas'
           e = d3.select(@)
