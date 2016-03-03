@@ -371,9 +371,15 @@ func (p *segment_parser) parse_top_bottom() bool {
 
 	dlen := len(p.Data)
 	if dlen > 0 {
-		if typing.Type == TopTyping && p.Data[dlen-1].Type == BottomTyping {
-			if typing.High <= p.Data[dlen-1].High {
-				glog.Infoln("find a bottom high then top")
+		if typing.Type != p.Data[dlen-1].Type {
+			if typing.Type == TopTyping && typing.High <= p.Data[dlen-1].Low {
+				glog.Warningln("find a top high then bottom",
+					typing, p.Data[dlen-1])
+			}
+
+			if typing.Type == BottomTyping && typing.Low >= p.Data[dlen-1].High {
+				glog.Warningln("find a bottom high then top",
+					typing, p.Data[dlen-1])
 			}
 		}
 	}
