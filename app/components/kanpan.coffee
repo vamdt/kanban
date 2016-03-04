@@ -15,11 +15,10 @@ Vue.directive 'kanpan',
       return if e.target.tagName == 'INPUT'
       return unless @kl
       handles =
-        49: 'nmas'
-        50: 'nc'
-        51: 'nvolume'
-        52: 'nmacd'
-        72: 'handcraft'
+        49: 'nmacd'
+        50: 'nvolume'
+        51: 'nc'
+        52: 'nmas'
       name = handles[e.keyCode] || off
       if name
         param = {}
