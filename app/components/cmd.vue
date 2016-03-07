@@ -18,44 +18,67 @@
   </ul>
 </template>
 
-<script lang="coffee">
-module.exports =
-  props:
-    stocks:
-      type: Array
-      twoWay: true
-  data: ->
-    sugg: []
+<script>
+import Cmd from './cmd';
+export default {
+  props: {
+    stocks: {
+      type: Array,
+      twoWay: true,
+    },
+  },
+  data() {
+    return {
+      sugg: [],
+    };
+  },
 
-  ready: ->
-    window.addEventListener 'keyup', (e) =>
-      return if e.target.tagName == 'INPUT'
-      dofocus = ->
-        e.preventDefault()
-        document.getElementById('cmd').focus()
-      if e.keyCode == 80 and e.ctrlKey and e.shiftKey
-        return dofocus()
-      if e.keyCode == 186
-        return dofocus()
+  ready() {
+    window.addEventListener('keyup', e => {
+      if (e.target.tagName === 'INPUT') {
+        return;
+      }
+      function dofocus() {
+        e.preventDefault();
+        document.getElementById('cmd').focus();
+      }
+      if (e.keyCode === 80 && e.ctrlKey && e.shiftKey) {
+        dofocus();
+        return;
+      }
+      if (e.keyCode === 186) {
+        dofocus();
+        return;
+      }
+    });
+  },
 
-  mixins: [require './cmd']
+  mixins: [Cmd],
 
-  methods:
-    show_stock: (to) ->
-      @sugg = off
-      @$dispatch 'show_stock', to
+  methods: {
+    show_stock(to) {
+      this.sugg = false;
+      this.$dispatch('show_stock', to);
+    },
 
-    cancle: ->
-      @sugg = off
+    cancle() {
+      this.sugg = false;
+    },
 
-    run: ->
-      cmd = @cmd
-      @cmd = ''
-      opt = cmd.split ' '
-      return if opt.length < 1
-      if opt.length < 2
-        cmd = 'sugg'
-      else
-        cmd = opt.shift()
-      @$emit cmd, opt
+    run() {
+      let cmd = this.cmd;
+      this.cmd = '';
+      const opt = cmd.split(' ');
+      if (opt.length < 1) {
+        return;
+      }
+      if (opt.length < 2) {
+        cmd = 'sugg';
+      } else {
+        cmd = opt.shift();
+      }
+      this.$emit(cmd, opt);
+    },
+  },
+};
 </script>

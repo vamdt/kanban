@@ -49,57 +49,84 @@
   </div>
 </template>
 
-<script lang="coffee">
-d3 = require 'd3'
-cmd = require './cmd.vue'
-param = (hash, key) -> (hash=hash||{})[key]
-module.exports =
-  events:
-    'show_stock': 'show_stock'
-  components:
-    cmd: cmd
-  watch:
-    cur_stock_name: (v) ->
-      t = document.title.split('/')
-      t[0] = v
-      document.title = t.join('/')
-  data: ->
-    try
-      stocks = JSON.parse localStorage.getItem 'stocks'
-    catch
+<script>
+import cmd from './cmd.vue';
+function param(hash = {}, key) {
+  return hash[key];
+}
 
-    stocks: stocks || []
-    cur_stock_name: @stock_name param(@$route.params, 'sid'), stocks
+export default {
+  events: {
+    show_stock: 'show_stock',
+  },
+  components: {
+    cmd,
+  },
+  watch: {
+    cur_stock_name: v => {
+      const t = document.title.split('/');
+      t[0] = v;
+      document.title = t.join('/');
+    },
+  },
 
-  methods:
-    tips: (msg, type) ->
-      types = ['success', 'warning', 'danger']
-      if -1 is types.indexOf type
-        type = 'warning'
-      @tip = msg: msg, className: 'tip-'+type
+  data() {
+    let stocks = [];
+    try {
+      stocks = JSON.parse(localStorage.getItem('stocks'));
+    } catch (e) {
+      stocks = [];
+    }
+    return {
+      stocks: stocks || [],
+      cur_stock_name: this.stock_name(param(this.$route.params, 'sid'), stocks),
+    };
+  },
 
-    stock_name: (sid, stocks) ->
-      for s in stocks||@stocks||[]
-        if s.sid == sid
-          return s.name || sid
-      sid
+  methods: {
+    tips(msg, type) {
+      let t = type;
+      const types = ['success', 'warning', 'danger'];
+      if (types.indexOf(type) === -1) {
+        t = 'warning';
+      }
+      this.tip = {
+        msg,
+        className: `tip-${t}`,
+      };
+    },
 
-    lru: (s) ->
-      stocks = @stocks || []
-      i = -1
-      i = j for ss, j in stocks when ss.sid == s.sid
-      if i > -1
-        stocks.splice(i, 1)
-      stocks.unshift(s)
-      localStorage.setItem('stocks', JSON.stringify(stocks))
-      @stocks = stocks
+    stock_name(sid, stocks) {
+      const all = stocks || this.stocks || [];
+      for (const s in all) {
+        if (s.sid === sid) {
+          return s.name || sid;
+        }
+      }
+      return sid;
+    },
 
-    show_stock: (to) ->
-      @cur_stock_name = to.name || to.sid
-      @lru to
-      k = param(@$route.params, 'k') || 1
-      @$route.router.go
-        name: 'stock'
-        params: { sid: to.sid, k: k}
-        replace: @$route.name is 'stock'
+    lru(s) {
+      const stocks = this.stocks || [];
+      const i = stocks.findIndex((e) => e.sid === s.sid);
+      if (i > -1) {
+        stocks.splice(i, 1);
+      }
+      stocks.unshift(s);
+      localStorage.setItem('stocks', JSON.stringify(stocks));
+      this.stocks = stocks;
+    },
+
+    show_stock(to) {
+      this.cur_stock_name = to.name || to.sid;
+      this.lru(to);
+      const k = param(this.$route.params, 'k') || 1;
+      this.$route.router.go({
+        name: 'stock',
+        params: { sid: to.sid, k },
+        replace: this.$route.name === 'stock',
+      });
+    },
+  },
+};
 </script>

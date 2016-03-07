@@ -79,46 +79,82 @@
   </form>
 </template>
 
-<script lang="coffee">
-config = require './config'
-colorpicker = require './colorpicker.vue'
-module.exports =
-  components:
-    colorpicker: colorpicker
-  watch:
-    'settings':
-      handler: 'submit'
-      deep: true
-  data: ->
-    settings: {mas:[], fxck: off}
-  route:
-    data: ->
-      @settings = config.load()
+<script>
+import config from './config';
+import colorpicker from './colorpicker.vue';
 
-  methods:
-    submit: (val, oldVal) ->
-      return unless val and oldVal
-      return if val.hasOwnProperty('fxck')
-      return if oldVal.hasOwnProperty('fxck')
-      config.save @settings
-    add_mas: ->
-      unless Array.isArray(@settings.mas)
-        @settings.mas = []
-      mas = @settings.mas
-      n = interval: 5
-      if mas.length
-        n.interval = +mas[mas.length-1].interval + 1
-      mas.push n
-    del_mas: (mas) ->
-      unless Array.isArray(@settings.mas)
-        @settings.mas = []
-      mass = @settings.mas
-      index = mass.indexOf mas
-      return if index is -1
-      mass.splice(index, 1)
-    reset_mas: ->
-      mas = []
-      for i in [5, 13, 21, 34, 55, 89, 144, 233]
-        mas.push interval: i
-      @settings.mas = mas
+export default {
+  components: {
+    colorpicker,
+  },
+  watch: {
+    settings: {
+      handler: 'submit',
+      deep: true,
+    },
+  },
+
+  data() {
+    return {
+      settings: {
+        mas: [],
+        fxck: false,
+      },
+    };
+  },
+
+  route: {
+    data() {
+      this.settings = config.load();
+    },
+  },
+
+  methods: {
+
+    submit(val, oldVal) {
+      if (!val || !oldVal) {
+        return;
+      }
+      if (val.hasOwnProperty('fxck')) {
+        return;
+      }
+      if (oldVal.hasOwnProperty('fxck')) {
+        return;
+      }
+      config.save(this.settings);
+    },
+
+    add_mas() {
+      if (!Array.isArray(this.settings.mas)) {
+        this.settings.mas = [];
+      }
+      const mas = this.settings.mas;
+      const n = { interval: 5 };
+      if (mas.length) {
+        n.interval = +mas[mas.length - 1].interval + 1;
+      }
+      mas.push(n);
+    },
+
+    del_mas(mas) {
+      if (!Array.isArray(this.settings.mas)) {
+        this.settings.mas = [];
+      }
+      const mass = this.settings.mas;
+      const index = mass.indexOf(mas);
+      if (index === -1) {
+        return;
+      }
+      mass.splice(index, 1);
+    },
+
+    reset_mas() {
+      const mas = [];
+      [5, 13, 21, 34, 55, 89, 144, 233].forEach((i) => {
+        mas.push({ interval: i });
+      });
+      this.settings.mas = mas;
+    },
+  },
+};
 </script>

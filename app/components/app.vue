@@ -21,10 +21,11 @@
   </div>
 </template>
 
-<script lang="coffee">
-menu = require('./menu.vue')
-module.exports =
+<script>
+import menu from './menu.vue';
+export default {
   components: {
-    menu
-  }
+    menu,
+  },
+};
 </script>

@@ -16,6 +16,18 @@ module.exports = {
     modulesDirectories: ['node_modules', 'scripts', 'styles', 'images', 'fonts']
   },
   module: {
+    preLoaders: [
+      {
+        test: /\.vue$/,
+        loader: 'eslint',
+        exclude: /node_modules/
+      },
+      {
+        test: /\.js$/,
+        loader: 'eslint',
+        exclude: /node_modules/
+      }
+    ],
     loaders: [
     {
       test: /\.css$/,
@@ -34,13 +46,16 @@ module.exports = {
     { test: /\.gif$/, loader: "file-loader" },
     { test: /\.jpg$/, loader: "file-loader" },
     { test: /\.vue$/, loader: "vue" },
+    {
+      test: /\.js$/,
+      loader: 'babel-loader',
+      exclude: /node_modules/
+    },
     { test: /\.coffee$/, loader: "coffee-loader?sourceMap" }
     ]
   },
-  vue: {
-    loaders: {
-      js: 'coffee'
-    }
+  eslint: {
+    formatter: require('eslint-friendly-formatter')
   },
   postcss: [
     require('autoprefixer'),

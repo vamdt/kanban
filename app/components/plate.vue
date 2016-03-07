@@ -20,48 +20,78 @@
 </div>
 </template>
 
-<script lang="coffee">
-d3 = require 'd3'
-param = (hash, key) -> (hash=hash||{})[key]
-module.exports =
-  data: ->
-    plate: []
-    stocks: []
-  route:
-    data: ->
-      pid = param(@$route.params, 'pid') || 0
-      id = param(@$route.params, 'id') || 0
-      @rdata 0, =>
-        @rdata pid, =>
-          @rdata id, (s) =>
-            @stocks = s if s
+<script>
+import d3 from 'd3';
+const param = (hash = {}, key) => hash[key];
+function noop() {}
 
-  methods:
-    show: (plate, e) ->
-      return unless plate.Sub
-      return unless plate.Sub.length
-      @stocks = plate.Sub
-      e.preventDefault()
+export default {
+  data() {
+    return {
+      plate: [],
+      stocks: [],
+    };
+  },
 
-    rdata: (pid, cb) ->
-      pid = +pid
-      cb = cb || ->
-      if pid == 0 and @plate.length > 0
-        return cb()
-      d3.json '/plate?pid=' + pid, (error, data) =>
-        data = data.sort (a, b) -> b.Factor - a.Factor
-        for d in data
-          unless d.Sub
-            d.Sub = []
-        for p in @plate
-          if +p.Id == pid
-            p.Sub = data
-            return cb(data)
-          continue unless p.Sub
-          for s in p.Sub
-            if +s.Id == pid
-              s.Sub = data
-              return cb(data)
-        @plate = data
-        cb(data)
+  route: {
+    data() {
+      const pid = param(this.$route.params, 'pid') || 0;
+      const id = param(this.$route.params, 'id') || 0;
+      this.rdata(0, () => {
+        this.rdata(pid, () => {
+          this.rdata(id, (s) => {
+            if (s) {
+              this.stocks = s;
+            }
+          });
+        });
+      });
+    },
+  },
+
+  methods: {
+    show(plate, e) {
+      if (!plate.Sub || !plate.Sub.length) {
+        return;
+      }
+      this.stocks = plate.Sub;
+      e.preventDefault();
+    },
+
+    rdata(pids, cb = noop) {
+      const pid = +pids;
+      if (pid === 0 && this.plate.length) {
+        return cb();
+      }
+      d3.json(`/plate?pid=${pid}`, (error, rdata) => {
+        const data = rdata.sort((a, b) => b.Factor - a.Factor);
+        data.forEach((d, i) => {
+          if (d.Sub) {
+            data[i].Sub = [];
+          }
+        });
+        for (let i = 0; i < this.plate.length; i++) {
+          const p = this.plate[i];
+          if (+p.Id === pid) {
+            p.Sub = data;
+            return cb(data);
+          }
+          if (!p.Sub) {
+            continue;
+          }
+          for (let j = 0; j < p.Sub.length; j++) {
+            const s = p.Sub[j];
+            if (+s.Id === pid) {
+              s.Sub = data;
+              return cb(data);
+            }
+          }
+        }
+        this.plate = data;
+        return cb(data);
+      });
+      return 0;
+    },
+  },
+};
 </script>
