@@ -61,12 +61,13 @@ export default {
     rdata(pids, cb = noop) {
       const pid = +pids;
       if (pid === 0 && this.plate.length) {
-        return cb();
+        cb();
+        return;
       }
       d3.json(`/plate?pid=${pid}`, (error, rdata) => {
         const data = rdata.sort((a, b) => b.Factor - a.Factor);
         data.forEach((d, i) => {
-          if (d.Sub) {
+          if (!d.Sub) {
             data[i].Sub = [];
           }
         });
@@ -90,7 +91,6 @@ export default {
         this.plate = data;
         return cb(data);
       });
-      return 0;
     },
   },
 };
