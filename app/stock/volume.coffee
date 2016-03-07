@@ -1,6 +1,6 @@
 d3 = require 'd3'
 KLine = require './kline'
-KLineMas = require './mas'
+KLineMas = require('./mas').default
 
 formatValue = d3.format(",d")
 fmtVolume = (d) -> formatValue(d/100)
