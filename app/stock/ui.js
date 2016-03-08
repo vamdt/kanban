@@ -1,8 +1,26 @@
 import d3 from 'd3';
 
+const color = {
+  up: '#f00',
+  down: '#080',
+  eq: '#000',
+};
+
 export default class KUI {
   constructor(root) {
     this.root = root;
+    this.dispatch = root.dispatch;
+    root.dispatch.on('param.ui', () => {
+      const rcolor = root.param('color');
+      if (!rcolor) {
+        return;
+      }
+      ['up', 'down', 'eq'].forEach((n) => {
+        if (rcolor.hasOwnProperty(n)) {
+          color[n] = rcolor[n];
+        }
+      });
+    });
   }
 
   path(dataset, id, style1 = {}) {
@@ -61,7 +79,7 @@ export default class KUI {
       .attr('y1', (d) => y(d.Type === up ? d.Low : d.High))
       .attr('x2', (d) => x(d.ei))
       .attr('y2', (d) => y(d.Type === down ? d.Low : d.High))
-      .style('stroke', style.stroke || this.root.tColor);
+      .style('stroke', style.stroke || this.tColor);
   }
 
   lineno(dataset, begin, clazz, style = {}) {
@@ -108,7 +126,7 @@ export default class KUI {
       .attr('x', (d) => x(d.ei))
       .attr('y', (d) => y(d.Type === down ? d.Low : d.High))
       .text(numf)
-      .style('stroke', style.stroke || this.root.tColor);
+      .style('stroke', style.stroke || this.tColor);
   }
 
   circle(dataset, clazz, style = {}) {
@@ -139,5 +157,31 @@ export default class KUI {
       .attr('cx', (d) => x(d.i))
       .attr('cy', (d) => y(d.Price))
       .style(style);
+  }
+
+  color(compare) {
+    return (...args) => compare(...args) ? color.up : color.down;
+  }
+
+  tColor(d) {
+    return (d.Type === 2 || d.Type === 4) ? color.up : color.down;
+  }
+
+  kColor(d, i, data) {
+    if (d.open === d.close) {
+      if (i > 0 && data) {
+        if (data[i] && data[i - 1]) {
+          if (data[i].open >= data[i - 1].close) {
+            return color.up;
+          }
+          if (data[i].open < data[i - 1].close) {
+            return color.down;
+          }
+        }
+      }
+      return color.eq;
+    }
+
+    return (d.open > d.close) ? color.down : color.up;
   }
 }

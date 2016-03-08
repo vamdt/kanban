@@ -77,8 +77,6 @@ class KLine
           if @_param[k] and @_param[k] != v
             o[k] = @_param[k]
           @_param[k] = v
-        if @_param.color
-          color[c] = v for c,v of @_param.color
         @dispatch.param(o)
       when 'string'
         return @_param[p]
@@ -383,33 +381,5 @@ class KLine
         body: msg
         dir:'auto'
       notification = new Notification(id, config)
-
-  tColor: (d) ->
-    up = 4
-    if d.Type == up
-      color.up
-    else
-      color.down
-
-color =
-  up: "#f00"
-  down: "#080"
-  eq: "#000"
-kColor = (d, i, data) ->
-  if d.open == d.close
-    if i and data
-      if data[i] and data[i-1]
-        return color.up if data[i].open >= data[i-1].close
-        return color.down if data[i].open < data[i-1].close
-    return color.eq
-  if d.open > d.close
-    return color.down
-  color.up
-
-KLine.color = color
-KLine.kColor = kColor
-
-KLine.merge_data = util.merge_data
-KLine.merge_with_key = util.merge_with_key
 
 module.exports = KLine

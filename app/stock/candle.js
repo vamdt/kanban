@@ -1,4 +1,3 @@
-import KLine from './kline';
 import KLineMas from './mas';
 import plugin from './plugin';
 import { extend } from './util';
@@ -32,7 +31,7 @@ class KLineCandle {
       return;
     }
 
-    const kColor = (d, i) => KLine.kColor(d, i, data);
+    const kColor = (d, i) => this._ui.kColor(d, i, data);
     const x = this._ui.x;
     const y = this._ui.y;
     const candleWidth = this.options.width;

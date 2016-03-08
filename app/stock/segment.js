@@ -16,8 +16,8 @@ class KLineSegment {
     const dataset = filter(sdata, data);
 
     const style = {
-      stroke: this.root.tColor,
-      fill: (d) => d.Case1 ? this.root.tColor(d) : '#fff',
+      stroke: this._ui.tColor,
+      fill: (d) => d.Case1 ? this._ui.tColor(d) : '#fff',
     };
     this._ui.circle(dataset, 'segment', style);
   }

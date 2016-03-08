@@ -1,5 +1,4 @@
 import d3 from 'd3';
-import KLine from './kline';
 import KLineMas from './mas';
 import plugin from './plugin';
 import { extend } from './util';
@@ -85,7 +84,7 @@ class KLineVolume {
       return;
     }
 
-    const kColor = (d, i) => KLine.kColor(d, i, data);
+    const kColor = (d, i) => this.root._ui.kColor(d, i, data);
     const x = this.root._ui.x;
     const y = this.y;
     const height = this.height;

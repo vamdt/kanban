@@ -2,8 +2,6 @@ import d3 from 'd3';
 import plugin from './plugin';
 import { extend } from './util';
 
-const bColor = (d) => (d.MACD > 0) ? '#f00' : '#080';
-
 const formatValue = d3.format(',.3f');
 
 function fmtMacd(d) {
@@ -88,6 +86,7 @@ class KLineMacd {
     }
     this.show();
 
+    const bColor = this.root._ui.color((d) => d.MACD > 0);
     const x = this.root._ui.x;
     const y = this.y;
     const candleWidth = this.root.options.candle.width;

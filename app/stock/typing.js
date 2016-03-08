@@ -19,7 +19,7 @@ class KLineTyping {
     const dataset = filter(tdata, data);
 
     const style = {
-      fill: this.root.tColor,
+      fill: this._ui.tColor,
     };
     this._ui.circle(dataset, 'typing', style);
   }
