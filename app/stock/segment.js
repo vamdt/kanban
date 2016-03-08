@@ -16,9 +16,6 @@ class KLineSegment {
     const dispatch = this.root.dispatch;
     const sdata = datasel.Segment.Data;
     const dataset = KLine.filter(sdata, data);
-    const [eq, up, down] = [KLine.color.eq, KLine.color.up, KLine.color.down];
-    const colors = [eq, eq, up, down, up, down];
-    const color = (d) => colors[d.Type] || colors[0];
     const c = this._ui.svg.selectAll('circle.segment')
       .data(dataset);
 
@@ -40,8 +37,8 @@ class KLineSegment {
       .attr('r', rsize)
       .attr('cx', (d) => x(d.i))
       .attr('cy', (d) => y(d.Price))
-      .style('stroke', color)
-      .style('fill', (d, i) => d.Case1 ? color(d, i) : '#fff');
+      .style('stroke', this.root.tColor)
+      .style('fill', (d) => d.Case1 ? this.root.tColor(d) : '#fff');
   }
 }
 

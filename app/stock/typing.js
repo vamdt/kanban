@@ -35,9 +35,6 @@ class KLineTyping {
       .transition()
       .remove();
 
-    const [eq, up, down] = [KLine.color.eq, KLine.color.up, KLine.color.down];
-    const colors = [eq, eq, up, down, up, down];
-
     const rsize = this.root.param('typing_circle_size') || 3;
 
     circle
@@ -45,7 +42,7 @@ class KLineTyping {
       .attr('r', rsize)
       .attr('cx', (d) => x(d.i))
       .attr('cy', (d) => y(d.Price))
-      .style('fill', (d) => colors[d.Type] || colors[0]);
+      .style('fill', this.root.tColor);
   }
 }
 

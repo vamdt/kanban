@@ -38,10 +38,10 @@ class KLineSegmentLine {
       dataset[j].MACD = d.Type === up ? mup : mdown;
     });
 
-    this._ui.draw_line(dataset, 'segment_line');
+    this._ui.line(dataset, 'segment_line');
     if (handcraft) {
       const begin = datasel.begin || 0;
-      this._ui.draw_lineno(dataset, begin, 'segment_line');
+      this._ui.lineno(dataset, begin, 'segment_line');
     } else {
       this._ui.svg.selectAll('text.segment_line').remove();
     }

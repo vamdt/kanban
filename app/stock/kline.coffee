@@ -1,6 +1,6 @@
 d3 = require 'd3'
 util = require './util'
-KUI = require './ui'
+KUI = require('./ui').default
 defaults =
   container: 'body'
   margin:
@@ -19,7 +19,7 @@ class KLine
     @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw')
     @options = util.extend {}, @options, defaults
     @_data = []
-    @_ui = new KUI()
+    @_ui = new KUI(@)
     @_ui.dispatch = @dispatch
     @_left = 0
     @_max_left = 0
@@ -385,6 +385,13 @@ class KLine
         dir:'auto'
       notification = new Notification(id, config)
 
+  tColor: (d) ->
+    up = 4
+    if d.Type == up
+      color.up
+    else
+      color.down
+
 KLine.register_plugin = (name, clazz) ->
   Plugins[name] = clazz
 
@@ -406,6 +413,7 @@ kColor = (d, i, data) ->
 KLine.extend = util.extend
 KLine.color = color
 KLine.kColor = kColor
+
 KLine.filter = util.filter
 KLine.merge_data = util.merge_data
 KLine.merge_with_key = util.merge_with_key

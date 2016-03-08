@@ -105,19 +105,21 @@ class KLineToolTip {
     const left = () => {
       const w = util.w();
       const tw = tips[0][0].clientWidth;
+      let v = d3.event.pageX;
       if (w - tw - d3.event.pageX - 30 < 0) {
-        return d3.event.pageX - tw - 10;
+        v = d3.event.pageX - tw - 10;
       }
-      return d3.event.pageX;
+      return `${v}px`;
     };
 
     const top = () => {
       const h = util.h();
       const th = tips[0][0].clientHeight;
+      let v = d3.event.pageY + 30;
       if (h - th - d3.event.pageY - 30 < 0) {
-        return d3.event.pageY - th - 30;
+        v = d3.event.pageY - th - 30;
       }
-      return d3.event.pageY + 30;
+      return `${v}px`;
     };
 
     this.root.dispatch.on('tip', (e, ...args) => {

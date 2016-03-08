@@ -16,7 +16,7 @@ class KLineTypingLine {
       'stroke-dasharray': '7 7',
       stroke: '#abc',
     };
-    this._ui.draw_line(dset, 'typing_line', style);
+    this._ui.line(dset, 'typing_line', style);
   }
 }
 
