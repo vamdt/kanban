@@ -29,10 +29,6 @@ class KLineCandle {
       svg.selectAll('.candle').remove();
       return;
     }
-    if (this.root.param('ocl')) {
-      svg.selectAll('rect.candle').remove();
-      return;
-    }
 
     const kColor = (d, i) => KLine.kColor(d, i, data);
     const x = this._ui.x;
@@ -41,7 +37,7 @@ class KLineCandle {
     const dispatch = this.root.dispatch;
 
     const rect = svg.selectAll('rect.candle')
-      .data(data);
+      .data(this.root.param('ocl') ? [] : data);
 
     function mover(d, i) { dispatch.tip(this, 'k', d, i); }
     rect
