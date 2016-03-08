@@ -81,8 +81,9 @@ function templ(name, d) {
       <div style='background-color:${e.style('stroke')}'>${e.attr('id')}</div>
         ${name}`;
     default:
-      return 'no templ';
+      break;
   }
+  return false;
 }
 
 class KLineToolTip {
@@ -123,11 +124,15 @@ class KLineToolTip {
     };
 
     this.root.dispatch.on('tip', (e, ...args) => {
+      const html = templ.apply(e, args);
+      if (html === false) {
+        return;
+      }
       tips
         .style('display', '')
         .style('left', left)
         .style('top', top)
-        .html(templ.apply(e, args))
+        .html(html)
         .transition()
         .duration(5000)
         .transition()
