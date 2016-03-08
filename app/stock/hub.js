@@ -1,10 +1,11 @@
 import d3 from 'd3';
-import KLine from './kline';
+import plugin from './plugin';
+import { extend, filter } from './util';
 
 class KLineHub {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.hub);
+    this.options = extend({}, this.root.options.hub);
     this._ui = this.root._ui;
   }
 
@@ -56,7 +57,7 @@ class KLineHub {
     const x = this._ui.x;
     const y = this._ui.y;
     const dispatch = this.root.dispatch;
-    const dataset = KLine.filter(data, kdata);
+    const dataset = filter(data, kdata);
     const rect = this._ui.svg.selectAll(`rect.${cls}`)
       .data(dataset);
     const hover = {
@@ -113,4 +114,4 @@ class KLineHub {
   }
 }
 
-KLine.register_plugin('hub', KLineHub);
+plugin.register('hub', KLineHub);

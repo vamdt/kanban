@@ -1,9 +1,10 @@
-import KLine from './kline';
+import plugin from './plugin';
+import { extend, filter } from './util';
 
 class KLineSegmentLine {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.segment);
+    this.options = extend({}, this.root.options.segment);
     this._ui = this.root._ui;
   }
 
@@ -16,7 +17,7 @@ class KLineSegmentLine {
     if (handcraft && this.root.param('k') !== '1') {
       dname = 'HCLine';
     }
-    const dataset = KLine.filter(datasel.Segment[dname], data);
+    const dataset = filter(datasel.Segment[dname], data);
     const up = 4;
     dataset.forEach((d, j) => {
       if (d.hasOwnProperty('MACD')) {
@@ -48,4 +49,4 @@ class KLineSegmentLine {
   }
 }
 
-KLine.register_plugin('segment_line', KLineSegmentLine);
+plugin.register('segment_line', KLineSegmentLine);

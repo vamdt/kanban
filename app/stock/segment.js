@@ -1,9 +1,10 @@
-import KLine from './kline';
+import plugin from './plugin';
+import { extend, filter } from './util';
 
 class KLineSegment {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.segment);
+    this.options = extend({}, this.root.options.segment);
     this._ui = this.root._ui;
   }
 
@@ -12,7 +13,7 @@ class KLineSegment {
 
   update(data, datasel) {
     const sdata = datasel.Segment.Data;
-    const dataset = KLine.filter(sdata, data);
+    const dataset = filter(sdata, data);
 
     const style = {
       stroke: this.root.tColor,
@@ -22,4 +23,4 @@ class KLineSegment {
   }
 }
 
-KLine.register_plugin('segment', KLineSegment);
+plugin.register('segment', KLineSegment);

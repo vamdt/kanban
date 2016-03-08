@@ -1,4 +1,4 @@
-import KLine from './kline';
+import plugin from './plugin';
 
 const hd = {};
 
@@ -156,4 +156,4 @@ class KLineCmd {
   }
 }
 
-KLine.register_plugin('cmd', KLineCmd);
+plugin.register('cmd', KLineCmd);

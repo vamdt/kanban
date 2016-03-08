@@ -1,5 +1,7 @@
 import KLine from './kline';
 import KLineMas from './mas';
+import plugin from './plugin';
+import { extend } from './util';
 
 const defaults = {
   width: 2,
@@ -8,7 +10,7 @@ const defaults = {
 class KLineCandle {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.candle, defaults);
+    this.options = extend({}, this.root.options.candle, defaults);
     this.root.options.candle = this.options;
     this._ui = this.root._ui;
   }
@@ -93,4 +95,4 @@ class KLineCandle {
 
 }
 
-KLine.register_plugin('candle', KLineCandle);
+plugin.register('candle', KLineCandle);

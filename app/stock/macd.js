@@ -1,5 +1,6 @@
 import d3 from 'd3';
-import KLine from './kline';
+import plugin from './plugin';
+import { extend } from './util';
 
 const bColor = (d) => (d.MACD > 0) ? '#f00' : '#080';
 
@@ -17,7 +18,7 @@ function dragmove() {
 class KLineMacd {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.macd);
+    this.options = extend({}, this.root.options.macd);
   }
 
   init() {
@@ -146,4 +147,4 @@ class KLineMacd {
   }
 }
 
-KLine.register_plugin('macd', KLineMacd);
+plugin.register('macd', KLineMacd);

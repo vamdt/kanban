@@ -1,6 +1,6 @@
 import d3 from 'd3';
+import plugin from './plugin';
 import util from './util';
-import KLine from './kline';
 
 const defaults = {
   tmpl: '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.High%><br/>最低价：<%- p.Low%>',
@@ -89,7 +89,7 @@ function templ(name, d) {
 class KLineToolTip {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.tooltip, defaults);
+    this.options = util.extend({}, this.root.options.tooltip, defaults);
   }
 
   init() {
@@ -144,4 +144,4 @@ class KLineToolTip {
   }
 }
 
-KLine.register_plugin('tooltip', KLineToolTip);
+plugin.register('tooltip', KLineToolTip);

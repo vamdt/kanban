@@ -1,6 +1,8 @@
 import d3 from 'd3';
 import KLine from './kline';
 import KLineMas from './mas';
+import plugin from './plugin';
+import { extend } from './util';
 
 const formatValue = d3.format(',d');
 const fmtVolume = (d) => formatValue(d / 100);
@@ -12,7 +14,7 @@ function dragmove() {
 class KLineVolume {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.volume);
+    this.options = extend({}, this.root.options.volume);
   }
 
   init() {
@@ -115,4 +117,4 @@ class KLineVolume {
   }
 }
 
-KLine.register_plugin('volume', KLineVolume);
+plugin.register('volume', KLineVolume);

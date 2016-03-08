@@ -1,5 +1,6 @@
 d3 = require 'd3'
 util = require './util'
+Plugin = require('./plugin').default
 KUI = require('./ui').default
 defaults =
   container: 'body'
@@ -11,8 +12,6 @@ defaults =
 
 formatValue = d3.format(",.2f")
 fmtCent = (d) -> formatValue d/100
-
-Plugins = {}
 
 class KLine
   constructor: (@options) ->
@@ -108,9 +107,9 @@ class KLine
 
   initPlugins: ->
     @plugins = []
-    for n,c of Plugins
+    Plugin.every (name, c) =>
       plugin = new c @
-      continue if plugin.init() is off
+      return if plugin.init() is off
       @add_plugin_obj plugin
 
   resize: (w, h) ->
@@ -392,9 +391,6 @@ class KLine
     else
       color.down
 
-KLine.register_plugin = (name, clazz) ->
-  Plugins[name] = clazz
-
 color =
   up: "#f00"
   down: "#080"
@@ -410,11 +406,9 @@ kColor = (d, i, data) ->
     return color.down
   color.up
 
-KLine.extend = util.extend
 KLine.color = color
 KLine.kColor = kColor
 
-KLine.filter = util.filter
 KLine.merge_data = util.merge_data
 KLine.merge_with_key = util.merge_with_key
 

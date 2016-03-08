@@ -1,9 +1,10 @@
-import KLine from './kline';
+import plugin from './plugin';
+import { extend, filter } from './util';
 
 class KLineTyping {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.typing);
+    this.options = extend({}, this.root.options.typing);
     this._ui = this.root._ui;
   }
 
@@ -15,7 +16,7 @@ class KLineTyping {
     if (this.root.param('ntyping')) {
       tdata = false;
     }
-    const dataset = KLine.filter(tdata, data);
+    const dataset = filter(tdata, data);
 
     const style = {
       fill: this.root.tColor,
@@ -24,4 +25,4 @@ class KLineTyping {
   }
 }
 
-KLine.register_plugin('typing', KLineTyping);
+plugin.register('typing', KLineTyping);

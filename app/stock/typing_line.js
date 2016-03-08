@@ -1,9 +1,10 @@
-import KLine from './kline';
+import plugin from './plugin';
+import { extend, filter } from './util';
 
 class KLineTypingLine {
   constructor(root) {
     this.root = root;
-    this.options = KLine.extend({}, this.root.options.typing);
+    this.options = extend({}, this.root.options.typing);
     this._ui = this.root._ui;
   }
 
@@ -11,7 +12,7 @@ class KLineTypingLine {
   }
 
   update(data, datasel) {
-    const dset = KLine.filter(datasel.Typing.Line, data);
+    const dset = filter(datasel.Typing.Line, data);
     const style = {
       'stroke-dasharray': '7 7',
       stroke: '#abc',
@@ -20,4 +21,4 @@ class KLineTypingLine {
   }
 }
 
-KLine.register_plugin('typing_line', KLineTypingLine);
+plugin.register('typing_line', KLineTypingLine);
