@@ -9,6 +9,9 @@
     {{c}}
     </div>
   </div>
+  <div v-if="show" class="pure-g">
+    <button class="pure-button" @click="sel('')">Delete</button>
+  </div>
 </template>
 
 <script>

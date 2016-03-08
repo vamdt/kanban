@@ -5,21 +5,26 @@ const color = {
   down: '#080',
   eq: '#000',
 };
+color._up = color.up;
+color._down = color.down;
+color._eq = color.eq;
 
 export default class KUI {
   constructor(root) {
     this.root = root;
     this.dispatch = root.dispatch;
-    root.dispatch.on('param.ui', () => {
-      const rcolor = root.param('color');
-      if (!rcolor) {
-        return;
+    root.dispatch.on('param.ui', () => this.updateColor());
+  }
+
+  updateColor() {
+    const rcolor = this.root.param('color');
+    if (!rcolor) {
+      return;
+    }
+    ['up', 'down', 'eq'].forEach((n) => {
+      if (rcolor.hasOwnProperty(n)) {
+        color[n] = rcolor[n] || color[`_${n}`];
       }
-      ['up', 'down', 'eq'].forEach((n) => {
-        if (rcolor.hasOwnProperty(n)) {
-          color[n] = rcolor[n];
-        }
-      });
     });
   }
 
