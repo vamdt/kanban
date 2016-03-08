@@ -110,4 +110,34 @@ export default class KUI {
       .text(numf)
       .style('stroke', style.stroke || this.root.tColor);
   }
+
+  circle(dataset, clazz, style = {}) {
+    const x = this.x;
+    const y = this.y;
+    const dispatch = this.root.dispatch;
+    const circle = this.svg.selectAll(`circle.${clazz}`)
+      .data(dataset);
+
+    function mover(d, i) { dispatch.tip(this, clazz, d, i); }
+
+    circle
+      .exit()
+      .transition()
+      .remove();
+
+    circle
+      .enter()
+      .append('circle')
+      .attr('class', clazz)
+      .on('mouseover.tip', mover);
+
+    const rsize = this.root.param(`${clazz}_circle_size`) || 3;
+
+    circle
+      .transition()
+      .attr('r', rsize)
+      .attr('cx', (d) => x(d.i))
+      .attr('cy', (d) => y(d.Price))
+      .style(style);
+  }
 }

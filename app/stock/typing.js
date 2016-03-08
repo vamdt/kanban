@@ -11,38 +11,16 @@ class KLineTyping {
   }
 
   update(data, datasel) {
-    const x = this._ui.x;
-    const y = this._ui.y;
     let tdata = datasel.Typing.Data;
     if (this.root.param('ntyping')) {
       tdata = false;
     }
     const dataset = KLine.filter(tdata, data);
-    const dispatch = this.root.dispatch;
-    const circle = this._ui.svg.selectAll('circle.typing')
-      .data(dataset);
-    function mover(d, i) {
-      dispatch.tip(this, 'typing', d, i);
-    }
-    circle
-      .enter()
-      .append('circle')
-      .attr('class', 'typing')
-      .on('mouseover', mover);
 
-    circle
-      .exit()
-      .transition()
-      .remove();
-
-    const rsize = this.root.param('typing_circle_size') || 3;
-
-    circle
-      .transition()
-      .attr('r', rsize)
-      .attr('cx', (d) => x(d.i))
-      .attr('cy', (d) => y(d.Price))
-      .style('fill', this.root.tColor);
+    const style = {
+      fill: this.root.tColor,
+    };
+    this._ui.circle(dataset, 'typing', style);
   }
 }
 
