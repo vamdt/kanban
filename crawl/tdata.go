@@ -136,6 +136,10 @@ func (p *Tdatas) Drop_lastday_data() {
 }
 
 func (p *Tdatas) Add(data Tdata) int {
+	if data.Volume == 0 && data.Open == 0 {
+		return 0
+	}
+
 	l := len(p.Data)
 	if l < 1 {
 		p.Data = append(p.Data, data)

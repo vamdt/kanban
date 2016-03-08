@@ -86,7 +86,7 @@ func TestM1s2M5s(t *testing.T) {
 
 func TestM1s2M30s(t *testing.T) {
 	type Case struct {
-		m1 []Tdata
+		m1  []Tdata
 		m30 []Tdata
 	}
 

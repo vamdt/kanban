@@ -12,6 +12,7 @@ func stringSlice2Ticks(dates []string) Ticks {
 	for i := len(ticks.Data) - 1; i > -1; i-- {
 		d, _ := time.Parse(fmt[:len(dates[i])], dates[i])
 		ticks.Data[i].Time = d
+		ticks.Data[i].Volume = 1
 	}
 	return ticks
 }

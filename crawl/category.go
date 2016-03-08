@@ -181,6 +181,7 @@ func UpdateFactor(storestr string) {
 		data[i].Factor = 0
 	}
 
+	latest_time := market_begin_day
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup
 	c := 0
@@ -203,6 +204,9 @@ func UpdateFactor(storestr string) {
 		go func(s *Stock, i int) {
 			defer wg.Done()
 			s.Days_update(store)
+			if t := s.Days.latest_time(); t.After(latest_time) {
+				latest_time = t
+			}
 			s.loaded = int32(i) + 2
 		}(s, i)
 	}
@@ -219,6 +223,9 @@ func UpdateFactor(storestr string) {
 			continue
 		}
 		s := stocks.stocks[i]
+		if s.Days.latest_time().Before(latest_time) {
+			continue
+		}
 		j := int(s.loaded) - 2
 		if j < len(data) {
 			data[j].Factor = s.Days.Factor()

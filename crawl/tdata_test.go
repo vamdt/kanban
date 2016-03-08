@@ -12,6 +12,7 @@ func stringSlice2Tdatas(dates []string) Tdatas {
 	for i := len(tdatas.Data) - 1; i > -1; i-- {
 		d, _ := time.Parse(fmt[:len(dates[i])], dates[i])
 		tdatas.Data[i].Time = d
+		tdatas.Data[i].Volume = 1
 	}
 	return tdatas
 }
@@ -45,7 +46,7 @@ func TestTdatasAdd(t *testing.T) {
 		old_len := len(cases.Data)
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
-		tdata := Tdata{Time: d}
+		tdata := Tdata{Time: d, Volume: 1}
 		index := cases.Add(tdata)
 		new_len := len(cases.Data)
 
