@@ -41,6 +41,11 @@ export default class KUI {
       .data(dataset);
 
     line
+      .exit()
+      .transition()
+      .remove();
+
+    line
       .enter()
       .append('line')
       .attr('class', clazz)
@@ -49,11 +54,6 @@ export default class KUI {
 
     const up = 4;
     const down = 5;
-
-    line
-      .exit()
-      .transition()
-      .remove();
 
     line
       .transition()
