@@ -1,11 +1,12 @@
-package crawl
+package mysql
 
 import (
 	"database/sql"
 	"flag"
 	"strings"
 
-	. "./base"
+	. "../../base"
+	"../../store"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/golang/glog"
@@ -19,7 +20,7 @@ var mysql string
 
 func init() {
 	flag.StringVar(&mysql, "mysql", "root@/stock", "mysql uri")
-	RegisterStore("mysql", &MysqlStore{})
+	store.Register("mysql", &MysqlStore{})
 }
 
 func (p *MysqlStore) Open() (err error) {

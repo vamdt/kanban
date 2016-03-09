@@ -1,9 +1,12 @@
-package crawl
+package mem
 
-import . "./base"
+import (
+	. "../../base"
+	"../../store"
+)
 
 func init() {
-	RegisterStore("mem", &MemStore{})
+	store.Register("mem", &MemStore{})
 }
 
 type MemStore struct {

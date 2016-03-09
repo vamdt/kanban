@@ -11,6 +11,7 @@ import (
 	"time"
 
 	. "./base"
+	"./store"
 	"github.com/golang/glog"
 )
 
@@ -88,7 +89,7 @@ func NewStock(id string, hub_height int) *Stock {
 type Stocks struct {
 	stocks  PStockSlice
 	rwmutex sync.RWMutex
-	store   Store
+	store   store.Store
 	play    int
 	ch      chan *Stock
 
@@ -96,7 +97,7 @@ type Stocks struct {
 }
 
 func NewStocks(storestr string, play, min_hub_height int) *Stocks {
-	store := getStore(storestr)
+	store := store.Get(storestr)
 	if min_hub_height < 0 {
 		min_hub_height = 0
 	}
@@ -107,7 +108,7 @@ func NewStocks(storestr string, play, min_hub_height int) *Stocks {
 	}
 }
 
-func (p *Stocks) Store() Store { return p.store }
+func (p *Stocks) Store() store.Store { return p.store }
 
 func (p *Stocks) Run() {
 	if p.play > minPlay {
@@ -345,7 +346,7 @@ func (p *Tdatas) ParseChan() {
 	p.LinkHub()
 }
 
-func (p *Stock) Update(store Store, play bool) bool {
+func (p *Stock) Update(store store.Store, play bool) bool {
 	if !atomic.CompareAndSwapInt32(&p.loaded, 0, 1) {
 		return false
 	}
@@ -375,7 +376,7 @@ func (p *Stock) days_download(t time.Time) (bool, error) {
 	return true, nil
 }
 
-func (p *Stock) Days_update(store Store) int {
+func (p *Stock) Days_update(store store.Store) int {
 	c := Day_collection_name(p.Id)
 	p.Days.Data, _ = store.LoadTDatas(c)
 	t := p.Days.latest_time()
@@ -396,7 +397,7 @@ func (p *Stock) Days_update(store Store) int {
 	return count - l
 }
 
-func (p *Stock) Ticks_update(store Store) int {
+func (p *Stock) Ticks_update(store store.Store) int {
 	c := Tick_collection_name(p.Id)
 	p.Ticks.Data, _ = store.LoadTicks(c)
 	begin_time := p.Ticks.latest_time()

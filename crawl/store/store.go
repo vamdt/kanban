@@ -1,9 +1,9 @@
-package crawl
+package store
 
 import (
 	"sync"
 
-	. "./base"
+	. "../base"
 	"github.com/golang/glog"
 )
 
@@ -12,10 +12,10 @@ var (
 	stores   = make(map[string]Store)
 )
 
-// RegisterStore makes a store driver available by the provided name.
+// Register makes a store driver available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
-func RegisterStore(name string, store Store) {
+func Register(name string, store Store) {
 	storesMu.Lock()
 	defer storesMu.Unlock()
 	if store == nil {
@@ -46,7 +46,7 @@ type Store interface {
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)
 }
 
-func getStore(s string) Store {
+func Get(s string) Store {
 	storesMu.Lock()
 	store, ok := stores[s]
 	storesMu.Unlock()

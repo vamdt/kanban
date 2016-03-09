@@ -1,6 +1,4 @@
-// +build mongo
-
-package crawl
+package mongo
 
 import (
 	"encoding/binary"
@@ -8,7 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	. "./base"
+	. "../../base"
+	"../../store"
 	"github.com/golang/glog"
 
 	"gopkg.in/mgo.v2"
@@ -19,7 +18,7 @@ var mongo string
 
 func init() {
 	flag.StringVar(&mongo, "mongo", "mongodb://127.0.0.1/stock", "mongo uri")
-	RegisterStore("mongo", &MongoStore{})
+	store.Register("mongo", &MongoStore{})
 }
 
 func (p *MongoStore) Open() (err error) {

@@ -8,6 +8,8 @@ import (
 	"os"
 
 	"./crawl"
+	_ "./crawl/store/mem"
+	_ "./crawl/store/mysql"
 	"./dev"
 	"github.com/golang/glog"
 )

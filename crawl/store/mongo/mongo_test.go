@@ -1,6 +1,4 @@
-// +build mongo
-
-package crawl
+package mongo
 
 import (
 	"encoding/json"

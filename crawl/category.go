@@ -7,10 +7,11 @@ import (
 	"time"
 
 	. "./base"
+	"./store"
 	"github.com/golang/glog"
 )
 
-func LoadCategoryItem(p *CategoryItem, store Store) {
+func LoadCategoryItem(p *CategoryItem, store store.Store) {
 	data, err := store.LoadCategories()
 	if err != nil {
 		glog.Warningln("load categories err", err)
@@ -24,7 +25,7 @@ func LoadCategoryItem(p *CategoryItem, store Store) {
 }
 
 func UpdateCate(storestr string) {
-	store := getStore(storestr)
+	store := store.Get(storestr)
 	cate := NewCategoryItem("")
 	LoadCategoryItem(cate, store)
 	if cate.Sub == nil {
@@ -104,7 +105,7 @@ func (p *Stocks) Days_update_real() {
 }
 
 func UpdateFactor(storestr string) {
-	store := getStore(storestr)
+	store := store.Get(storestr)
 	data, err := store.LoadCategories()
 	if err != nil {
 		glog.Infoln("load categories err", err)
