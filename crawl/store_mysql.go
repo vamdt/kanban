@@ -110,10 +110,22 @@ func (p *MysqlStore) LoadTDatas(table string) (res []Tdata, err error) {
 
 func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
 	p.createDayTdataTable(table)
-	stmt, err := p.db.Prepare("INSERT INTO `" + table + "`(`time`,`open`,`high`,`low`,`close`,`volume`) values(?,?,?,?,?,?)")
+	var stmt *sql.Stmt
+	var err error
+	for i := 0; i < 2; i++ {
+		stmt, err = p.db.Prepare("INSERT INTO `" + table + "`(`time`,`open`,`high`,`low`,`close`,`volume`) values(?,?,?,?,?,?)")
+		if err == nil {
+			break
+		}
+		if strings.Index(err.Error(), "Error 1146:") > -1 {
+			p.createTickTable(table)
+			continue
+		}
+	}
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 
 	for i, c := 0, len(datas); i < c; i++ {
 		data := &datas[i]
@@ -201,11 +213,22 @@ func (p *MysqlStore) LoadTicks(table string) (res []Tick, err error) {
 }
 
 func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
-	p.createTickTable(table)
-	stmt, err := p.db.Prepare("INSERT INTO `" + table + "`(`time`,`price`,`change`,`volume`,`turnover`,`type`) values(?,?,?,?,?,?)")
-	if err == nil {
+	var stmt *sql.Stmt
+	var err error
+	for i := 0; i < 2; i++ {
+		stmt, err = p.db.Prepare("INSERT INTO `" + table + "`(`time`,`price`,`change`,`volume`,`turnover`,`type`) values(?,?,?,?,?,?)")
+		if err == nil {
+			break
+		}
+		if strings.Index(err.Error(), "Error 1146:") > -1 {
+			p.createTickTable(table)
+			continue
+		}
+	}
+	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 
 	for i, c := 0, len(ticks); i < c; i++ {
 		tick := &ticks[i]
@@ -265,7 +288,8 @@ func (p *MysqlStore) createCategorieTable() {
 func (p *MysqlStore) LoadCategories() (res []CategoryItemInfo, err error) {
 	table := categoryTable
 	cols := "`id`,`name`,`pid`,`leaf`,`factor`"
-	rows, err := p.db.Query("SELECT " + cols + " FROM `" + table + "`")
+	var rows *sql.Rows
+	rows, err = p.db.Query("SELECT " + cols + " FROM `" + table + "`")
 	if err != nil {
 		glog.Warningln(err)
 		return
@@ -294,18 +318,24 @@ func (p *MysqlStore) getMaxConnections() int {
 
 func (p *MysqlStore) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err error) {
 	table := categoryTable
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		err = p.db.QueryRow("SELECT `id` FROM `"+table+"` WHERE pid=? AND name=?",
 			info.Pid, info.Name).Scan(&id)
 
+		if err == nil {
+			break
+		}
+
+		if strings.Index(err.Error(), "Error 1146:") > -1 {
+			p.createCategorieTable()
+			continue
+		}
 		if err == sql.ErrNoRows {
 			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`,`leaf`) values(?,?,?)",
 				info.Pid, info.Name, info.Leaf)
 			continue
 		}
-		if err == nil {
-			break
-		}
+		glog.Warningln(err)
 	}
 	return
 }
@@ -325,27 +355,17 @@ func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error
 		p.GetOrInsertCategoryItem(&info)
 	}
 
-	p.SaveCategoryWithPid(c.Sub, id)
+	p.SaveCategories(c.Sub, id)
 	return
 }
 
-func (p *MysqlStore) SaveCategoryWithPid(c Category, pid int) (err error) {
+func (p *MysqlStore) SaveCategories(c Category, pid int) (err error) {
 	if c == nil {
 		return
 	}
 	for _, cate := range c {
 		err = p.SaveCategoryItemWithPid(cate, pid)
 	}
-	return
-}
-
-func (p *MysqlStore) SaveCategories(c Category) (err error) {
-	if c == nil {
-		return
-	}
-
-	p.createCategorieTable()
-	p.SaveCategoryWithPid(c, 0)
 	return
 }
 

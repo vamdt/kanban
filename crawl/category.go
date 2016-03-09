@@ -71,30 +71,37 @@ func (p *CategoryItem) LeafCount() int {
 	return len(p.Info)
 }
 
-func LoadCategories(store Store) Category {
+func (p *CategoryItem) initSub() {
+	if p.Sub == nil {
+		p.Sub = *NewCategory()
+	}
+}
+
+func (p *CategoryItem) Load(store Store) {
 	data, err := store.LoadCategories()
 	if err != nil {
-		glog.Infoln("load categories err", err)
+		glog.Warningln("load categories err", err)
 	}
 
 	if len(data) < 1 {
-		return nil
+		return
 	}
 
-	item := NewCategoryItem("")
-	item.Assembly(data)
-	return item.Sub
+	p.Assembly(data)
+}
+
+func (p *CategoryItem) Save(store Store) {
+	store.SaveCategories(p.Sub, p.Id)
 }
 
 func UpdateCate(storestr string) {
 	store := getStore(storestr)
-	tc := LoadCategories(store)
-	if tc == nil {
-		tc = *NewCategory()
-	}
+	cate := NewCategoryItem("")
+	cate.Load(store)
+	cate.initSub()
 	robot := SinaRobot{}
-	robot.Cate(tc)
-	store.SaveCategories(tc)
+	robot.Cate(cate.Sub)
+	cate.Save(store)
 }
 
 func (p *Stocks) Days_update_real() {

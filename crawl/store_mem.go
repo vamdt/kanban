@@ -34,6 +34,6 @@ func (p *MemStore) SaveTicks(string, []Tick) (err error) { return }
 
 func (p *MemStore) LoadCategories() (res []CategoryItemInfo, err error) { return }
 
-func (p *MemStore) SaveCategories(c Category) (err error) { return }
+func (p *MemStore) SaveCategories(Category, int) (err error) { return }
 
 func (p *MemStore) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}

@@ -43,7 +43,7 @@ type Store interface {
 	SaveTick(table string, tick *Tick) error
 	SaveTicks(string, []Tick) error
 	LoadCategories() ([]CategoryItemInfo, error)
-	SaveCategories(Category) error
+	SaveCategories(Category, int) error
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)
 }
 
