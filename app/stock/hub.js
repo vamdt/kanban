@@ -2,7 +2,7 @@ import d3 from 'd3';
 import plugin from './plugin';
 import { extend, filter } from './util';
 
-class KLineHub {
+class Hub {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.hub);
@@ -114,4 +114,4 @@ class KLineHub {
   }
 }
 
-plugin.register('hub', KLineHub);
+plugin.register('hub', Hub);

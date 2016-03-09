@@ -86,7 +86,7 @@ function templ(name, d) {
   return false;
 }
 
-class KLineToolTip {
+class ToolTip {
   constructor(root) {
     this.root = root;
     this.options = util.extend({}, this.root.options.tooltip, defaults);
@@ -144,4 +144,4 @@ class KLineToolTip {
   }
 }
 
-plugin.register('tooltip', KLineToolTip);
+plugin.register('tooltip', ToolTip);

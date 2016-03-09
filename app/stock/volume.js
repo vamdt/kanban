@@ -1,5 +1,5 @@
 import d3 from 'd3';
-import KLineMas from './mas';
+import Mas from './mas';
 import plugin from './plugin';
 import { extend } from './util';
 
@@ -10,7 +10,7 @@ function dragmove() {
   d3.select(this).attr('transform', `translate(0, ${d3.event.y})`);
 }
 
-class KLineVolume {
+class Volume {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.volume);
@@ -37,7 +37,7 @@ class KLineVolume {
     }
     this.y = d3.scale.linear()
       .range([height, 0]);
-    const mas = new KLineMas(this.root, this.svg, this.y, (d) => d.volume);
+    const mas = new Mas(this.root, this.svg, this.y, (d) => d.volume);
     mas.init();
     this.root.add_plugin_obj(mas);
   }
@@ -116,4 +116,4 @@ class KLineVolume {
   }
 }
 
-plugin.register('volume', KLineVolume);
+plugin.register('volume', Volume);

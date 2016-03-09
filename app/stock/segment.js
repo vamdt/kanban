@@ -1,7 +1,7 @@
 import plugin from './plugin';
 import { extend, filter } from './util';
 
-class KLineSegment {
+class Segment {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.segment);
@@ -23,4 +23,4 @@ class KLineSegment {
   }
 }
 
-plugin.register('segment', KLineSegment);
+plugin.register('segment', Segment);

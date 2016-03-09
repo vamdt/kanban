@@ -2,7 +2,7 @@ import plugin from './plugin';
 
 const hd = {};
 
-class KLineCmd {
+class Cmd {
   constructor(root) {
     this.root = root;
     this.root.dispatch.on('cmd', (...args) => this.cmd.apply(this, args));
@@ -156,4 +156,4 @@ class KLineCmd {
   }
 }
 
-plugin.register('cmd', KLineCmd);
+plugin.register('cmd', Cmd);

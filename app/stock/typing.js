@@ -1,7 +1,7 @@
 import plugin from './plugin';
 import { extend, filter } from './util';
 
-class KLineTyping {
+class Typing {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.typing);
@@ -25,4 +25,4 @@ class KLineTyping {
   }
 }
 
-plugin.register('typing', KLineTyping);
+plugin.register('typing', Typing);

@@ -1,4 +1,4 @@
-import KLineMas from './mas';
+import Mas from './mas';
 import plugin from './plugin';
 import { extend } from './util';
 
@@ -6,7 +6,7 @@ const defaults = {
   width: 2,
 };
 
-class KLineCandle {
+class Candle {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.candle, defaults);
@@ -18,7 +18,7 @@ class KLineCandle {
     const svg = this.root._ui.svg;
     this.options.width = +this.options.width || 4;
     this.root.options.size = Math.floor(this.root.options.width / (1 + this.options.width));
-    const mas = new KLineMas(this.root, svg, this.root._ui.y, (d) => d.close);
+    const mas = new Mas(this.root, svg, this.root._ui.y, (d) => d.close);
     mas.init();
     this.root.add_plugin_obj(mas);
   }
@@ -94,4 +94,4 @@ class KLineCandle {
 
 }
 
-plugin.register('candle', KLineCandle);
+plugin.register('candle', Candle);

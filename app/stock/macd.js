@@ -13,7 +13,7 @@ function dragmove() {
     .attr('transform', `translate(0, ${d3.event.y})`);
 }
 
-class KLineMacd {
+class Macd {
   constructor(root) {
     this.root = root;
     this.options = extend({}, this.root.options.macd);
@@ -146,4 +146,4 @@ class KLineMacd {
   }
 }
 
-plugin.register('macd', KLineMacd);
+plugin.register('macd', Macd);

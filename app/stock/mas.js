@@ -17,7 +17,7 @@ function defaultDfn(d) {
   return d.close;
 }
 
-export default class KLineMas {
+export default class Mas {
   constructor(root, svg, y, dfn) {
     this.root = root;
     this.svg = svg;
