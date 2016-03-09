@@ -1,6 +1,9 @@
 package crawl
 
-import "github.com/golang/glog"
+import (
+	. "./base"
+	"github.com/golang/glog"
+)
 
 type segment_parser struct {
 	typing_parser

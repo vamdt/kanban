@@ -12,6 +12,7 @@ import (
 	"github.com/golang/glog"
 
 	"./crawl"
+	"./crawl/base"
 )
 
 var stocks *crawl.Stocks
@@ -66,7 +67,7 @@ func plates_handle(w http.ResponseWriter, r *http.Request) {
 		pid, _ = strconv.Atoi(pidstr)
 	}
 	data, _ := stocks.Store().LoadCategories()
-	sel := []crawl.CategoryItemInfo{}
+	sel := []base.CategoryItemInfo{}
 	for _, d := range data {
 		if d.Pid == pid {
 			sel = append(sel, d)

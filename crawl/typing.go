@@ -5,6 +5,7 @@ import (
 	"sort"
 	"time"
 
+	. "./base"
 	"github.com/golang/glog"
 )
 
@@ -19,11 +20,6 @@ const (
 	DownTyping
 	DullTyping
 )
-
-type HL struct {
-	High int
-	Low  int
-}
 
 type Typing struct {
 	begin int

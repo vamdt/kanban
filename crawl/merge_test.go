@@ -3,6 +3,8 @@ package crawl
 import (
 	"testing"
 	"time"
+
+	. "./base"
 )
 
 func _d(s string) time.Time {

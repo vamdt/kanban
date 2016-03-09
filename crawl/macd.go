@@ -14,15 +14,15 @@ func macd(td *Tdatas, short, long, m, start int) {
 		start = c
 	}
 	for i := start - 1; i > -1; i-- {
-		if td.Data[i].emas > 0 {
+		if td.Data[i].Emas > 0 {
 			break
 		}
 		start = i
 	}
 
 	if start < 1 {
-		td.Data[0].emas = td.Data[0].Close * 10
-		td.Data[0].emal = td.Data[0].Close * 10
+		td.Data[0].Emas = td.Data[0].Close * 10
+		td.Data[0].Emal = td.Data[0].Close * 10
 		td.Data[0].DIFF = 0
 		td.Data[0].DEA = 0
 		td.Data[0].MACD = 0
@@ -33,9 +33,9 @@ func macd(td *Tdatas, short, long, m, start int) {
 	l1, l2 := long-1, long+1
 	m1, m2 := m-1, m+1
 	for i := start; i < c; i++ {
-		td.Data[i].emas = (td.Data[i-1].emas*s1 + td.Data[i].Close*20) / s2
-		td.Data[i].emal = (td.Data[i-1].emal*l1 + td.Data[i].Close*20) / l2
-		td.Data[i].DIFF = td.Data[i].emas - td.Data[i].emal
+		td.Data[i].Emas = (td.Data[i-1].Emas*s1 + td.Data[i].Close*20) / s2
+		td.Data[i].Emal = (td.Data[i-1].Emal*l1 + td.Data[i].Close*20) / l2
+		td.Data[i].DIFF = td.Data[i].Emas - td.Data[i].Emal
 		td.Data[i].DEA = (td.Data[i-1].DEA*m1 + td.Data[i].DIFF*2) / m2
 		td.Data[i].MACD = 2 * (td.Data[i].DIFF - td.Data[i].DEA)
 	}

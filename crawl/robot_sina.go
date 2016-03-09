@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	. "./base"
 )
 
 type SinaRobot struct {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	. "./base"
 	"github.com/golang/glog"
 )
 
@@ -85,7 +86,7 @@ func (p *JQKARobot) Days_download(id string, start time.Time) (res []Tdata, err 
 
 	// "start":"19901219"
 	start_str := string(ParseParamBeginEnd(body, []byte(`"start":"`), []byte(`"`)))
-	start_date, _ := time.Parse(jqkamt, start_str)
+	start_date, _ := time.Parse(JQKAmt, start_str)
 	if start.Before(start_date) {
 		start = start_date
 	}

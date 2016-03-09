@@ -7,51 +7,15 @@ import (
 	"log"
 	"os"
 	"path"
-	"sort"
 	"strconv"
 	"time"
-)
 
-const (
-	_ int = iota
-	buy_tick
-	sell_tick
-	eq_tick
+	. "./base"
 )
-
-type Tick struct {
-	Time     time.Time
-	Price    int
-	Change   int
-	Volume   int // 手
-	Turnover int // 元
-	Type     int
-}
 
 type Ticks struct {
 	Data []Tick `json:"data"`
 	play []Tick
-}
-
-type TickSlice []Tick
-
-func (p TickSlice) Len() int           { return len(p) }
-func (p TickSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-func (p TickSlice) Less(i, j int) bool { return p[i].Time.Before(p[j].Time) }
-
-func SearchTickSlice(a TickSlice, t time.Time) int {
-	return sort.Search(len(a), func(i int) bool {
-		// a[i].Time >= t
-		return a[i].Time.After(t) || a[i].Time.Equal(t)
-	})
-}
-
-func (p TickSlice) Search(t time.Time) (int, bool) {
-	i := SearchTickSlice(p, t)
-	if i < p.Len() {
-		return i, t.Equal(p[i].Time)
-	}
-	return i, false
 }
 
 type RealtimeTick struct {
@@ -66,32 +30,6 @@ func (p *RealtimeTick) set_status(s []byte) {
 	p.status, _ = strconv.Atoi(string(s))
 	if p.status == 3 {
 		p.status = 2
-	}
-}
-
-func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnover, typestr []byte) {
-	p.Time, _ = time.Parse("15:04:05", string(timestr))
-	p.Time = date.Add(time.Second * time.Duration(TheSeconds(p.Time)))
-
-	p.Price = ParseCent(string(price))
-	p.Change = ParseCent(string(change))
-
-	p.Volume, _ = strconv.Atoi(string(volume))
-	p.Turnover, _ = strconv.Atoi(string(turnover))
-
-	switch string(typestr) {
-	case "UP":
-		fallthrough
-	case "买盘":
-		p.Type = buy_tick
-	case "DOWN":
-		fallthrough
-	case "卖盘":
-		p.Type = sell_tick
-	case "EQUAL":
-		fallthrough
-	case "中性盘":
-		p.Type = eq_tick
 	}
 }
 
@@ -110,10 +48,6 @@ func tick_write_raw_cache(c []byte, id string, t time.Time) {
 	f := raw_cache_filename(id, t)
 	os.MkdirAll(path.Dir(f), 0755)
 	ioutil.WriteFile(f, c, 0644)
-}
-
-func TheSeconds(t time.Time) int {
-	return t.Hour()*60*60 + t.Minute()*60 + t.Second()
 }
 
 func FixTickTime(ticks []Tick) {

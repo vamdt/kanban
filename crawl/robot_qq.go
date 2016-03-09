@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"time"
+
+	. "./base"
 )
 
 type QQRobot struct {
@@ -51,7 +53,7 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 
 	// start:901219
 	start_str := string(ParseParamByte(lines[1], []byte("start"), []byte(" "), []byte(":")))
-	start_date, _ := time.Parse(qqmt, start_str)
+	start_date, _ := time.Parse(QQmt, start_str)
 	if start.Before(start_date) {
 		start = start_date
 	}

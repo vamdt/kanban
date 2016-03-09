@@ -1,5 +1,7 @@
 package crawl
 
+import . "./base"
+
 func init() {
 	RegisterStore("mem", &MemStore{})
 }

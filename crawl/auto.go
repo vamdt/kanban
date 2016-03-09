@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	. "./base"
 	"github.com/golang/glog"
 )
 
@@ -439,6 +440,7 @@ func (p *Stock) Ticks_update(store Store) int {
 	return count - l
 }
 
+/*
 func (p *Tdata) parse_mins_from_sina(line []byte) error {
 	items := [6]string{"day:", "open:", "high:", "close:", "low:", "volume:"}
 	v := [6]string{}
@@ -463,6 +465,7 @@ func (p *Tdata) parse_mins_from_sina(line []byte) error {
 	p.FromString(v[0], v[1], v[2], v[3], v[4], v[5])
 	return nil
 }
+*/
 
 var UnknowSinaRes error = errors.New("could not find '成交时间' in head line")
 
@@ -596,11 +599,11 @@ func (p *Stock) tick_get_real(line []byte) bool {
 	}
 	if tick.Volume != p.last_tick.Volume {
 		if tick.Price >= p.last_tick.sellone {
-			tick.Type = buy_tick
+			tick.Type = Buy_tick
 		} else if tick.Price <= p.last_tick.buyone {
-			tick.Type = sell_tick
+			tick.Type = Sell_tick
 		} else {
-			tick.Type = eq_tick
+			tick.Type = Eq_tick
 		}
 		tick.Change = tick.Price - p.last_tick.Price
 

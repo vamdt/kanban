@@ -5,6 +5,8 @@ import (
 	"flag"
 	"sort"
 	"testing"
+
+	. "./base"
 )
 
 var line_files_flag = flag.String("lines", "", "the line test files")

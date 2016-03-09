@@ -5,6 +5,7 @@ import (
 	"flag"
 	"strings"
 
+	. "./base"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/golang/glog"

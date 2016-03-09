@@ -3,6 +3,7 @@ package crawl
 import (
 	"sync"
 
+	. "./base"
 	"github.com/golang/glog"
 )
 

@@ -3,6 +3,8 @@ package crawl
 import (
 	"testing"
 	"time"
+
+	. "./base"
 )
 
 func stringSlice2Tdatas(dates []string) Tdatas {

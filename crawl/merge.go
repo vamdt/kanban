@@ -3,6 +3,8 @@ package crawl
 import (
 	"flag"
 	"time"
+
+	. "./base"
 )
 
 var jhjj_k bool
