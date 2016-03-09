@@ -1,4 +1,4 @@
-package crawl
+package robot
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 )
 
 func Http_get(url string, referer *string) (res *http.Response, err error) {
-	glog.V(HttpV).Infoln("http get", url)
+	glog.V(HttpV).Infoln(url)
 	for i := 0; i < 2; i++ {
 		client := &http.Client{Timeout: time.Second * 5}
 

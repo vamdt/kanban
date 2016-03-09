@@ -1,4 +1,4 @@
-package crawl
+package sina
 
 import (
 	"bytes"
@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"time"
 
-	. "./base"
+	. "../"
+	. "../../base"
 )
 
 type SinaRobot struct {
 }
 
 func init() {
-	for i := 4; i > 0; i-- {
+	for i := DefaultRobotConcurrent; i > 0; i-- {
 		robot := &SinaRobot{}
 		Registry(robot)
 	}

@@ -1,18 +1,19 @@
-package crawl
+package qq
 
 import (
 	"bytes"
 	"fmt"
 	"time"
 
-	. "./base"
+	. "../"
+	. "../../base"
 )
 
 type QQRobot struct {
 }
 
 func init() {
-	for i := 4; i > 0; i-- {
+	for i := DefaultRobotConcurrent; i > 0; i-- {
 		robot := &QQRobot{}
 		Registry(robot)
 	}

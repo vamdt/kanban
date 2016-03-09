@@ -8,6 +8,9 @@ import (
 	"os"
 
 	"./crawl"
+	_ "./crawl/robot/jqka"
+	_ "./crawl/robot/qq"
+	_ "./crawl/robot/sina"
 	_ "./crawl/store/mem"
 	_ "./crawl/store/mysql"
 	"./dev"

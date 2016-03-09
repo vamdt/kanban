@@ -1,4 +1,4 @@
-package crawl
+package robot
 
 import (
 	"container/list"
@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	. "./base"
+	. "../base"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	robotBusy
 )
 
-const defaultRobotConcurrent int = 4
+const DefaultRobotConcurrent int = 4
 
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
@@ -31,6 +31,7 @@ type RobotBox struct {
 	jobs   list.List
 	mrobot sync.Mutex
 	mjob   sync.Mutex
+	start  bool
 }
 
 func NewWorker(worker Robot) *Worker { return &Worker{worker: worker} }
@@ -38,7 +39,7 @@ func NewRobotBox() *RobotBox         { return &RobotBox{} }
 
 var DefaultRobotBox = NewRobotBox()
 
-func init() {
+func Work() {
 	go DefaultRobotBox.Work(false)
 }
 
@@ -88,6 +89,18 @@ func (p *Worker) Do(job *jobItem) {
 }
 
 func (p *RobotBox) Work(once bool) {
+	if !once {
+		p.mrobot.Lock()
+		start := p.start
+		if !p.start {
+			p.start = true
+		}
+		p.mrobot.Unlock()
+		if start {
+			return
+		}
+	}
+
 	for {
 		p.mjob.Lock()
 		l := p.jobs.Len()
@@ -112,7 +125,7 @@ func (p *RobotBox) Work(once bool) {
 			}
 			go w.Do(p.GetJob())
 		})
-		p.robots = p.robots.Move(defaultRobotConcurrent)
+		p.robots = p.robots.Move(DefaultRobotConcurrent)
 		p.mrobot.Unlock()
 	}
 }

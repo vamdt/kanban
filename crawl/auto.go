@@ -11,6 +11,7 @@ import (
 	"time"
 
 	. "./base"
+	"./robot"
 	"./store"
 	"github.com/golang/glog"
 )
@@ -118,6 +119,7 @@ func (p *Stocks) Run() {
 		}
 	}
 
+	robot.Work()
 	for {
 		if IsTradeTime(time.Now()) {
 			p.Ticks_update_real()
@@ -269,7 +271,7 @@ func (p *Stocks) Ticks_update_real() {
 		wg.Add(1)
 		go func(ids string, pstocks PStockSlice) {
 			defer wg.Done()
-			body := Tick_download_real_from_sina(ids)
+			body := robot.Tick_download_real_from_sina(ids)
 			if body == nil {
 				return
 			}
@@ -366,7 +368,7 @@ func (p *Stock) Update(store store.Store, play bool) bool {
 }
 
 func (p *Stock) days_download(t time.Time) (bool, error) {
-	tds, err := Days_download(p.Id, t)
+	tds, err := robot.Days_download(p.Id, t)
 	if err != nil {
 		return false, err
 	}
@@ -471,7 +473,7 @@ func (p *Tdata) parse_mins_from_sina(line []byte) error {
 var UnknowSinaRes error = errors.New("could not find '成交时间' in head line")
 
 func (p *Stock) ticks_download(t time.Time) (bool, error) {
-	body := Tick_download_from_sina(p.Id, t)
+	body := robot.Tick_download_from_sina(p.Id, t)
 	if body == nil {
 		return false, nil
 	}
@@ -537,7 +539,7 @@ func (p *Stock) ticks_get_today() bool {
 		return false
 	}
 
-	body := Tick_download_today_from_sina(p.Id)
+	body := robot.Tick_download_today_from_sina(p.Id)
 	if body == nil {
 		return false
 	}

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	. "./base"
+	"./robot"
+	"./robot/sina"
 	"./store"
 	"github.com/golang/glog"
 )
@@ -31,7 +33,7 @@ func UpdateCate(storestr string) {
 	if cate.Sub == nil {
 		cate.Sub = *NewCategory()
 	}
-	robot := SinaRobot{}
+	robot := sina.SinaRobot{}
 	robot.Cate(cate.Sub)
 	store.SaveCategories(cate.Sub, cate.Id)
 }
@@ -77,7 +79,7 @@ func (p *Stocks) Days_update_real() {
 		wg.Add(1)
 		go func(ids string, pstocks PStockSlice) {
 			defer wg.Done()
-			body := Tick_download_real_from_sina(ids)
+			body := robot.Tick_download_real_from_sina(ids)
 			if body == nil {
 				return
 			}
@@ -120,6 +122,7 @@ func UpdateFactor(storestr string) {
 		data[i].Factor = 0
 	}
 
+	robot.Work()
 	latest_time := market_begin_day
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup

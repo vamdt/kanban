@@ -1,11 +1,12 @@
-package crawl
+package jqka
 
 import (
 	"bytes"
 	"fmt"
 	"time"
 
-	. "./base"
+	. "../"
+	. "../../base"
 	"github.com/golang/glog"
 )
 
@@ -13,7 +14,7 @@ type JQKARobot struct {
 }
 
 func init() {
-	for i := defaultRobotConcurrent; i > 0; i-- {
+	for i := DefaultRobotConcurrent; i > 0; i-- {
 		robot := &JQKARobot{}
 		Registry(robot)
 	}
