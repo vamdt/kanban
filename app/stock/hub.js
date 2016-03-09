@@ -41,7 +41,7 @@ class KLineHub {
       },
     ];
     const handcraft = this.root.param('handcraft');
-    const dname = handcraft ? 'Data' : 'HCData';
+    const dname = handcraft ? 'HCData' : 'Data';
     let skip = false;
     levels.forEach(({ level, name }) => {
       const hubdata = (!skip && dataset[name]) ? dataset[name].Hub[dname] : false;
