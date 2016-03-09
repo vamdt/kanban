@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"strings"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -151,31 +150,6 @@ func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
 	return err
 }
 
-func (p *MysqlStore) SaveTData(table string, data *Tdata) (err error) {
-	for i := 0; i < 2; i++ {
-		_, err = p.db.Exec("INSERT INTO `"+table+"`(`time`,`open`,`high`,`low`,`close`,`volume`) values(?,?,?,?,?,?)",
-			data.Time, data.Open, data.High, data.Low, data.Close, data.Volume)
-		if err == nil {
-			break
-		}
-		e := err.Error()
-		if strings.Index(e, "re-prepared") > 0 {
-			i--
-			time.Sleep(time.Millisecond * 10)
-			continue
-		}
-		if strings.Index(e, "Error 1062") > -1 {
-			err = nil
-			break
-		}
-		p.createDayTdataTable(table)
-	}
-	if err != nil {
-		glog.Warningln("insert tdata error", err, *data)
-	}
-	return
-}
-
 func (p *MysqlStore) createTickTable(table string) {
 	sql := "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
 		"`time` DATETIME(3) NOT NULL," +
@@ -251,21 +225,6 @@ func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
 		glog.Warningf("insert tick error %v", err)
 	}
 	return err
-}
-
-func (p *MysqlStore) SaveTick(table string, tick *Tick) (err error) {
-	for i := 0; i < 2; i++ {
-		_, err = p.db.Exec("INSERT INTO `"+table+"`(`time`,`price`,`change`,`volume`,`turnover`,`type`) values(?,?,?,?,?,?)",
-			tick.Time, tick.Price, tick.Change, tick.Volume, tick.Turnover, tick.Type)
-		if err == nil {
-			break
-		}
-		p.createTickTable(table)
-	}
-	if err != nil {
-		glog.Warningf("insert tick error %+v %+v", err, *tick)
-	}
-	return
 }
 
 func (p *MysqlStore) createCategorieTable() {

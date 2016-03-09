@@ -16,17 +16,9 @@ func (p *MemStore) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
-func (p *MemStore) SaveTData(table string, data *Tdata) (err error) {
-	return
-}
-
 func (p *MemStore) SaveTDatas(string, []Tdata) (err error) { return }
 
 func (p *MemStore) LoadTicks(table string) (res []Tick, err error) {
-	return
-}
-
-func (p *MemStore) SaveTick(table string, tick *Tick) (err error) {
 	return
 }
 

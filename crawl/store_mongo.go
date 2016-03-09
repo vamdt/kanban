@@ -89,22 +89,6 @@ func (p *MongoStore) SaveTDatas(table string, datas []Tdata) (err error) {
 	return
 }
 
-func (p *MongoStore) SaveTData(table string, data *Tdata) (err error) {
-	c := p.session.DB("").C(table)
-	id := Time2ObjectId(data.Time)
-	m, err := data2BsonM(*data)
-	if err != nil {
-		glog.Warningln("convert tdata error", err, *data)
-		return
-	}
-	m["_id"] = id
-	_, err = c.Upsert(bson.M{"_id": id}, m)
-	if err != nil {
-		glog.Warningln("insert tdata error", err, *data)
-	}
-	return
-}
-
 func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
 	c := p.session.DB("").C(table)
 	d := Tick{}
@@ -135,22 +119,6 @@ func (p *MongoStore) SaveTicks(table string, ticks []Tick) (err error) {
 	_, err = b.Run()
 	if err != nil {
 		glog.Warningln("insert ticks error", err)
-	}
-	return
-}
-
-func (p *MongoStore) SaveTick(table string, tick *Tick) (err error) {
-	c := p.session.DB("").C(table)
-	id := Time2ObjectId(tick.Time)
-	m, err := data2BsonM(*tick)
-	if err != nil {
-		glog.Warningln("convert tick error", err, *tick)
-		return
-	}
-	m["_id"] = id
-	_, err = c.Upsert(bson.M{"_id": id}, m)
-	if err != nil {
-		glog.Warningln("insert tick error", err, *tick)
 	}
 	return
 }
