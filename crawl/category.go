@@ -165,7 +165,8 @@ func UpdateFactor(storestr string) {
 			continue
 		}
 		s := stocks.stocks[i]
-		if s.Days.latest_time().Before(latest_time) {
+		if t := s.Days.latest_time(); t.Before(latest_time) {
+			glog.Infoln("latest time", s.Id, t)
 			continue
 		}
 		j := int(s.loaded) - 2
@@ -176,11 +177,16 @@ func UpdateFactor(storestr string) {
 	stocks.rwmutex.RUnlock()
 
 	factor := make(map[string]int)
+	stats := make([]int, 10)
 	for _, info := range data {
 		if info.Leaf && info.Factor > 0 {
 			factor[info.Name] = info.Factor
+			if info.Factor > -1 && info.Factor < 10 {
+				stats[info.Factor]++
+			}
 		}
 	}
+	mostFactor := maxIndex(stats)
 
 	for i, info := range data {
 		if info.Leaf && info.Factor == 0 {
@@ -201,7 +207,6 @@ func UpdateFactor(storestr string) {
 		for _, item := range data {
 			if item.Leaf && item.Pid == pid {
 				if item.Factor == 0 {
-					glog.Warningln("found an 0 factor", item)
 					continue
 				}
 				num++
@@ -210,6 +215,8 @@ func UpdateFactor(storestr string) {
 		}
 		if num > 0 {
 			data[i].Factor = factor / num
+		} else {
+			data[i].Factor = mostFactor
 		}
 	}
 

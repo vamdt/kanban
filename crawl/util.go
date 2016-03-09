@@ -89,3 +89,16 @@ func Minute5end(t time.Time) time.Time {
 func Minute30end(t time.Time) time.Time {
 	return t.Truncate(30 * time.Minute).Add(30 * time.Minute)
 }
+
+func maxIndex(nums []int) int {
+	if len(nums) < 1 {
+		return 0
+	}
+	i := 0
+	for j, n := range nums {
+		if nums[i] < n {
+			i = j
+		}
+	}
+	return i
+}
