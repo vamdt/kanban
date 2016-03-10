@@ -182,7 +182,9 @@ func UpdateFactor(storestr string) {
 		if info.Leaf && info.Factor > 0 {
 			factor[info.Name] = info.Factor
 			if info.Factor > -1 && info.Factor < 10 {
-				stats[info.Factor]++
+				if IsChinaShareCode(info.Name) {
+					stats[info.Factor]++
+				}
 			}
 		}
 	}
