@@ -6,31 +6,31 @@ import (
 )
 
 func init() {
-	store.Register("mem", &MemStore{})
+	store.Register("mem", &Mem{})
 }
 
-type MemStore struct {
+type Mem struct {
 }
 
-func (p *MemStore) Open() error { return nil }
+func (p *Mem) Open() error { return nil }
 
-func (p *MemStore) Close() {
+func (p *Mem) Close() {
 }
 
-func (p *MemStore) LoadTDatas(table string) (res []Tdata, err error) {
+func (p *Mem) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
-func (p *MemStore) SaveTDatas(string, []Tdata) (err error) { return }
+func (p *Mem) SaveTDatas(string, []Tdata) (err error) { return }
 
-func (p *MemStore) LoadTicks(table string) (res []Tick, err error) {
+func (p *Mem) LoadTicks(table string) (res []Tick, err error) {
 	return
 }
 
-func (p *MemStore) SaveTicks(string, []Tick) (err error) { return }
+func (p *Mem) SaveTicks(string, []Tick) (err error) { return }
 
-func (p *MemStore) LoadCategories() (res []CategoryItemInfo, err error) { return }
+func (p *Mem) LoadCategories() (res []CategoryItemInfo, err error) { return }
 
-func (p *MemStore) SaveCategories(Category, int) (err error) { return }
+func (p *Mem) SaveCategories(Category, int) (err error) { return }
 
-func (p *MemStore) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
+func (p *Mem) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
