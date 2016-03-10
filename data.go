@@ -76,3 +76,18 @@ func plates_handle(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonp(w, r, sel)
 }
+
+func star_handle(w http.ResponseWriter, r *http.Request) {
+	defer w.Write(nil)
+	sid := r.FormValue("s")
+	if len(sid) < 1 {
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		stocks.Store().Star(-1, sid)
+	}
+	if r.Method == http.MethodDelete {
+		stocks.Store().UnStar(-1, sid)
+	}
+}

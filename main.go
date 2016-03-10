@@ -54,6 +54,7 @@ func serve() {
 	http.HandleFunc("/socket.io/", serveWs)
 	http.HandleFunc("/search", search_handle)
 	http.HandleFunc("/plate", plates_handle)
+	http.HandleFunc("/star", star_handle)
 
 	port := os.Getenv("PORT")
 

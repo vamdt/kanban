@@ -11,6 +11,12 @@
           <a class="pure-menu-link" v-link="{name:'stock', params: {sid:
           opt.s, k: k}, replace: true}">{{k}}</a>
         </li>
+        <li class="pure-menu-item">
+          <button class="pure-button" @click="star(opt.s)">Star</button>
+        </li>
+        <li class="pure-menu-item">
+          <button class="pure-button" @click="unstar(opt.s)">Unstar</button>
+        </li>
     </ul>
   </div>
   <div id="container" v-kanpan="opt"></div>
@@ -18,6 +24,8 @@
 
 <script>
 import config from './config';
+import star from './cmd/star';
+import unstar from './cmd/unstar';
 import './kanpan';
 
 export default {
@@ -58,6 +66,8 @@ export default {
       }
       this.opt.v = +(new Date());
     },
+    star,
+    unstar,
   },
 };
 </script>

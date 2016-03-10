@@ -2,6 +2,8 @@ import sugg from './sugg';
 import unwatch from './unwatch';
 import watch from './watch';
 import show from './show';
+import star from './star';
+import unstar from './unstar';
 
 const kanpan = [
   'begin',
@@ -13,6 +15,8 @@ const handlers = {
   unwatch,
   watch,
   show,
+  star,
+  unstar,
 };
 
 export default {
