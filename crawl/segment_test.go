@@ -253,8 +253,6 @@ func TestText2Segment(t *testing.T) {
 }
 
 func TestParseSegment(t *testing.T) {
-	flag.Lookup("logtostderr").Value.Set("true")
-	flag.Lookup("v").Value.Set("1000")
 	pattern := *segment_files_flag
 	if len(pattern) < 1 {
 		pattern = "**/*.segment"
