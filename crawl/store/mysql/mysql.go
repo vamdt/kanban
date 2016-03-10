@@ -20,10 +20,10 @@ var mysql string
 
 func init() {
 	flag.StringVar(&mysql, "mysql", "root@/stock", "mysql uri")
-	store.Register("mysql", &MysqlStore{})
+	store.Register("mysql", &Mysql{})
 }
 
-func (p *MysqlStore) Open() (err error) {
+func (p *Mysql) Open() (err error) {
 	if p.db != nil {
 		p.Close()
 	}
@@ -47,7 +47,7 @@ func (p *MysqlStore) Open() (err error) {
 	return
 }
 
-func (p *MysqlStore) SetMaxOpenConns(n int) {
+func (p *Mysql) SetMaxOpenConns(n int) {
 	num := p.getMaxConnections()
 	if n < 0 {
 		n = 0
@@ -62,18 +62,18 @@ func (p *MysqlStore) SetMaxOpenConns(n int) {
 	p.db.SetMaxOpenConns(n)
 }
 
-type MysqlStore struct {
+type Mysql struct {
 	db *sql.DB
 }
 
-func (p *MysqlStore) Close() {
+func (p *Mysql) Close() {
 	if p.db != nil {
 		p.db.Close()
 		p.db = nil
 	}
 }
 
-func (p *MysqlStore) createDayTdataTable(table string) {
+func (p *Mysql) createDayTdataTable(table string) {
 	sql := "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
 		"`time` DATETIME NOT NULL," +
 		"`open` INT(11) NOT NULL DEFAULT 0," +
@@ -89,7 +89,7 @@ func (p *MysqlStore) createDayTdataTable(table string) {
 	}
 }
 
-func (p *MysqlStore) LoadTDatas(table string) (res []Tdata, err error) {
+func (p *Mysql) LoadTDatas(table string) (res []Tdata, err error) {
 	rows, err := p.db.Query("SELECT `time`,`open`,`high`,`low`,`close`,`volume` FROM `" + table + "` ORDER BY time")
 	if err != nil {
 		glog.Warningln(err)
@@ -109,7 +109,7 @@ func (p *MysqlStore) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
-func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
+func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
 	p.createDayTdataTable(table)
 	var stmt *sql.Stmt
 	var err error
@@ -152,7 +152,7 @@ func (p *MysqlStore) SaveTDatas(table string, datas []Tdata) error {
 	return err
 }
 
-func (p *MysqlStore) createTickTable(table string) {
+func (p *Mysql) createTickTable(table string) {
 	sql := "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
 		"`time` DATETIME(3) NOT NULL," +
 		"`price` INT(11) NOT NULL DEFAULT 0," +
@@ -168,7 +168,7 @@ func (p *MysqlStore) createTickTable(table string) {
 	}
 }
 
-func (p *MysqlStore) LoadTicks(table string) (res []Tick, err error) {
+func (p *Mysql) LoadTicks(table string) (res []Tick, err error) {
 	d := Tick{}
 	rows, err := p.db.Query("SELECT `time`,`price`,`change`,`volume`,`turnover`,`type` FROM `" + table + "` ORDER BY time")
 	if err != nil {
@@ -188,7 +188,7 @@ func (p *MysqlStore) LoadTicks(table string) (res []Tick, err error) {
 	return
 }
 
-func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
+func (p *Mysql) SaveTicks(table string, ticks []Tick) error {
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -229,7 +229,7 @@ func (p *MysqlStore) SaveTicks(table string, ticks []Tick) error {
 	return err
 }
 
-func (p *MysqlStore) createCategorieTable() {
+func (p *Mysql) createCategorieTable() {
 	table := categoryTable
 	sql := "CREATE TABLE IF NOT EXISTS `" + table + "` (" +
 		"`id` INT(11) NOT NULL AUTO_INCREMENT," +
@@ -246,7 +246,7 @@ func (p *MysqlStore) createCategorieTable() {
 	}
 }
 
-func (p *MysqlStore) LoadCategories() (res []CategoryItemInfo, err error) {
+func (p *Mysql) LoadCategories() (res []CategoryItemInfo, err error) {
 	table := categoryTable
 	cols := "`id`,`name`,`pid`,`leaf`,`factor`"
 	var rows *sql.Rows
@@ -271,13 +271,13 @@ func (p *MysqlStore) LoadCategories() (res []CategoryItemInfo, err error) {
 	return
 }
 
-func (p *MysqlStore) getMaxConnections() int {
+func (p *Mysql) getMaxConnections() int {
 	num := 0
 	p.db.QueryRow("SELECT @@max_connections").Scan(&num)
 	return num
 }
 
-func (p *MysqlStore) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err error) {
+func (p *Mysql) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err error) {
 	table := categoryTable
 	for i := 0; i < 3; i++ {
 		err = p.db.QueryRow("SELECT `id` FROM `"+table+"` WHERE pid=? AND name=?",
@@ -301,7 +301,7 @@ func (p *MysqlStore) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, er
 	return
 }
 
-func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error) {
+func (p *Mysql) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error) {
 	id := 0
 	info := CategoryItemInfo{Name: c.Name, Pid: pid, Leaf: false}
 	id, err = p.GetOrInsertCategoryItem(&info)
@@ -320,7 +320,7 @@ func (p *MysqlStore) SaveCategoryItemWithPid(c CategoryItem, pid int) (err error
 	return
 }
 
-func (p *MysqlStore) SaveCategories(c Category, pid int) (err error) {
+func (p *Mysql) SaveCategories(c Category, pid int) (err error) {
 	if c == nil {
 		return
 	}
@@ -330,7 +330,7 @@ func (p *MysqlStore) SaveCategories(c Category, pid int) (err error) {
 	return
 }
 
-func (p *MysqlStore) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
+func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	table := categoryTable
 	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=? WHERE `id`=?")
 	if err != nil {
