@@ -18,10 +18,10 @@ var mongo string
 
 func init() {
 	flag.StringVar(&mongo, "mongo", "mongodb://127.0.0.1/stock", "mongo uri")
-	store.Register("mongo", &MongoStore{})
+	store.Register("mongo", &Mongo{})
 }
 
-func (p *MongoStore) Open() (err error) {
+func (p *Mongo) Open() (err error) {
 	if p.session != nil {
 		p.Close()
 	}
@@ -34,18 +34,18 @@ func (p *MongoStore) Open() (err error) {
 	return
 }
 
-type MongoStore struct {
+type Mongo struct {
 	session *mgo.Session
 }
 
-func (p *MongoStore) Close() {
+func (p *Mongo) Close() {
 	if p.session != nil {
 		p.session.Close()
 		p.session = nil
 	}
 }
 
-func (p *MongoStore) LoadTDatas(table string) (res []Tdata, err error) {
+func (p *Mongo) LoadTDatas(table string) (res []Tdata, err error) {
 	c := p.session.DB("").C(table)
 	d := Tdata{}
 	iter := c.Find(nil).Sort("_id").Iter()
@@ -68,7 +68,7 @@ func data2BsonM(data interface{}) (m bson.M, err error) {
 	return
 }
 
-func (p *MongoStore) SaveTDatas(table string, datas []Tdata) (err error) {
+func (p *Mongo) SaveTDatas(table string, datas []Tdata) (err error) {
 	c := p.session.DB("").C(table)
 	b := c.Bulk()
 	for i, _ := range datas {
@@ -89,7 +89,7 @@ func (p *MongoStore) SaveTDatas(table string, datas []Tdata) (err error) {
 	return
 }
 
-func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
+func (p *Mongo) LoadTicks(table string) (res []Tick, err error) {
 	c := p.session.DB("").C(table)
 	d := Tick{}
 	iter := c.Find(nil).Sort("_id").Iter()
@@ -102,7 +102,7 @@ func (p *MongoStore) LoadTicks(table string) (res []Tick, err error) {
 	return
 }
 
-func (p *MongoStore) SaveTicks(table string, ticks []Tick) (err error) {
+func (p *Mongo) SaveTicks(table string, ticks []Tick) (err error) {
 	c := p.session.DB("").C(table)
 	b := c.Bulk()
 	for i, _ := range ticks {
@@ -140,8 +140,8 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 	return time.Unix(secs, nsec).UTC()
 }
 
-func (p *MongoStore) LoadCategories() (res []CategoryItemInfo, err error) { return }
+func (p *Mongo) LoadCategories() (res []CategoryItemInfo, err error) { return }
 
-func (p *MongoStore) SaveCategories(c Category, pid int) (err error) { return }
+func (p *Mongo) SaveCategories(c Category, pid int) (err error) { return }
 
-func (p *MongoStore) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
+func (p *Mongo) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
