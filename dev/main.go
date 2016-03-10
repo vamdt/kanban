@@ -23,6 +23,7 @@ type dev struct {
 	host       string
 	port       int
 	open       bool
+	out        _out
 }
 
 var Dev *dev = &dev{}
@@ -129,23 +130,20 @@ func (p *dev) Start(https bool, port string) {
 		args = append(args, "--content-base="+serve_uri)
 
 		p.webpackCmd = exec.Command("webpack-dev-server", args...)
-		p.webpackCmd.Stdout = os.Stdout
-		p.webpackCmd.Stderr = os.Stderr
+		p.webpackCmd.Stdout = &p.out
+		p.webpackCmd.Stderr = &p.out
 		glog.Infoln("start webpack-dev-server")
-		err := p.webpackCmd.Start()
-		if err != nil {
-			glog.Warningln(err)
-		}
+		go p.webpackCmd.Run()
 	}
 
 	if p.open {
 		go func() {
-			time.Sleep(time.Second * 2)
-			glog.Infoln("open", serve_uri)
-			err := exec.Command(openCmd, serve_uri).Run()
-			if err != nil {
-				glog.Warning(err)
+			if p.webpackCmd != nil {
+				for i := 5; p.out < 200 && i > 0; i-- {
+					time.Sleep(time.Second)
+				}
 			}
+			glog.Infoln("open", serve_uri, exec.Command(openCmd, serve_uri).Run())
 		}()
 	}
 }
@@ -172,4 +170,11 @@ func (p *dev) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	dev_static_handle(w, req)
+}
+
+type _out int
+
+func (p *_out) Write(buf []byte) (int, error) {
+	*p = _out(int(*p) + len(buf))
+	return os.Stdout.Write(buf)
 }
