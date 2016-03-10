@@ -357,3 +357,9 @@ func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 		}
 	}
 }
+
+func (p *Mysql) Star(pid int, symbol string) {
+}
+
+func (p *Mysql) UnStar(pid int, symbol string) {
+}

@@ -34,3 +34,7 @@ func (p *Mem) LoadCategories() (res []CategoryItemInfo, err error) { return }
 func (p *Mem) SaveCategories(Category, int) (err error) { return }
 
 func (p *Mem) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
+
+func (p *Mem) Star(pid int, symbol string) {}
+
+func (p *Mem) UnStar(pid int, symbol string) {}

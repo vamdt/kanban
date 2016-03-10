@@ -145,3 +145,9 @@ func (p *Mongo) LoadCategories() (res []CategoryItemInfo, err error) { return }
 func (p *Mongo) SaveCategories(c Category, pid int) (err error) { return }
 
 func (p *Mongo) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
+
+func (p *Mongo) Star(pid int, symbol string) {
+}
+
+func (p *Mongo) UnStar(pid int, symbol string) {
+}

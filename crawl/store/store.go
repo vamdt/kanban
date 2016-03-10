@@ -44,6 +44,8 @@ type Store interface {
 	LoadCategories() ([]CategoryItemInfo, error)
 	SaveCategories(Category, int) error
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)
+	Star(int, string)
+	UnStar(int, string)
 }
 
 func Get(s string) Store {
