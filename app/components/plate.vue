@@ -1,4 +1,5 @@
 <template>
+<div>
 <div class="pure-menu pure-menu-horizontal">
     <ul class="pure-menu-list">
         <li v-for="p in plate" class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
@@ -17,6 +18,7 @@
   <div v-for="i in stocks" class="pure-u-1-5">
     <a v-if="i.Leaf" v-link="{ path: '/s/' + i.Name + '/1'}" class="pure-menu-link">{{i.Name}} {{i.Factor}}</a>
   </div>
+</div>
 </div>
 </template>
 
