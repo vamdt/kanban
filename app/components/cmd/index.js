@@ -22,7 +22,7 @@ const handlers = {
 export default {
   ready() {
     const bind = (e, func) => {
-      this.$on(e, (opt) => {
+      this.$on(e, (...opt) => {
         func.apply(this, opt);
       });
     };

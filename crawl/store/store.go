@@ -46,6 +46,7 @@ type Store interface {
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)
 	Star(int, string)
 	UnStar(int, string)
+	IsStar(pid int, symbol string) bool
 }
 
 func Get(s string) Store {

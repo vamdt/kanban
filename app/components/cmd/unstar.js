@@ -1,5 +1,4 @@
 import d3 from 'd3';
-import unwatch from './unwatch';
 
 export default function (sid) {
   if (sid.length < 1) {
@@ -7,5 +6,5 @@ export default function (sid) {
   }
 
   d3.xhr(`/star?s=${sid}`).send('DELETE');
-  unwatch(sid);
+  this.$root.$broadcast('unwatch', sid);
 }

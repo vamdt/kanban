@@ -236,6 +236,7 @@ func (p *Mysql) createCategorieTable() {
 		"`pid` INT(11) NOT NULL DEFAULT 0," +
 		"`factor` INT(11) NOT NULL DEFAULT 0," +
 		"`leaf` TINYINT(1) NOT NULL DEFAULT 0," +
+		"`deleted` TINYINT(1) NOT NULL DEFAULT 0," +
 		"`name` VARCHAR(128) NOT NULL DEFAULT ''," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY (`pid`, `name`)" +
@@ -358,8 +359,50 @@ func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	}
 }
 
+func (p *Mysql) changeStar(pid int, symbol string, star bool) {
+	table := categoryTable
+	info := CategoryItemInfo{Name: "star", Pid: pid, Leaf: false}
+	starId, _ := p.GetOrInsertCategoryItem(&info)
+	if starId < 1 {
+		return
+	}
+	info.Name = "unstar"
+	unstarId, _ := p.GetOrInsertCategoryItem(&info)
+	if unstarId < 1 {
+		return
+	}
+
+	id := 0
+	err := p.db.QueryRow("SELECT `id`,`pid` FROM `"+table+"` WHERE `pid` in (?,?) AND name=?",
+		starId, unstarId, symbol).Scan(&id, &pid)
+	if err == sql.ErrNoRows {
+		info.Name = symbol
+		info.Pid = unstarId
+		if star {
+			info.Pid = starId
+		}
+		info.Leaf = true
+		p.GetOrInsertCategoryItem(&info)
+		return
+	}
+	if star && pid != starId {
+		p.db.Exec("UPDATE `"+table+"` SET `pid`=? WHERE `id`=?", starId, id)
+	}
+}
+
 func (p *Mysql) Star(pid int, symbol string) {
+	p.changeStar(pid, symbol, true)
 }
 
 func (p *Mysql) UnStar(pid int, symbol string) {
+	p.changeStar(pid, symbol, false)
+}
+
+func (p *Mysql) IsStar(pid int, symbol string) bool {
+	table := categoryTable
+	count := 0
+	starSql := "SELECT `id` FROM `" + table + "` WHERE pid=? AND name='star'"
+	err := p.db.QueryRow("SELECT COUNT(1) FROM `"+table+"` WHERE `pid`=("+starSql+") AND name=?",
+		pid, symbol).Scan(&count)
+	return err == nil && count > 0
 }

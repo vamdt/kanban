@@ -38,3 +38,7 @@ func (p *Mem) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
 func (p *Mem) Star(pid int, symbol string) {}
 
 func (p *Mem) UnStar(pid int, symbol string) {}
+
+func (p *Mem) IsStar(pid int, symbol string) bool {
+	return false
+}

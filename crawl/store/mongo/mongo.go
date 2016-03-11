@@ -151,3 +151,7 @@ func (p *Mongo) Star(pid int, symbol string) {
 
 func (p *Mongo) UnStar(pid int, symbol string) {
 }
+
+func (p *Mongo) IsStar(pid int, symbol string) bool {
+	return false
+}
