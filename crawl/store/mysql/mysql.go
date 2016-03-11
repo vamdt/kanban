@@ -385,8 +385,12 @@ func (p *Mysql) changeStar(pid int, symbol string, star bool) {
 		p.GetOrInsertCategoryItem(&info)
 		return
 	}
-	if star && pid != starId {
-		p.db.Exec("UPDATE `"+table+"` SET `pid`=? WHERE `id`=?", starId, id)
+	expPid := unstarId
+	if star {
+		expPid = starId
+	}
+	if pid != expPid {
+		p.db.Exec("UPDATE `"+table+"` SET `pid`=? WHERE `id`=?", expPid, id)
 	}
 }
 
