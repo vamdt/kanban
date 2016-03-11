@@ -43,12 +43,16 @@ type Stock struct {
 	broadcast bool
 	lst_trade time.Time
 	rw        sync.RWMutex
+	Name      string
 }
 
 func (p *Stock) MarshalTail(tail bool) ([]byte, error) {
 	p.rw.RLock()
 	defer p.rw.RUnlock()
-	s := Stock{Id: p.Id}
+	s := Stock{
+		Id:   p.Id,
+		Name: p.Name,
+	}
 	if !tail || !p.broadcast {
 		p.broadcast = true
 		// full
@@ -585,6 +589,7 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		return false
 	}
 
+	p.Name = string(infos[0])
 	nul := []byte("")
 	tick := RealtimeTick{}
 	t, _ := time.Parse("2006-01-02", string(infos[30]))
