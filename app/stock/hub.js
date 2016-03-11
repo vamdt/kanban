@@ -71,15 +71,23 @@ class Hub {
       'stroke-opacity': '.3',
     };
 
+    function mover() { d3.select(this).style(hover); }
+    function mout() { d3.select(this).style(hout); }
+    function tip(...args) {
+      args.unshift('hub');
+      args.unshift(this);
+      dispatch.tip(...args);
+    }
+
     rect
       .enter()
       .append('rect')
       .attr('class', cls)
       .attr('fill', 'transparent')
       .style(hout)
-      .on('mouseover.stroke', () => d3.select(this).style(hover))
-      .on('mouseover.tip', (d, i) => dispatch.tip(this, 'hub', d, i))
-      .on('mouseout.stroke', () => d3.select(this).style(hout));
+      .on('mouseover.stroke', mover)
+      .on('mouseover.tip', tip)
+      .on('mouseout.stroke', mout);
 
     rect
       .exit()
