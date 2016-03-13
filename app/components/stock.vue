@@ -17,6 +17,9 @@
         <li v-else class="pure-menu-item">
           <button class="pure-button" @click="star(opt.s)">Star</button>
         </li>
+        <li class="pure-menu-item">
+          <a :href="'/lucky?s='+opt.s" class="pure-menu-link">Lucky</a>
+        </li>
     </ul>
   </div>
   <div id="container" v-kanpan="opt"></div>

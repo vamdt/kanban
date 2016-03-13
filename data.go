@@ -102,3 +102,23 @@ func star_handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func expect_json_res(r *http.Request) bool {
+	accept := r.Header.Get("Accept")
+	if strings.Contains(accept, "application/json") {
+		return true
+	}
+	if strings.Contains(accept, "text/json") {
+		return true
+	}
+	return false
+}
+
+func lucky_handle(w http.ResponseWriter, r *http.Request) {
+	sid := r.FormValue("s")
+	sid = stocks.Store().Lucky(-1, sid)
+	if expect_json_res(r) {
+		jsonp(w, r, map[string]string{"lucky": sid})
+	}
+	http.Redirect(w, r, "/#/"+sid+"/1", http.StatusFound)
+}

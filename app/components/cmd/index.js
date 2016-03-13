@@ -4,6 +4,7 @@ import watch from './watch';
 import show from './show';
 import star from './star';
 import unstar from './unstar';
+import lucky from './lucky';
 
 const kanpan = [
   'begin',
@@ -17,6 +18,7 @@ const handlers = {
   show,
   star,
   unstar,
+  lucky,
 };
 
 export default {

@@ -410,3 +410,20 @@ func (p *Mysql) IsStar(pid int, symbol string) bool {
 		pid, symbol).Scan(&count)
 	return err == nil && count > 0
 }
+
+func (p *Mysql) Lucky(pid int, symbol string) string {
+	table := categoryTable
+	for {
+		err := p.db.QueryRow("SELECT `name` FROM `"+table+"` WHERE `leaf`=1 AND name!=? LIMIT 0,1",
+			symbol).Scan(&symbol)
+		if err != nil {
+			glog.Warningln(err)
+			break
+		}
+		if p.IsStar(pid, symbol) {
+			continue
+		}
+		break
+	}
+	return symbol
+}

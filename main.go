@@ -55,6 +55,7 @@ func serve() {
 	http.HandleFunc("/search", search_handle)
 	http.HandleFunc("/plate", plates_handle)
 	http.HandleFunc("/star", star_handle)
+	http.HandleFunc("/lucky", lucky_handle)
 
 	port := os.Getenv("PORT")
 

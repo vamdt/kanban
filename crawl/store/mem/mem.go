@@ -42,3 +42,7 @@ func (p *Mem) UnStar(pid int, symbol string) {}
 func (p *Mem) IsStar(pid int, symbol string) bool {
 	return false
 }
+
+func (p *Mem) Lucky(pid int, symbol string) string {
+	return symbol
+}
