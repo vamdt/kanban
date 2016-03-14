@@ -3,7 +3,9 @@ package mysql
 import (
 	"database/sql"
 	"flag"
+	"math/rand"
 	"strings"
+	"time"
 
 	. "../../base"
 	"../../store"
@@ -411,19 +413,34 @@ func (p *Mysql) IsStar(pid int, symbol string) bool {
 	return err == nil && count > 0
 }
 
-func (p *Mysql) Lucky(pid int, symbol string) string {
+func (p *Mysql) Lucky(uid int, symbol string) string {
 	table := categoryTable
-	for {
-		err := p.db.QueryRow("SELECT `name` FROM `"+table+"` WHERE `leaf`=1 AND name!=? LIMIT 0,1",
-			symbol).Scan(&symbol)
+	maxId := 0
+	p.db.QueryRow("SELECT MAX(`id`) FROM `" + table + "`").Scan(&maxId)
+	if maxId < 1 {
+		return symbol
+	}
+
+	name := ""
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 1000; i > 0; i-- {
+		id := rand.Intn(maxId)
+		err := p.db.QueryRow("SELECT `name` FROM `"+table+"` WHERE `id`=? AND `factor`>0 AND `leaf`=1 AND name!=?",
+			id, symbol).Scan(&name)
 		if err != nil {
 			glog.Warningln(err)
-			break
-		}
-		if p.IsStar(pid, symbol) {
 			continue
 		}
-		break
+
+		if len(name) < 1 {
+			continue
+		}
+
+		if !p.IsStar(uid, name) {
+			symbol = name
+			break
+		}
 	}
+
 	return symbol
 }
