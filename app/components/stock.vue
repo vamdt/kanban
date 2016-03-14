@@ -37,18 +37,15 @@ export default {
   },
   watch: {
     'opt.s': 'checkStar',
-    'opt.k': (v) => {
-      if (!v) {
-        return;
-      }
-      document.title = [document.title.split('/')[0], v].join('/');
-    },
+    sname: 'updateTitle',
+    'opt.k': 'updateTitle',
   },
 
   data() {
     return {
       levels: ['1', '5', '30', 'day', 'week', 'month'],
       opt: {},
+      sname: '',
       starred: false,
     };
   },
@@ -80,6 +77,13 @@ export default {
       }
       isStar(v, (e, res) => {
         this.starred = res && res.star;
+      });
+    },
+    updateTitle() {
+      document.title = [this.sname, this.opt.s, this.opt.k].join('/');
+      this.$root.$broadcast('stock_change', {
+        sid: this.opt.s,
+        name: this.sname,
       });
     },
   },

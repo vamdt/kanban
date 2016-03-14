@@ -91,6 +91,9 @@ Vue.directive('kanpan', {
       this.kl = new KLine({
         container: this.el,
       });
+      this.kl.dispatch.on('nameChange', (v) => {
+        this.vm.sname = v;
+      });
     }
     this.kl.param(settings);
     setTimeout(() => {

@@ -25,7 +25,7 @@
     <ul class="pure-menu-list">
         <li class="pure-menu-item pure-menu-selected"><a v-link="{ path: '/' }" class="pure-menu-link">Home</a></li>
         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
-            <a class="pure-menu-link">{{cur_stock_name ? cur_stock_name : 'Stock'}}</a>
+            <a v-link="{ path: '/s/'+cur_stock.sid+'/1' }" class="pure-menu-link">{{cur_stock.name}}</a>
             <ul class="pure-menu-children">
               <li v-for="s in stocks" class="pure-menu-item">
                 <a v-link="{ path: '/s/'+s.sid+'/1' }"
@@ -58,16 +58,10 @@ function param(hash = {}, key) {
 export default {
   events: {
     show_stock: 'show_stock',
+    stock_change: 'stock_change',
   },
   components: {
     cmd,
-  },
-  watch: {
-    cur_stock_name: v => {
-      const t = document.title.split('/');
-      t[0] = v;
-      document.title = t.join('/');
-    },
   },
 
   data() {
@@ -79,7 +73,7 @@ export default {
     }
     return {
       stocks: stocks || [],
-      cur_stock_name: this.stock_name(param(this.$route.params, 'sid'), stocks),
+      cur_stock: { name: 'Stock', sid:'' },
     };
   },
 
@@ -96,16 +90,6 @@ export default {
       };
     },
 
-    stock_name(sid, stocks) {
-      const all = stocks || this.stocks || [];
-      for (const s in all) {
-        if (s.sid === sid) {
-          return s.name || sid;
-        }
-      }
-      return sid;
-    },
-
     lru(s) {
       const stocks = this.stocks || [];
       const i = stocks.findIndex((e) => e.sid === s.sid);
@@ -118,7 +102,6 @@ export default {
     },
 
     show_stock(to) {
-      this.cur_stock_name = to.name || to.sid;
       this.lru(to);
       const k = param(this.$route.params, 'k') || 1;
       this.$route.router.go({
@@ -126,6 +109,10 @@ export default {
         params: { sid: to.sid, k },
         replace: this.$route.name === 'stock',
       });
+    },
+
+    stock_change(v) {
+      this.cur_stock = v;
     },
   },
 };

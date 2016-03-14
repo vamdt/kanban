@@ -15,7 +15,7 @@ fmtCent = (d) -> formatValue d/100
 
 class KLine
   constructor: (@options) ->
-    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw')
+    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw', 'nameChange')
     @options = util.extend {}, @options, defaults
     @_data = []
     @_ui = new KUI(@)
@@ -52,11 +52,14 @@ class KLine
     s = data.id
     return if s != @param 's'
     @_dataset = @_dataset || off
+    name = @_dataset.Name || off
     id = @_dataset.id || off
     if id != data.id
       @_dataset = off
     data = util.merge_data(@_dataset, data)
     @_dataset = data
+    if data.Name != name
+      @dispatch.nameChange(data.Name)
     k = @param 'k'
     dataset = switch k
       when '1' then data.m1s
