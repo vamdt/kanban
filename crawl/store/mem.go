@@ -1,12 +1,11 @@
-package mem
+package store
 
 import (
-	. "../../base"
-	"../../store"
+	. "../base"
 )
 
 func init() {
-	store.Register("mem", &Mem{})
+	Register("mem", &Mem{})
 }
 
 type Mem struct {
