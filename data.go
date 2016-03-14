@@ -119,6 +119,7 @@ func lucky_handle(w http.ResponseWriter, r *http.Request) {
 	sid = stocks.Store().Lucky(-1, sid)
 	if expect_json_res(r) {
 		jsonp(w, r, map[string]string{"lucky": sid})
+		return
 	}
 	http.Redirect(w, r, "/#/"+sid+"/1", http.StatusFound)
 }

@@ -7,6 +7,7 @@ import App from './components/app.vue';
 import Stock from './components/stock.vue';
 import Settings from './components/settings.vue';
 import Plate from './components/plate.vue';
+import Lucky from './components/lucky.vue';
 
 Vue.use(VueRouter);
 
@@ -23,6 +24,13 @@ router.map({
   '/plate/:pid/:id': {
     component: Plate,
   },
+  '/lucky/:sid': {
+    component: Lucky,
+  },
+});
+
+router.redirect({
+  '/lucky': '/lucky/sh000001',
 });
 
 router.start(App, '#app');

@@ -18,7 +18,7 @@
           <button class="pure-button" @click="star(opt.s)">Star</button>
         </li>
         <li class="pure-menu-item">
-          <a :href="'/lucky?s='+opt.s" class="pure-menu-link">Lucky</a>
+          <a v-link="{ path: '/lucky/'+opt.s }" class="pure-menu-link">Lucky</a>
         </li>
     </ul>
   </div>
