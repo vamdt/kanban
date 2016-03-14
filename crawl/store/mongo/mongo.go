@@ -35,6 +35,7 @@ func (p *Mongo) Open() (err error) {
 }
 
 type Mongo struct {
+	store.Mem
 	session *mgo.Session
 }
 
@@ -138,20 +139,4 @@ func ObjectId2Time(oid bson.ObjectId) time.Time {
 	secs := int64(binary.BigEndian.Uint32([]byte(id[0:4])))
 	nsec := int64(binary.BigEndian.Uint16([]byte(id[4:6]))) * int64(time.Millisecond)
 	return time.Unix(secs, nsec).UTC()
-}
-
-func (p *Mongo) LoadCategories() (res []CategoryItemInfo, err error) { return }
-
-func (p *Mongo) SaveCategories(c Category, pid int) (err error) { return }
-
-func (p *Mongo) SaveCategoryItemInfoFactor([]CategoryItemInfo) {}
-
-func (p *Mongo) Star(pid int, symbol string) {
-}
-
-func (p *Mongo) UnStar(pid int, symbol string) {
-}
-
-func (p *Mongo) IsStar(pid int, symbol string) bool {
-	return false
 }
