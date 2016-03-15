@@ -73,7 +73,7 @@ export default {
     }
     return {
       stocks: stocks || [],
-      cur_stock: { name: 'Stock', sid:'' },
+      cur_stock: { name: 'Stock', sid: '' },
     };
   },
 
