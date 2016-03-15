@@ -91,6 +91,7 @@ merge_data = (o, n) ->
   return n if not o
   o = data_init o
 
+  o.Name = n.Name
   for k in ['m1s', 'm5s', 'm30s', 'days', 'weeks', 'months'] when n[k] and n[k].data
     if not o[k]
       o[k] = n[k]
