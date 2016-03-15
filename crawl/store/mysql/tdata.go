@@ -46,7 +46,6 @@ func (p *Mysql) LoadTDatas(table string) (res []Tdata, err error) {
 }
 
 func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
-	p.createDayTdataTable(table)
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -55,7 +54,7 @@ func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
 			break
 		}
 		if strings.Index(err.Error(), "Error 1146:") > -1 {
-			p.createTickTable(table)
+			p.createDayTdataTable(table)
 			continue
 		}
 	}
