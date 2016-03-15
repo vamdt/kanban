@@ -10,9 +10,6 @@ defaults =
     bottom: 30
     left: 50
 
-formatValue = d3.format(",.2f")
-fmtCent = (d) -> formatValue d/100
-
 class KLine
   constructor: (@options) ->
     @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw', 'nameChange')
@@ -88,7 +85,7 @@ class KLine
 
   init: ->
     @stop()
-    @initUI()
+    @_ui.init()
     @initPlugins()
 
     redraw = (data) =>
@@ -120,134 +117,6 @@ class KLine
     @options.height = h - @options.margin.top - @options.margin.bottom
     @dispatch.resize()
 
-  initUI: ->
-    container = @_ui.container = d3.select @options.container || 'body'
-    container.html('')
-    width = parseInt container.style('width')
-    if width < 1
-      width = util.w()
-    height = parseInt container.style('height')
-    if height < 1
-      height = util.h() - 80
-    @options.width = width - @options.margin.left - @options.margin.right
-    @options.height = height - @options.margin.top - @options.margin.bottom
-    width = @options.width
-    height = @options.height
-    margin = @options.margin
-
-    svg = @_ui.svg = container.append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", "translate(#{margin.left},#{margin.top})")
-
-    x = @_ui.x = d3.scale.linear()
-      .range([0, width])
-
-    y = @_ui.y = d3.scale.linear()
-      .range([height, 0])
-
-    xAxisTickFormat = (i) =>
-      data = @data()
-      if typeof data[i] == 'undefined'
-        return 'F'
-      @prevTick = @prevTick || 0
-      prevTick = @prevTick
-      @prevTick = i
-
-      if i == 0
-        return d3.time.format("%Y-%m-%d")(data[i].date)
-      if data[i].date == data[prevTick].date
-        return ''
-      if data[i].date.getYear() isnt data[prevTick].date.getYear()
-        return d3.time.format("%Y-%m-%d")(data[i].date)
-      if data[i].date.getMonth() isnt data[prevTick].date.getMonth()
-        return d3.time.format("%m-%d")(data[i].date)
-      if data[i].date.getDay() isnt data[prevTick].date.getDay()
-        return d3.time.format("%d %H:%M")(data[i].date)
-      if data[i].date.getHours() isnt data[prevTick].date.getHours()
-        return d3.time.format("%H:%M")(data[i].date)
-      d3.time.format(":%M")(data[i].date)
-
-    xAxis = @_ui.xAxis = d3.svg.axis()
-      .scale(x)
-      .orient("bottom")
-      .tickSize(-height, 0)
-      .tickFormat(xAxisTickFormat)
-
-    yAxis = @_ui.yAxis = d3.svg.axis()
-      .scale(y)
-      .orient("left")
-      .ticks(6)
-      .tickSize(-width)
-      .tickFormat(fmtCent)
-
-    svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0, #{height})")
-      .call(xAxis)
-
-    svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-
-    zoomed = =>
-      n = zoom.scale()
-      @zs = @zs || n
-      o = @zs
-      @zs = n
-
-      x1 = zoom.translate()[0]
-      @zx = @zx || x1
-      x0 = @zx
-
-      nsize = @options.size
-      nleft = @_left
-      if n < o
-        nsize = parseInt nsize * 1.1
-      else if n > o
-        nsize = parseInt nsize * 0.9
-      else
-        return if Math.abs(Math.abs(x1) - Math.abs(x0)) < 2
-        @zx = x1
-
-        if x0 > x1
-          nleft = nleft + Math.max(20, parseInt nsize * 0.05)
-        else if x0 < x1
-          nleft = nleft - Math.max(20, parseInt nsize * 0.05)
-        else
-          return
-      @update_size(nsize, nleft)
-
-      @delay_draw()
-
-    zoom = d3.behavior.zoom()
-      .on("zoom", zoomed)
-
-    svg
-      .call(zoom)
-    svg.append("rect")
-      .attr("class", "pane")
-      .attr("width", width)
-      .attr("height", height)
-
-    @dispatch.on 'resize.core', =>
-      width = @options.width
-      height = @options.height
-      margin = @options.margin
-      container.select('svg')
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      x.range([0, width])
-      y.range([height, 0])
-      xAxis.tickSize(-height, 0)
-      yAxis.tickSize(-width)
-      svg.select('.x.axis').attr("transform", "translate(0, #{height})")
-      svg.select('rect.pane')
-        .attr("width", width)
-        .attr("height", height)
-      @delay_draw()
-
   move_to: (dir) ->
     switch dir
       when 'left'
@@ -264,21 +133,12 @@ class KLine
     d3.timer => @draw()
 
   draw: ->
-    x = @_ui.x
-    y = @_ui.y
     data = @data()
 
-    x.domain([0, data.length-1])
-    y.domain([d3.min(data, (d)->d.Low) * 0.99, d3.max(data, (d)->d.High)])
-
+    @_ui.update data
     @update data, @_datasel, @_dataset
 
-  updateAxis: ->
-    @_ui.svg.select(".x.axis").call(@_ui.xAxis)
-    @_ui.svg.select(".y.axis").call(@_ui.yAxis)
-
   update: (data, datasel, dataset) ->
-    @updateAxis()
     for plugin in @plugins when plugin.updateAxis
       plugin.updateAxis data, datasel, dataset
     for plugin in @plugins
