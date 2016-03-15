@@ -22,10 +22,11 @@ func (p *Mysql) createCategorieTable() {
 		"`pid` INT(11) NOT NULL DEFAULT 0," +
 		"`factor` INT(11) NOT NULL DEFAULT 0," +
 		"`leaf` TINYINT(1) NOT NULL DEFAULT 0," +
-		"`deleted` TINYINT(1) NOT NULL DEFAULT 0," +
+		"`updateAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
 		"`name` VARCHAR(128) NOT NULL DEFAULT ''," +
 		"PRIMARY KEY (`id`)," +
-		"UNIQUE KEY (`pid`, `name`)" +
+		"UNIQUE KEY (`pid`, `name`)," +
+		"KEY (`updateAt`)" +
 		")"
 	_, err := p.db.Exec(sql)
 	if err != nil {
@@ -193,32 +194,24 @@ func (p *Mysql) IsStar(pid int, symbol string) bool {
 
 func (p *Mysql) Lucky(uid int, symbol string) string {
 	table := categoryTable
-	maxId := 0
-	p.db.QueryRow("SELECT MAX(`id`) FROM `" + table + "`").Scan(&maxId)
-	if maxId < 1 {
-		return symbol
-	}
 
-	name := ""
+	pidSql := "SELECT `id` FROM `" + table + "` WHERE `pid`=-1 AND `name`='star'"
+	nameSql := "SELECT ? UNION ALL SELECT `name` FROM `" + table + "` WHERE `pid`=(" + pidSql + ")"
+	sql := "SELECT `name` FROM `" + table + "` WHERE `factor`>0 AND `leaf`=1 AND `name` NOT IN (" + nameSql + ") ORDER BY `updateAt` LIMIT ?,1"
+
+	name := symbol
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 1000; i > 0; i-- {
-		id := rand.Intn(maxId)
-		err := p.db.QueryRow("SELECT `name` FROM `"+table+"` WHERE `id`=? AND `factor`>0 AND `leaf`=1 AND name!=?",
-			id, symbol).Scan(&name)
+	for i := 10; i > 0; i-- {
+		offset := rand.Intn(10)
+		err := p.db.QueryRow(sql, symbol, offset).Scan(&name)
 		if err != nil {
 			glog.Warningln(err)
 			continue
 		}
-
-		if len(name) < 1 {
-			continue
-		}
-
-		if !p.IsStar(uid, name) {
-			symbol = name
+		if len(name) > 0 {
 			break
 		}
 	}
 
-	return symbol
+	return name
 }
