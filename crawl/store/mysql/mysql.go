@@ -46,7 +46,7 @@ func (p *Mysql) SetMaxOpenConns(n int) {
 	if n < 0 {
 		n = 0
 	} else {
-		if n > num {
+		if n > num/2 {
 			n = num / 2
 		}
 		if n < 1 {
