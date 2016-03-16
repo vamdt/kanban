@@ -35,14 +35,27 @@ class EventEmitter {
 }
 
 export default class IO extends EventEmitter {
-  constructor(root) {
-    this.root = root;
-    this.dispatch = root.dispatch;
-    this.sids = new EventEmitter();
+  constructor() {
+    super();
     this.auto_reconnect = false;
+
+    this.on('ready', () => {
+      this.readySubscribe();
+    });
   }
 
-  connect(readyCb) {
+  data(evt) {
+    const data = JSON.parse(evt.data);
+    if (data && data.id) {
+      this.emit(`subscribe.${data.id}`, data);
+    }
+    this.emit('data', evt);
+  }
+
+  connect() {
+    if (this.connected) {
+      return;
+    }
     const protocol = location.protocol.toLowerCase() === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${protocol}//${location.host}/socket.io/`);
     this.ws = ws;
@@ -57,16 +70,12 @@ export default class IO extends EventEmitter {
     };
 
     ws.onmessage = (evt) => {
-      this.emit('data', JSON.parse(evt.data));
+      this.data(evt);
     };
 
     ws.onerror = (evt) => {
       this.emit('error', evt);
-    }
-
-    if (readyCb) {
-      this.on('ready', readyCb);
-    }
+    };
 
     this.auto_reconnect = true;
     this.on('close', () => {
@@ -81,21 +90,38 @@ export default class IO extends EventEmitter {
 
   close() {
     this.auto_reconnect = false;
-    this.ws.close();
+    if (this.ws) {
+      this.ws.close();
+      this.ws = undefined;
+    }
+  }
+
+  readySubscribe() {
+    Object.keys(this.events).forEach((e) => {
+      const ee = e.split('.');
+      if (ee.length !== 2) {
+        return;
+      }
+      if (ee[0] !== 'subscribe') {
+        return;
+      }
+      this.ws.send(JSON.stringify({ s: ee[1] }));
+    });
   }
 
   subscribe(sid, cb) {
-    this.sids.on(`data.${sid}`, cb);
+    this.on(`subscribe.${sid}`, cb);
     if (this.connected) {
       this.ws.send(JSON.stringify({ s: sid }));
       return;
     }
+
     if (!this.auto_reconnect) {
-      this.on('ready', () => {});
+      this.connect();
     }
   }
 
   unsubscribe(sid) {
-    this.sids.off(`data.${sid}`);
+    this.off(`subscribe.${sid}`);
   }
 }
