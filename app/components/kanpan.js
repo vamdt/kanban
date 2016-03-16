@@ -82,23 +82,21 @@ Vue.directive('kanpan', {
       }
     }
     if (this.kl) {
-      if (value.s === this.kl.param('s')) {
-        this.kl.param(settings);
-        return;
-      }
-      this.kl.stop();
-    } else {
-      this.kl = new KLine({
-        container: this.el,
-      });
-      this.kl.dispatch.on('nameChange', (v) => {
-        this.vm.sname = v;
-      });
+      this.kl.param(settings);
+      return;
     }
-    this.kl.param(settings);
+
+    this.kl = new KLine({
+      container: this.el,
+    });
+    this.kl.dispatch.on('nameChange', (v) => {
+      this.vm.sname = v;
+    });
+
     setTimeout(() => {
       this.kl.init();
       this.kl.start();
+      this.kl.param(settings);
     }, 500);
   },
 });

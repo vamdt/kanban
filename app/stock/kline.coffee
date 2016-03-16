@@ -2,6 +2,7 @@ d3 = require 'd3'
 util = require './util'
 Plugin = require('./plugin').default
 KUI = require('./ui').default
+Data = require('./data').default
 defaults =
   container: 'body'
   margin:
@@ -17,6 +18,7 @@ class KLine
     @_data = []
     @_ui = new KUI(@)
     @_ui.dispatch = @dispatch
+    @io = new Data()
     @_left = 0
     @_max_left = 0
     @plugins = []
@@ -74,7 +76,7 @@ class KLine
       when 'object'
         o = {}
         for k,v of p
-          if @_param[k] and @_param[k] != v
+          if @_param[k] != v
             o[k] = @_param[k]
           @_param[k] = v
         @dispatch.param(o)
@@ -92,9 +94,10 @@ class KLine
       return unless data and data.id
       @data data
       @delay_draw()
-    @on_event 'kdata', redraw
 
     @dispatch.on 'param.core', (o) =>
+      if o.hasOwnProperty('s')
+        @io.subscribe @param('s'), redraw
       redraw(@_dataset)
 
     @dispatch.on 'redraw.core', =>
@@ -144,96 +147,10 @@ class KLine
     for plugin in @plugins
       plugin.update data, datasel, dataset
 
-  init_websocket: (done) ->
-    if @io
-      @io.on('ready', done)
-      if @io.connected
-        return done()
-      return
-
-    io = {}
-    handles = {}
-    @io = io
-
-    ev =
-      s: @param 's'
-      k: @param 'k'
-      fq: @param 'fq'
-
-    connect = ->
-      protocol = if location.protocol.toLowerCase() == 'https:' then 'wss:' else 'ws:'
-      ws = new WebSocket("#{protocol}//#{location.host}/socket.io/")
-      io.ws = ws
-      ws.onopen = (evt) ->
-        io.connected = true
-        io.trigger('ready', evt)
-        io.ws.send(JSON.stringify(ev))
-
-      ws.onclose = (evt) ->
-        io.connected = false
-        io.trigger('close', evt)
-
-      ws.onmessage = (evt) ->
-        res = JSON.parse(evt.data)
-        io.trigger('data', res)
-
-      ws.onerror = (evt) ->
-        io.trigger('error', evt)
-
-    io.on = (event, cb) ->
-      handles[event] = handles[event] || []
-      i = handles[event].indexOf(cb)
-      if i < 0
-        handles[event].push(cb)
-
-    io.off = (event, cb) ->
-      return unless handles[event]
-      i = handles[event].indexOf(cb)
-      if i > -1
-        handles[event].splice i, 1
-
-    io.emit = (event, data) ->
-      msg = event: event, data: data
-      io.ws.send(JSON.stringify(msg))
-
-    io.trigger = (event, data) ->
-      return unless handles[event]
-      fn(data) for fn in handles[event]
-
-    io.on 'data', (data) ->
-      for event in ['kdata']
-        ename = [ev.s,ev.k,ev.fq,event].join('.')
-        data.param = ev
-        io.trigger ename, data
-
-    if done
-      @io.on 'ready', done
-    onclose = (evt) ->
-      console.log evt
-      setTimeout((->connect()), 1000)
-
-    io.on 'close', onclose
-
-    io.close = ->
-      io.off 'close', onclose
-      io.ws.close()
-
-    io.connect = connect
-
-  on_event: (event, cb) ->
-    @init_websocket =>
-      s = @param 's'
-      k = @param 'k'
-      fq = @param 'fq'
-      ename = [s,k,fq,event].join('.')
-      @io.on(ename, cb)
-
   start: ->
     @io.connect()
   stop: ->
-    if @io
-      @io.close()
-      @io = off
+    @io.close()
 
   notification: (id, msg) ->
     unless window.Notification

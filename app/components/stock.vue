@@ -5,6 +5,7 @@
 </style>
 
 <template>
+<div>
   <div id="level" class="pure-menu pure-menu-horizontal">
     <ul class="pure-menu-list">
         <li class="pure-menu-item" v-for="k in levels">
@@ -23,6 +24,7 @@
     </ul>
   </div>
   <div id="container" v-kanpan="opt"></div>
+</div>
 </template>
 
 <script>
