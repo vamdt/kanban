@@ -13,7 +13,7 @@ defaults =
 
 class KLine
   constructor: (@options) ->
-    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw', 'nameChange')
+    @dispatch = d3.dispatch('resize', 'param', 'tip', 'cmd', 'redraw', 'nameChange', 'uiInit')
     @options = util.extend {}, @options, defaults
     @_data = []
     @_ui = new KUI(@)
@@ -24,6 +24,8 @@ class KLine
     @plugins = []
     @_param = {}
     @options.size = +@options.size || 100
+
+    @bindEvent()
 
   update_size: (size, left) ->
     size = size || @options.size || 10
@@ -85,11 +87,7 @@ class KLine
       else
         return @_param
 
-  init: ->
-    @stop()
-    @_ui.init()
-    @initPlugins()
-
+  bindEvent: ->
     redraw = (data) =>
       return unless data and data.id
       @data data
@@ -103,6 +101,9 @@ class KLine
     @dispatch.on 'redraw.core', =>
       redraw(@_dataset)
 
+    @dispatch.on 'uiInit.core', =>
+      @initPlugins()
+
   add_plugin_obj: (plugin) ->
     @plugins.push plugin
 
@@ -114,6 +115,9 @@ class KLine
       @add_plugin_obj plugin
 
   resize: (w, h) ->
+    unless @_ui.__inited
+      return
+
     w = w || @_ui.container[0][0].clientWidth
     h = h || (util.h() - 80)
     @options.width = w - @options.margin.left - @options.margin.right
@@ -147,8 +151,6 @@ class KLine
     for plugin in @plugins
       plugin.update data, datasel, dataset
 
-  start: ->
-    @io.connect()
   stop: ->
     @io.close()
 

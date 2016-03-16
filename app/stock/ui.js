@@ -95,6 +95,15 @@ export default class KUI {
     this.dispatch = root.dispatch;
     root.dispatch.on('param.ui', () => this.updateColor());
     root.dispatch.on('resize.ui', () => this.resize());
+    this.__inited = false;
+  }
+
+  lazyInit() {
+    if (this.__inited) {
+      return;
+    }
+    this.init();
+    this.__inited = true;
   }
 
   init() {
@@ -162,9 +171,12 @@ export default class KUI {
       .attr('class', 'pane')
       .attr('width', width)
       .attr('height', height);
+
+    this.root.dispatch.uiInit();
   }
 
   update(data) {
+    this.lazyInit();
     this.x.domain([0, data.length - 1]);
     this.y.domain([d3.min(data, (d) => d.Low) * 0.99, d3.max(data, (d) => d.High)]);
 
@@ -175,6 +187,9 @@ export default class KUI {
   }
 
   resize() {
+    if (!this.__inited) {
+      return;
+    }
     const options = this.root.options;
     const width = options.width;
     const height = options.height;

@@ -93,10 +93,8 @@ Vue.directive('kanpan', {
       this.vm.sname = v;
     });
 
-    setTimeout(() => {
-      this.kl.init();
-      this.kl.start();
+    this.vm.$nextTick(() => {
       this.kl.param(settings);
-    }, 500);
+    });
   },
 });
