@@ -52,16 +52,16 @@ Vue.directive('kanpan', {
       const kl = this.kl;
       const handles = {
         35() {
-          kl.move_to('end');
+          kl.move('end');
         },
         36() {
-          kl.move_to('home');
+          kl.move('home');
         },
         37() {
-          kl.move_to('left');
+          kl.move('left');
         },
         39() {
-          kl.move_to('right');
+          kl.move('right');
         },
       };
       if (handles.hasOwnProperty(e.keyCode)) {

@@ -20,7 +20,7 @@ class Candle {
     this.root.options.size = Math.floor(this.root.options.width / (1 + this.options.width));
     const mas = new Mas(this.root, svg, this.root._ui.y, (d) => d.close);
     mas.init();
-    this.root.add_plugin_obj(mas);
+    this.root.addPluginObj(mas);
   }
 
   update(data) {
@@ -49,17 +49,16 @@ class Candle {
       .on('mouseover', mover);
 
     rect
-      .exit()
-      .transition()
-      .remove();
-
-    rect
       .transition()
       .attr('x', (d, i) => x(i) - candleWidth / 2)
       .attr('y', d => y(Math.max(d.open, d.close)))
       .attr('height', d => Math.max(0.5, Math.abs(y(d.open) - y(d.close))))
       .attr('stroke', kColor)
       .attr('fill', kColor);
+
+    rect
+      .exit()
+      .remove();
 
     const line = svg.selectAll('line.candle')
       .data(data);
@@ -72,11 +71,6 @@ class Candle {
       .on('mouseover', mover);
 
     line
-      .exit()
-      .transition()
-      .remove();
-
-    line
       .transition()
       .style('stroke', kColor)
       .attr('x1', (d, i) => x(i) - (d.Low === d.High ? candleWidth / 2 : 0))
@@ -84,10 +78,13 @@ class Candle {
       .attr('x2', (d, i) => x(i) + (d.Low === d.High ? candleWidth / 2 : 0))
       .attr('y2', d => y(d.Low));
 
+    line
+      .exit()
+      .remove();
+
     const opacity = this.root.param('opacity');
     if (opacity) {
       svg.selectAll('.candle')
-        .transition()
         .style('opacity', opacity);
     }
   }

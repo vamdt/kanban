@@ -90,16 +90,15 @@ class Hub {
       .on('mouseout.stroke', mout);
 
     rect
-      .exit()
-      .transition()
-      .remove();
-
-    rect
       .transition()
       .attr('x', (d) => x(d.i))
       .attr('y', (d) => y(d.High))
       .attr('width', (d) => Math.max(0.5, x(d.ei) - x(d.i)))
       .attr('height', (d) => Math.max(0.5, y(d.Low) - y(d.High)));
+
+    rect
+      .exit()
+      .remove();
 
     const text = this._ui.svg.selectAll(`text.${cls}`)
       .data(dataset);
@@ -110,15 +109,14 @@ class Hub {
       .attr('fill', 'black');
 
     text
-      .exit()
-      .transition()
-      .remove();
-
-    text
       .transition()
       .attr('x', (d) => x(d.i))
       .attr('y', (d) => y(d.High) + 10)
       .text(k);
+
+    text
+      .exit()
+      .remove();
   }
 }
 

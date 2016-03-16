@@ -84,8 +84,8 @@ function zoomFn(root) {
         return;
       }
     }
-    root.update_size(nsize, nleft);
-    root.delay_draw();
+    root.updateSize(nsize, nleft);
+    root.delayDraw();
   };
 }
 
@@ -213,7 +213,7 @@ export default class KUI {
     this.svg.select('rect.pane')
       .attr('width', width)
       .attr('height', height);
-    this.root.delay_draw();
+    this.root.delayDraw();
   }
 
   updateColor() {
@@ -264,11 +264,6 @@ export default class KUI {
       .data(dataset);
 
     line
-      .exit()
-      .transition()
-      .remove();
-
-    line
       .enter()
       .append('line')
       .attr('class', clazz)
@@ -285,6 +280,10 @@ export default class KUI {
       .attr('x2', (d) => x(d.ei))
       .attr('y2', (d) => y(d.Type === down ? d.Low : d.High))
       .style('stroke', style.stroke || this.tColor);
+
+    line
+      .exit()
+      .remove();
   }
 
   lineno(dataset, begin, clazz, style = {}) {
@@ -311,11 +310,6 @@ export default class KUI {
       .data(data);
 
     text
-      .exit()
-      .transition()
-      .remove();
-
-    text
       .enter()
       .append('text')
       .attr('class', clazz)
@@ -332,6 +326,10 @@ export default class KUI {
       .attr('y', (d) => y(d.Type === down ? d.Low : d.High))
       .text(numf)
       .style('stroke', style.stroke || this.tColor);
+
+    text
+      .exit()
+      .remove();
   }
 
   circle(dataset, clazz, style = {}) {
@@ -342,11 +340,6 @@ export default class KUI {
       .data(dataset);
 
     function mover(d, i) { dispatch.tip(this, clazz, d, i); }
-
-    circle
-      .exit()
-      .transition()
-      .remove();
 
     circle
       .enter()
@@ -362,6 +355,10 @@ export default class KUI {
       .attr('cx', (d) => x(d.i))
       .attr('cy', (d) => y(d.Price))
       .style(style);
+
+    circle
+      .exit()
+      .remove();
   }
 
   color(compare) {

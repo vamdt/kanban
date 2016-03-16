@@ -39,7 +39,7 @@ class Volume {
       .range([height, 0]);
     const mas = new Mas(this.root, this.svg, this.y, (d) => d.volume);
     mas.init();
-    this.root.add_plugin_obj(mas);
+    this.root.addPluginObj(mas);
   }
 
   hide() {
