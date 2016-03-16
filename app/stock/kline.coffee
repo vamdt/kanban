@@ -118,14 +118,7 @@ class KLine
       @add_plugin_obj plugin
 
   resize: (w, h) ->
-    unless @_ui.__inited
-      return
-
-    w = w || @_ui.container[0][0].clientWidth
-    h = h || (util.h() - 80)
-    @options.width = w - @options.margin.left - @options.margin.right
-    @options.height = h - @options.margin.top - @options.margin.bottom
-    @dispatch.resize()
+    @dispatch.resize(w, h)
 
   move_to: (dir) ->
     switch dir

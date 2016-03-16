@@ -94,7 +94,7 @@ export default class KUI {
     this.root = root;
     this.dispatch = root.dispatch;
     root.dispatch.on('param.ui', () => this.updateColor());
-    root.dispatch.on('resize.ui', () => this.resize());
+    root.dispatch.on('resize.ui', (...args) => this.resize(...args));
     this.__inited = false;
   }
 
@@ -186,14 +186,21 @@ export default class KUI {
       .call(this.yAxis);
   }
 
-  resize() {
+  resize(_w, _h) {
     if (!this.__inited) {
       return;
     }
+
+    const w = _w || this.container[0][0].clientWidth;
+    const h = _h || (util.h() - 80);
+
     const options = this.root.options;
+    const margin = options.margin;
+    options.width = w - margin.left - margin.right;
+    options.height = h - margin.top - margin.bottom;
+
     const width = options.width;
     const height = options.height;
-    const margin = options.margin;
     this.container.select('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom);
