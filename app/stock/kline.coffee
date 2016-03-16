@@ -23,6 +23,7 @@ class KLine
     @_max_left = 0
     @plugins = []
     @_param = {}
+    @_cache = {}
     @options.size = +@options.size || 100
 
     @bindEvent()
@@ -51,16 +52,15 @@ class KLine
 
     return unless data and data.id
     s = data.id
-    return if s != @param 's'
-    @_dataset = @_dataset || off
-    name = @_dataset.Name || off
-    id = @_dataset.id || off
-    if id != data.id
-      @_dataset = off
-    data = util.merge_data(@_dataset, data)
-    @_dataset = data
-    if data.Name != name
-      @dispatch.nameChange(data.Name)
+    dataset = @_cache[s]
+    dataset = util.merge_data(dataset, data)
+    @_cache[s] = dataset
+
+    s = @param 's'
+    @_dataset = @_cache[s] || off
+    data = @_dataset
+    if data is off
+      return
     k = @param 'k'
     dataset = switch k
       when '1' then data.m1s
@@ -72,6 +72,9 @@ class KLine
     @_datasel = dataset
     @_data = dataset.data
     @update_size()
+    if data.Name != @title
+      @title = data.Name
+      @dispatch.nameChange(data.Name)
 
   param: (p) ->
     switch typeof p
@@ -140,6 +143,7 @@ class KLine
     d3.timer => @draw()
 
   draw: ->
+    return unless @_dataset
     data = @data()
 
     @_ui.update data
