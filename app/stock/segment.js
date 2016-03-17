@@ -12,7 +12,8 @@ class Segment {
   }
 
   update(data, datasel) {
-    const sdata = datasel.Segment.Data;
+    const segment = datasel.Segment || {};
+    const sdata = segment.Data;
     const dataset = filter(sdata, data);
 
     const style = {

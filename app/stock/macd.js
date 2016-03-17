@@ -96,10 +96,6 @@ class Macd {
       .data(data);
 
     rect
-      .exit()
-      .transition()
-      .remove();
-    rect
       .enter()
       .append('rect')
       .attr('class', 'macd')
@@ -111,6 +107,9 @@ class Macd {
       .attr('height', (d) => Math.abs(y(0) - y(d.MACD)))
       .attr('stroke', bColor)
       .attr('fill', bColor);
+    rect
+      .exit()
+      .remove();
 
     let ldiff = svg.select('path#diff');
     if (ldiff.empty()) {

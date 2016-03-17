@@ -12,7 +12,8 @@ class TypingLine {
   }
 
   update(data, datasel) {
-    const dset = filter(datasel.Typing.Line, data);
+    const typing = datasel.Typing || {};
+    const dset = filter(typing.Line, data);
     const style = {
       'stroke-dasharray': '7 7',
       stroke: '#abc',

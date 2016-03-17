@@ -62,7 +62,7 @@ export default class Mas {
     const x = this.root._ui.x;
     const y = this.y;
     const left = this.root._left;
-    const data = this.root._data;
+    const data = this.root._data || [];
     const dfn = this.d;
     function mean(d, i) {
       let l = left + i - interval - 1;

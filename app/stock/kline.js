@@ -40,6 +40,10 @@ export default class KLine {
     this.bindEvent();
   }
 
+  datalen() {
+    return this._data ? this._data.length : 0;
+  }
+
   updateSize(_size, _left) {
     let size = _size || this.options.size || 10;
     size = Math.max(size, 10);
@@ -49,9 +53,9 @@ export default class KLine {
 
     const atrightedge = this._left === this._max_left;
 
-    this._max_left = Math.max(0, this._data.length - 1 - this.options.size);
+    this._max_left = Math.max(0, this.datalen() - 1 - this.options.size);
 
-    this.options.size = this._data.length - 1 - this._max_left;
+    this.options.size = this.datalen() - 1 - this._max_left;
 
     if (atrightedge && left === this._left) {
       this._left = this._max_left;
@@ -187,16 +191,22 @@ export default class KLine {
   }
 
   delayDraw() {
-    d3.timer(() => { this.draw(); });
+    if (this.__need_draw) {
+      this.__need_draw++;
+      return;
+    }
+    this.__need_draw = 1;
+    d3.timer(() => {
+      this.draw();
+      return true;
+    });
   }
 
   draw() {
-    if (!this._dataset) {
-      return;
-    }
     const data = this.data();
     this._ui.update(data);
     this.update(data, this._datasel, this._dataset);
+    this.__need_draw = 0;
   }
 
   update(data, datasel, dataset) {

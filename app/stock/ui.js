@@ -102,8 +102,8 @@ export default class KUI {
     if (this.__inited) {
       return;
     }
-    this.init();
     this.__inited = true;
+    this.init();
   }
 
   init() {

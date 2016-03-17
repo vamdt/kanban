@@ -17,7 +17,8 @@ class SegmentLine {
     if (handcraft && this.root.param('k') !== '1') {
       dname = 'HCLine';
     }
-    const dataset = filter(datasel.Segment[dname], data);
+    const segment = datasel.Segment || {};
+    const dataset = filter(segment[dname], data);
     const up = 4;
     dataset.forEach((d, j) => {
       if (d.hasOwnProperty('MACD')) {

@@ -151,6 +151,12 @@ class Cmd {
     this.data = data;
     this.datasel = datasel;
     this.dataset = dataset;
+    if (!this.root.param('handcraft')) {
+      return;
+    }
+    if (!this.datasel) {
+      return;
+    }
     this.k = this.root.param('k') || '1';
     this.initHc((hchub) => hchub.begin || 0);
   }

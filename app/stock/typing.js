@@ -12,9 +12,11 @@ class Typing {
   }
 
   update(data, datasel) {
-    let tdata = datasel.Typing.Data;
+    let tdata = false;
     if (this.root.param('ntyping')) {
       tdata = false;
+    } else if (datasel && datasel.Typing) {
+      tdata = datasel.Typing.Data;
     }
     const dataset = filter(tdata, data);
 
