@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/golang/glog"
+
 	. "../base"
 )
 
@@ -15,10 +17,27 @@ const (
 	robotBusy
 )
 
+const (
+	_ int32 = iota
+	TaskDay
+	TaskMin1
+	TaskMin5
+	TaskRealTick
+	TaskTick
+)
+
 const DefaultRobotConcurrent int = 4
 
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
+	Can(id string, task int32) bool
+}
+
+type RobotBase struct {
+}
+
+func (p *RobotBase) Can(id string, task int32) bool {
+	return false
 }
 
 type Worker struct {
@@ -59,14 +78,17 @@ func (p *RobotBox) Registry(robot Robot) {
 	}
 }
 
-func (p *RobotBox) GetJob() *jobItem {
+func (p *RobotBox) GetJob(robot Robot) *jobItem {
 	p.mjob.Lock()
 	defer p.mjob.Unlock()
-	e := p.jobs.Front()
-	if e == nil {
-		return nil
+	for e := p.jobs.Front(); e != nil; e = e.Next() {
+		job := e.Value.(*jobItem)
+		if robot.Can(job.id, job.task) {
+			p.jobs.Remove(e)
+			return job
+		}
 	}
-	return p.jobs.Remove(e).(*jobItem)
+	return nil
 }
 
 func Days_download(id string, start time.Time) ([]Tdata, error) {
@@ -77,6 +99,7 @@ type jobItem struct {
 	id    string
 	start time.Time
 	res   chan []Tdata
+	task  int32
 }
 
 func (p *Worker) Do(job *jobItem) {
@@ -84,8 +107,12 @@ func (p *Worker) Do(job *jobItem) {
 	if job == nil {
 		return
 	}
-	data, _ := p.worker.Days_download(job.id, job.start)
-	job.res <- data
+
+	if job.task == TaskDay {
+		data, _ := p.worker.Days_download(job.id, job.start)
+		job.res <- data
+		return
+	}
 }
 
 func (p *RobotBox) Work(once bool) {
@@ -115,23 +142,38 @@ func (p *RobotBox) Work(once bool) {
 		}
 
 		p.mrobot.Lock()
+		count := 0
+		busy := 0
+		do := 0
 		p.robots.Do(func(v interface{}) {
 			if v == nil {
 				return
 			}
+			count++
 			w := v.(*Worker)
 			if !atomic.CompareAndSwapInt32(&w.busy, robotIdle, robotBusy) {
+				busy++
 				return
 			}
-			go w.Do(p.GetJob())
+			job := p.GetJob(w.worker)
+			if job != nil {
+				do++
+			}
+			go w.Do(job)
 		})
-		p.robots = p.robots.Move(DefaultRobotConcurrent)
+		if do > 0 {
+			glog.Infof("%dn %dbusy/robot(%d) %d/jobs(%d)", do, busy, count, l-do, l)
+		}
 		p.mrobot.Unlock()
 	}
 }
 
 func (p *RobotBox) Days_download(id string, start time.Time) ([]Tdata, error) {
-	job := jobItem{id: id, start: start}
+	job := jobItem{
+		id:    id,
+		start: start,
+		task:  TaskDay,
+	}
 	job.res = make(chan []Tdata)
 	p.mjob.Lock()
 	p.jobs.PushBack(&job)

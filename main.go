@@ -11,6 +11,7 @@ import (
 	_ "./crawl/robot/jqka"
 	_ "./crawl/robot/qq"
 	_ "./crawl/robot/sina"
+	_ "./crawl/robot/sse"
 	_ "./crawl/store/mysql"
 	"./dev"
 	"github.com/golang/glog"

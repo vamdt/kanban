@@ -11,6 +11,7 @@ import (
 )
 
 type SinaRobot struct {
+	RobotBase
 }
 
 func init() {
@@ -18,6 +19,24 @@ func init() {
 		robot := &SinaRobot{}
 		Registry(robot)
 	}
+}
+
+func (p *SinaRobot) Can(id string, task int32) bool {
+	switch task {
+	case TaskDay:
+		return true
+	case TaskMin1:
+		return false
+	case TaskMin5:
+		return false
+	case TaskTick:
+		return true
+	case TaskRealTick:
+		return true
+	default:
+		return false
+	}
+	return false
 }
 
 func (p *SinaRobot) Day_url(id string, t time.Time) string {
