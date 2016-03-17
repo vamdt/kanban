@@ -11,8 +11,7 @@ module.exports = {
   },
   devtool: 'source-map',
   resolve: {
-    extensions: ['', '.coffee', '.js'],
-    modulesDirectories: ['node_modules', 'scripts', 'styles', 'images', 'fonts']
+    modulesDirectories: ['node_modules', 'styles', 'images', 'fonts']
   },
   module: {
     preLoaders: [
@@ -49,7 +48,6 @@ module.exports = {
       loader: 'babel-loader',
       exclude: /node_modules/
     },
-    { test: /\.coffee$/, loader: "coffee-loader?sourceMap" }
     ]
   },
   eslint: {
