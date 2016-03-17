@@ -1,6 +1,6 @@
 import d3 from 'd3';
 import plugin from './plugin';
-import util from './util';
+import { extend, wwidth, wheight } from './util';
 
 const defaults = {
   tmpl: '开盘价：<%- p.open%><br/>收盘价：<%- p.close%><br/>最高价：<%- p.High%><br/>最低价：<%- p.Low%>',
@@ -89,7 +89,7 @@ function templ(name, d) {
 class ToolTip {
   constructor(root) {
     this.root = root;
-    this.options = util.extend({}, this.root.options.tooltip, defaults);
+    this.options = extend({}, this.root.options.tooltip, defaults);
   }
 
   init() {
@@ -104,7 +104,7 @@ class ToolTip {
     }
 
     const left = () => {
-      const w = util.w();
+      const w = wwidth();
       const tw = tips[0][0].clientWidth;
       let v = d3.event.pageX;
       if (w - tw - d3.event.pageX - 30 < 0) {
@@ -114,7 +114,7 @@ class ToolTip {
     };
 
     const top = () => {
-      const h = util.h();
+      const h = wheight();
       const th = tips[0][0].clientHeight;
       let v = d3.event.pageY + 30;
       if (h - th - d3.event.pageY - 30 < 0) {

@@ -1,5 +1,5 @@
 import d3 from 'd3';
-import util from './util';
+import { wwidth, wheight } from './util';
 
 const color = {
   up: '#f00',
@@ -116,11 +116,11 @@ export default class KUI {
     container.html('');
     let width = parseInt(container.style('width'), 10);
     if (width < 1) {
-      width = util.w();
+      width = wwidth();
     }
     let height = parseInt(container.style('height'), 10);
     if (height < 1) {
-      height = util.h() - 80;
+      height = wheight() - 80;
     }
 
     options.width = width - margin.left - margin.right;
@@ -192,7 +192,7 @@ export default class KUI {
     }
 
     const w = _w || this.container[0][0].clientWidth;
-    const h = _h || (util.h() - 80);
+    const h = _h || (wheight() - 80);
 
     const options = this.root.options;
     const margin = options.margin;

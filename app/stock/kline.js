@@ -1,5 +1,5 @@
 import d3 from 'd3';
-import util from './util';
+import { extend, mergeData } from './util';
 import Plugin from './plugin';
 import KUI from './ui';
 import Data from './data';
@@ -27,7 +27,7 @@ export default class KLine {
       'uiInit',
     ];
     this.dispatch = d3.dispatch(...ev);
-    this.options = util.extend({}, this.options, defaults);
+    this.options = extend({}, this.options, defaults);
     this._data = [];
     this._ui = new KUI(this);
     this.io = new Data();
@@ -78,7 +78,7 @@ export default class KLine {
       return;
     }
     const sid = _data.id;
-    this._cache[sid] = util.merge_data(this._cache[sid], _data);
+    this._cache[sid] = mergeData(this._cache[sid], _data);
 
     const s = this.param('s');
     this._dataset = this._cache[s] || false;
