@@ -18,7 +18,7 @@ const (
 )
 
 type Tdata struct {
-	Time   time.Time `json:"time"`
+	Time   time.Time
 	Open   int       `json:"open"`
 	Close  int       `json:"close"`
 	Volume int       `json:"volume"`

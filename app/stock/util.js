@@ -116,7 +116,7 @@ function dataInit(_n) {
     }
 
     n[k].data.forEach((d, i) => {
-      n[k].data[i].date = d.date || parseDate(d.time);
+      n[k].data[i].date = d.date || parseDate(d.Time);
     });
 
     ['Typing', 'Segment', 'Hub'].forEach((name) => {

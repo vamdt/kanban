@@ -137,12 +137,12 @@ describe('Util', () => {
       const n = {
         m1s: {
           data: [
-            { time: '2001-08-20T00:00:00Z' },
+            { Time: '2001-08-20T00:00:00Z' },
           ],
         },
       };
-      assert.typeOf(n.m1s.data[0].time, 'string', 'data[].time should be a time string');
-      assert.lengthOf(n.m1s.data[0].time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
+      assert.typeOf(n.m1s.data[0].Time, 'string', 'data[].time should be a time string');
+      assert.lengthOf(n.m1s.data[0].Time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
       const m = mergeData(o, n);
       assert.typeOf(m.m1s.data, 'array', 'data should be an array');
       assert.equal(m.m1s.data, n.m1s.data);
@@ -152,21 +152,21 @@ describe('Util', () => {
       const o = {
         m1s: {
           data: [
-            { time: '2001-08-20T00:00:00Z' },
-            { time: '2001-08-21T00:00:00Z' },
+            { Time: '2001-08-20T00:00:00Z' },
+            { Time: '2001-08-21T00:00:00Z' },
           ],
         },
       };
       const n = {
         m1s: {
           data: [
-            { time: '2001-08-21T00:00:00Z' },
-            { time: '2001-08-22T00:00:00Z' },
+            { Time: '2001-08-21T00:00:00Z' },
+            { Time: '2001-08-22T00:00:00Z' },
           ],
         },
       };
-      assert.typeOf(n.m1s.data[0].time, 'string', 'data[].time should be a time string');
-      assert.lengthOf(n.m1s.data[0].time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
+      assert.typeOf(n.m1s.data[0].Time, 'string', 'data[].time should be a time string');
+      assert.lengthOf(n.m1s.data[0].Time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
       const m = mergeData(o, n);
       assert.typeOf(n.m1s.data[0].date, 'date', 'data[].date should be a time');
       assert.lengthOf(m.m1s.data, 3);

@@ -96,15 +96,15 @@ describe('Model', () => {
       const o = {
         m1s: {
           data: [
-            { time: '2001-08-20T00:00:00Z' },
+            { Time: '2001-08-20T00:00:00Z' },
           ],
         },
       };
       m.assign(o);
       assert.instanceOf(m.m1s.data[0].date, Date);
-      assert.equal(m.m1s.data[0].time, o.m1s.data[0].time);
-      assert.typeOf(m.m1s.data[0].time, 'string', 'data[].time should be a time string');
-      assert.lengthOf(m.m1s.data[0].time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
+      assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
+      assert.typeOf(m.m1s.data[0].Time, 'string', 'data[].Time should be a time string');
+      assert.lengthOf(m.m1s.data[0].Time, 20, 'should be a time string with format %Y-%m-%dT%XZ');
     });
 
     describe('merge .data', () => {
@@ -113,13 +113,13 @@ describe('Model', () => {
         const o = {
           m1s: {
             data: [
-              { time: '2001-08-20T00:00:00Z' },
+              { Time: '2001-08-20T00:00:00Z' },
             ],
           },
         };
         m.assign(o);
         m.assign(o);
-        assert.equal(m.m1s.data[0].time, o.m1s.data[0].time);
+        assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
         assert.lengthOf(m.m1s.data, 1);
       });
 
@@ -128,28 +128,28 @@ describe('Model', () => {
         const o = {
           m1s: {
             data: [
-              { time: '2001-08-20T00:00:00Z' },
-              { time: '2001-08-21T00:00:00Z' },
-              { time: '2001-08-22T00:00:00Z' },
-              { time: '2001-08-23T00:00:00Z' },
+              { Time: '2001-08-20T00:00:00Z' },
+              { Time: '2001-08-21T00:00:00Z' },
+              { Time: '2001-08-22T00:00:00Z' },
+              { Time: '2001-08-23T00:00:00Z' },
             ],
           },
         };
         const n = {
           m1s: {
             data: [
-              { time: '2001-08-21T00:00:00Z' },
-              { time: '2001-08-24T00:00:00Z' },
+              { Time: '2001-08-21T00:00:00Z' },
+              { Time: '2001-08-24T00:00:00Z' },
             ],
           },
         };
         m.assign(o);
-        assert.equal(m.m1s.data[0].time, o.m1s.data[0].time);
+        assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
         assert.lengthOf(m.m1s.data, o.m1s.data.length);
         m.assign(n);
-        assert.equal(m.m1s.data[0].time, o.m1s.data[0].time);
+        assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
         assert.lengthOf(m.m1s.data, 3);
-        assert.equal(m.m1s.data[2].time, n.m1s.data[1].time);
+        assert.equal(m.m1s.data[2].Time, n.m1s.data[1].Time);
       });
     });
   });

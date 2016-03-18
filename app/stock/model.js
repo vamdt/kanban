@@ -15,7 +15,7 @@ function merge(name, data, Clazz) {
 
   const o = this[name];
   if (o.length > 0) {
-    const ndate = +parseDate(data[0].time);
+    const ndate = +parseDate(data[0].Time);
     const odate = +o[o.length - 1].date;
     const o0date = +o[0].date;
     if (odate < ndate) {
@@ -55,7 +55,7 @@ class Tdata {
 
     Object.defineProperty(this, 'date', {
       get() {
-        this._date = this._date || parseDate(this.time);
+        this._date = this._date || parseDate(this.Time);
         return this._date;
       },
     });
@@ -81,7 +81,7 @@ class Typing {
 
     Object.defineProperty(this, 'date', {
       get() {
-        this._date = this._date || parseDate(this.time);
+        this._date = this._date || parseDate(this.Time);
         return this._date;
       },
     });
