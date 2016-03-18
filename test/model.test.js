@@ -1,8 +1,11 @@
+/* eslint-env mocha */
+/* global assert */
+
 import Model from '../app/stock/model';
 
 describe('Model', () => {
   describe('property', () => {
-    const def_level = {
+    const defLevel = {
       name: '',
       data: [],
       Typing: {
@@ -21,19 +24,15 @@ describe('Model', () => {
     const defaults = {
       id: '',
       name: '',
-      m1s: def_level,
-      m5s: def_level,
-      m30s: def_level,
-      days: def_level,
-      weeks: def_level,
-      months: def_level,
+      m1s: defLevel,
+      m5s: defLevel,
+      m30s: defLevel,
+      days: defLevel,
+      weeks: defLevel,
+      months: defLevel,
     };
 
     const m = new Model('007');
-    const props = [
-      'id',
-      'name',
-    ];
     it('should has expect property', () => {
       Object.keys(defaults).forEach((k) => {
         assert.property(m, k);
@@ -54,12 +53,12 @@ describe('Model', () => {
       it('should has expect property', () => {
         let prev = false;
         levels.forEach((k) => {
-          Object.keys(def_level).forEach((p) => {
+          Object.keys(defLevel).forEach((p) => {
             assert.property(m[k], p);
-            if (Array.isArray(def_level[p])) {
+            if (Array.isArray(defLevel[p])) {
               assert.isArray(m[k][p], `${k}.${p}`);
             } else {
-              assert.typeOf(m[k][p], typeof def_level[p], `${k}.${p}`);
+              assert.typeOf(m[k][p], typeof defLevel[p], `${k}.${p}`);
             }
           });
           if (prev) {
@@ -86,7 +85,7 @@ describe('Model', () => {
       const id = '007';
       const m = new Model(id);
       assert.equal(m.id, id);
-      assert.throws(() => m.id = '001', 'Cannot assign');
+      assert.throws(() => { m.id = '001'; }, 'Cannot assign');
     });
   });
 
@@ -123,7 +122,7 @@ describe('Model', () => {
         assert.lengthOf(m.m1s.data, 1);
       });
 
-      it('should merge currect', () => {
+      it('should pop part as need', () => {
         const m = new Model('007');
         const o = {
           m1s: {
@@ -150,6 +149,35 @@ describe('Model', () => {
         assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
         assert.lengthOf(m.m1s.data, 3);
         assert.equal(m.m1s.data[2].Time, n.m1s.data[1].Time);
+      });
+
+      it('should pop all when the 1st data is oldder', () => {
+        const m = new Model('007');
+        const o = {
+          m1s: {
+            data: [
+              { Time: '2001-08-21T00:00:00Z' },
+              { Time: '2001-08-22T00:00:00Z' },
+              { Time: '2001-08-23T00:00:00Z' },
+            ],
+          },
+        };
+        const n = {
+          m1s: {
+            data: [
+              { Time: '2001-08-20T00:00:00Z' },
+              { Time: '2001-08-21T00:00:00Z' },
+              { Time: '2001-08-24T00:00:00Z' },
+            ],
+          },
+        };
+        m.assign(o);
+        assert.equal(m.m1s.data[0].Time, o.m1s.data[0].Time);
+        assert.lengthOf(m.m1s.data, o.m1s.data.length);
+        m.assign(n);
+        assert.equal(m.m1s.data[0].Time, n.m1s.data[0].Time);
+        assert.lengthOf(m.m1s.data, 3);
+        assert.equal(m.m1s.data[2].Time, n.m1s.data[2].Time);
       });
     });
   });

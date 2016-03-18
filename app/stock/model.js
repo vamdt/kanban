@@ -17,15 +17,9 @@ function merge(name, data, Clazz) {
   if (o.length > 0) {
     const ndate = +parseDate(data[0].Time);
     const odate = +o[o.length - 1].date;
-    const o0date = +o[0].date;
-    if (odate < ndate) {
-    } else if (o0date >= ndate) {
-      while(this[name].length) {
-        this[name].pop();
-      }
-    } else {
+    if (odate >= ndate) {
       const i = bisect.left(o, ndate);
-      while(this[name].length > i) {
+      while (this[name].length > i) {
         this[name].pop();
       }
     }

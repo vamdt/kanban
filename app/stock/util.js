@@ -46,15 +46,11 @@ export function filter(_src, _range) {
 
   const hash = {};
   range.forEach((d, i) => {
-    range[i].date = d.date || parseDate(d.Time);
-  });
-  range.forEach((d, i) => {
     hash[+d.date] = i;
   });
 
   src.forEach((d, i) => {
     src[i].no = i;
-    src[i].date = d.date || parseDate(d.Time);
   });
 
   const startDate = range[0].date;

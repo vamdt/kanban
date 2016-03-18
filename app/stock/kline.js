@@ -1,8 +1,9 @@
 import d3 from 'd3';
-import { extend, mergeData } from './util';
+import { extend } from './util';
 import Plugin from './plugin';
 import KUI from './ui';
 import Data from './data';
+import Model from './model';
 
 const defaults = {
   container: 'body',
@@ -78,7 +79,10 @@ export default class KLine {
       return;
     }
     const sid = _data.id;
-    this._cache[sid] = mergeData(this._cache[sid], _data);
+    if (!this._cache.hasOwnProperty(sid)) {
+      this._cache[sid] = new Model(sid);
+    }
+    this._cache[sid].assign(_data);
   }
 
   selData() {
@@ -99,9 +103,9 @@ export default class KLine {
     this._datasel = data[levels[k]] || data.days || {};
     this._data = this._datasel.data;
     this.updateSize();
-    if (data.Name !== this.title) {
-      this.title = data.Name;
-      this.dispatch.nameChange(data.Name);
+    if (data.name !== this.title) {
+      this.title = data.name;
+      this.dispatch.nameChange(data.name);
     }
   }
 

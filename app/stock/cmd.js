@@ -99,13 +99,6 @@ class Cmd {
       },
     ];
 
-    let prev = false;
-    levels.forEach(({ name }) => {
-      const dataset = this.dataset[name];
-      dataset.prev = prev;
-      prev = dataset;
-    });
-
     levels.forEach(({ level, name }) => {
       if (level !== this.k) {
         return;
@@ -121,7 +114,7 @@ class Cmd {
       hub.HCData = hub.HCData || hchub.Data;
       hub.HCLine = hub.HCLine || hchub.Line;
       if (dataset.prev) {
-        dataset.Segment.HCLine = dataset.Segment.HCLine || dataset.prev.Hub.HCLine;
+        dataset.Segment.HCLine = dataset.Segment.HCLine || this.dataset[dataset.prev].Hub.HCLine;
       }
     });
   }
