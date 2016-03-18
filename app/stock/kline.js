@@ -79,7 +79,9 @@ export default class KLine {
     }
     const sid = _data.id;
     this._cache[sid] = mergeData(this._cache[sid], _data);
+  }
 
+  selData() {
     const s = this.param('s');
     this._dataset = this._cache[s] || false;
     const data = this._dataset || {};
@@ -131,6 +133,7 @@ export default class KLine {
         return;
       }
       this.setData(data);
+      this.selData();
       this.delayDraw();
     };
 
@@ -138,11 +141,12 @@ export default class KLine {
       if (o.hasOwnProperty('s')) {
         this.io.subscribe(this.param('s'), redraw);
       }
-      redraw(this._dataset);
+      this.dispatch.redraw();
     });
 
     this.dispatch.on('redraw.core', () => {
-      redraw(this._dataset);
+      this.selData();
+      this.delayDraw();
     });
 
     this.dispatch.on('uiInit.core', () => {
