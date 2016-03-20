@@ -54,9 +54,9 @@ export default class KLine {
 
     const atrightedge = this._left === this._max_left;
 
-    this._max_left = Math.max(0, this.datalen() - 1 - this.options.size);
+    this._max_left = Math.max(0, this.datalen() - this.options.size);
 
-    this.options.size = this.datalen() - 1 - this._max_left;
+    this.options.size = this.datalen() - this._max_left;
 
     if (atrightedge && left === this._left) {
       this._left = this._max_left;
@@ -71,7 +71,7 @@ export default class KLine {
 
   data() {
     this._data = this._data || [];
-    return this._data.slice(this._left, this._left + this.options.size + 1);
+    return this._data.slice(this._left, this._left + this.options.size);
   }
 
   setData(_data) {
@@ -180,10 +180,10 @@ export default class KLine {
     let left = 0;
     switch (dir) {
       case 'left':
-        left = this._left - 100;
+        left = this._left - 120;
         break;
       case 'right':
-        left = this._left + 100;
+        left = this._left + 120;
         break;
       case 'home':
         left = -1;
