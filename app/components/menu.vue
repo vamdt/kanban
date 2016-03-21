@@ -1,7 +1,4 @@
 <style>
-.v-link-active {
-  color: red;
-}
 [v-cloak] {
   display: none;
 }
