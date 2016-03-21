@@ -1,6 +1,7 @@
 package robot
 
 import (
+	"bytes"
 	"container/list"
 	"container/ring"
 	"sync"
@@ -27,17 +28,12 @@ const (
 )
 
 const DefaultRobotConcurrent int = 4
+const maxMultiJobsConcurrent int = 50
 
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
+	RealtimeTick(id string)
 	Can(id string, task int32) bool
-}
-
-type RobotBase struct {
-}
-
-func (p *RobotBase) Can(id string, task int32) bool {
-	return false
 }
 
 type Worker struct {
@@ -78,7 +74,7 @@ func (p *RobotBox) Registry(robot Robot) {
 	}
 }
 
-func (p *RobotBox) GetJob(robot Robot) *jobItem {
+func (p *RobotBox) getJob(robot Robot) *jobItem {
 	p.mjob.Lock()
 	defer p.mjob.Unlock()
 	for e := p.jobs.Front(); e != nil; e = e.Next() {
@@ -91,6 +87,21 @@ func (p *RobotBox) GetJob(robot Robot) *jobItem {
 	return nil
 }
 
+func (p *RobotBox) getJobs(robot Robot, job *jobItem) []*jobItem {
+	p.mjob.Lock()
+	defer p.mjob.Unlock()
+	jobs := []*jobItem{job}
+	task := job.task
+	for e := p.jobs.Front(); e != nil && len(jobs) < maxMultiJobsConcurrent; e = e.Next() {
+		job := e.Value.(*jobItem)
+		if task == job.task && robot.Can(job.id, task) {
+			p.jobs.Remove(e)
+			jobs = append(jobs, job)
+		}
+	}
+	return jobs
+}
+
 func Days_download(id string, start time.Time) ([]Tdata, error) {
 	return DefaultRobotBox.Days_download(id, start)
 }
@@ -100,6 +111,23 @@ type jobItem struct {
 	start time.Time
 	res   chan []Tdata
 	task  int32
+}
+
+func (p *Worker) DoRealTick(jobs []*jobItem) {
+	defer atomic.StoreInt32(&p.busy, robotIdle)
+	if jobs == nil || len(jobs) < 1 {
+		return
+	}
+	var b bytes.Buffer
+	for _, job := range jobs {
+		b.WriteString(",")
+		b.WriteString(job.id)
+	}
+	if b.Len() < 2 {
+		return
+	}
+	ids := b.String()[1:]
+	p.worker.RealtimeTick(ids)
 }
 
 func (p *Worker) Do(job *jobItem) {
@@ -155,11 +183,19 @@ func (p *RobotBox) Work(once bool) {
 				busy++
 				return
 			}
-			job := p.GetJob(w.worker)
-			if job != nil {
-				do++
+			job := p.getJob(w.worker)
+			if job == nil {
+				atomic.StoreInt32(&w.busy, robotIdle)
+				return
 			}
-			go w.Do(job)
+
+			if job.task == TaskRealTick {
+				jobs := p.getJobs(w.worker, job)
+				go w.DoRealTick(jobs)
+			} else {
+				go w.Do(job)
+			}
+			do++
 		})
 		if do > 0 {
 			glog.Infof("%dn %dbusy/robot(%d) %d/jobs(%d)", do, busy, count, l-do, l)
