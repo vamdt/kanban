@@ -22,6 +22,15 @@ type Tick struct {
 	Type     int
 }
 
+type RealtimeTick struct {
+	Tick
+	HL
+	Buyone  int
+	Sellone int
+	Status  int
+	Name    string
+}
+
 type TickSlice []Tick
 
 func (p TickSlice) Len() int           { return len(p) }
@@ -71,4 +80,12 @@ func (p *Tick) FromString(date time.Time, timestr, price, change, volume, turnov
 
 func TheSeconds(t time.Time) int {
 	return t.Hour()*60*60 + t.Minute()*60 + t.Second()
+}
+
+func (p *RealtimeTick) SetStatus(s []byte) {
+	//"00":"","01":"临停1H","02":"停牌","03":"停牌","04":"临停","05":"停1/2","07":"暂停","-1":"无记录","-2":"未上市","-3":"退市"
+	p.Status, _ = strconv.Atoi(string(s))
+	if p.Status == 3 {
+		p.Status = 2
+	}
 }

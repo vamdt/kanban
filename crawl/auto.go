@@ -594,9 +594,9 @@ func (p *Stock) tick_get_real(line []byte) bool {
 	tick := RealtimeTick{}
 	t, _ := time.Parse("2006-01-02", string(infos[30]))
 	tick.FromString(t, infos[31], infos[3], nul, infos[8], infos[9], nul)
-	tick.buyone = ParseCent(string(infos[11]))
-	tick.sellone = ParseCent(string(infos[21]))
-	tick.set_status(infos[32])
+	tick.Buyone = ParseCent(string(infos[11]))
+	tick.Sellone = ParseCent(string(infos[21]))
+	tick.SetStatus(infos[32])
 
 	if p.last_tick.Volume == 0 {
 		p.last_tick = tick
@@ -606,9 +606,9 @@ func (p *Stock) tick_get_real(line []byte) bool {
 		return false
 	}
 	if tick.Volume != p.last_tick.Volume {
-		if tick.Price >= p.last_tick.sellone {
+		if tick.Price >= p.last_tick.Sellone {
 			tick.Type = Buy_tick
-		} else if tick.Price <= p.last_tick.buyone {
+		} else if tick.Price <= p.last_tick.Buyone {
 			tick.Type = Sell_tick
 		} else {
 			tick.Type = Eq_tick

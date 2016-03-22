@@ -3,7 +3,11 @@ package qq
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"time"
+
+	"github.com/golang/glog"
 
 	. "../"
 	. "../../base"
@@ -30,6 +34,8 @@ func (p *QQRobot) Can(id string, task int32) bool {
 		return false
 	case TaskTick:
 		return false
+	case TaskRealTicks:
+		fallthrough
 	case TaskRealTick:
 		return true
 	default:
@@ -128,6 +134,70 @@ func (p *QQRobot) years_download(id string, start time.Time) (res []Tdata, err e
 		res = []Tdata{}
 	} else {
 		res = res[i:]
+	}
+	return
+}
+
+func parse_realtime_tick(r *RealtimeTick, line []byte) {
+	infos := bytes.Split(line, []byte("~"))
+	if len(infos) < 49 {
+		glog.Warningln("qq hq api, res format changed")
+		return
+	}
+
+	r.Name = string(infos[1])
+	r.Price = ParseCent(string(infos[3]))
+	//prev_close := infos[4]
+	open := ParseCent(string(infos[5]))
+	r.Volume, _ = strconv.Atoi(string(infos[6]))
+	r.Volume *= 100
+	r.Buyone = ParseCent(string(infos[9]))
+	r.Sellone = ParseCent(string(infos[19]))
+	r.Time, _ = time.Parse("20060102150405", string(infos[30]))
+	r.Turnover, _ = strconv.Atoi(string(infos[37]))
+	r.Turnover *= 10000
+	r.High = ParseCent(string(infos[33]))
+	r.Low = ParseCent(string(infos[34]))
+
+	r.Status, _ = strconv.Atoi(string(infos[0]))
+
+	if r.Price > open {
+		r.Type = Buy_tick
+	} else if r.Price < open {
+		r.Type = Sell_tick
+	} else {
+		r.Type = Eq_tick
+	}
+	r.Change = open
+}
+
+func (p *QQRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
+	if len(ids) < 1 {
+		return
+	}
+	rand.Seed(time.Now().UnixNano())
+	url := fmt.Sprintf("http://qt.gtimg.cn/r=%fq=%s",
+		rand.Float64(), ids)
+	body, err := Http_get_gbk(url, nil)
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+
+	for _, line := range bytes.Split(body, []byte("\";")) {
+		line = bytes.TrimSpace(line)
+		info := bytes.Split(line, []byte("=\""))
+		if len(info) != 2 {
+			continue
+		}
+		prefix := "v_"
+		if !bytes.HasPrefix(info[0], []byte(prefix)) {
+			continue
+		}
+		id := string(info[0][len(prefix):])
+		rt := RealtimeTickRes{Id: id}
+		parse_realtime_tick(&rt.RealtimeTick, info[1])
+		res = append(res, rt)
 	}
 	return
 }

@@ -1,7 +1,6 @@
 package crawl
 
 import (
-	"bytes"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,6 +37,26 @@ func UpdateCate(storestr string) {
 	store.SaveCategories(cate.Sub, cate.Id)
 }
 
+func handle_realtimetick(stock *Stock, wg *sync.WaitGroup) func(interface{}, bool) bool {
+	return func(t interface{}, ok bool) bool {
+		defer wg.Done()
+		if !ok || t == nil {
+			glog.Infoln("RealtimeTick fail", stock.Id)
+			return true
+		}
+
+		rt := t.(*RealtimeTick)
+		td := Tdata{}
+		td.Time = rt.Time
+		td.Open = rt.Change
+		td.Close = rt.Price
+		td.Volume = rt.Volume / 100
+		td.HL = rt.HL
+		stock.Days.Add(td)
+		return true
+	}
+}
+
 func (p *Stocks) Days_update_real() {
 	now := time.Now().UTC()
 	if !IsTradeDay(now) {
@@ -51,56 +70,16 @@ func (p *Stocks) Days_update_real() {
 
 	var wg sync.WaitGroup
 
-	stocks := p.Find_need_update_tick_ids()
-	l := len(stocks)
-	if l < 1 {
-		return
-	}
-
-	for i := 0; i < l; {
-		var b bytes.Buffer
-		var pstocks PStockSlice
-		step := 50
-		if i+step < l {
-			pstocks = stocks[i : i+step]
-		} else {
-			pstocks = stocks[i:l]
-		}
-		for j := 0; j < step && i < l; i, j = i+1, j+1 {
-			if b.Len() > 0 {
-				b.WriteString(",")
-			}
-			b.WriteString(stocks[i].Id)
-		}
-		if b.Len() < 1 {
+	p.rwmutex.RLock()
+	defer p.rwmutex.RUnlock()
+	for i, l := 0, len(p.stocks); i < l; i++ {
+		if atomic.LoadInt32(&p.stocks[i].loaded) < 2 {
 			continue
 		}
-
 		wg.Add(1)
-		go func(ids string, pstocks PStockSlice) {
-			defer wg.Done()
-			body := robot.Tick_download_real_from_sina(ids)
-			if body == nil {
-				return
-			}
-			for _, line := range bytes.Split(body, []byte("\";")) {
-				line = bytes.TrimSpace(line)
-				info := bytes.Split(line, []byte("=\""))
-				if len(info) != 2 {
-					continue
-				}
-				prefix := "var hq_str_"
-				if !bytes.HasPrefix(info[0], []byte(prefix)) {
-					continue
-				}
-				id := info[0][len(prefix):]
-				if idx, ok := pstocks.Search(string(id)); ok {
-					pstocks[idx].day_get_real(info[1])
-				}
-			}
-		}(b.String(), pstocks)
-
+		robot.GetRealtimeTick(p.stocks[i].Id, handle_realtimetick(p.stocks[i], &wg))
 	}
+
 	glog.V(LogV).Infoln("wait Days_update_real")
 	wg.Wait()
 	glog.V(LogV).Infoln("Days_update_real done")

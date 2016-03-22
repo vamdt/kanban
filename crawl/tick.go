@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	. "./base"
@@ -14,21 +13,6 @@ import (
 type Ticks struct {
 	Data []Tick `json:"data"`
 	play []Tick
-}
-
-type RealtimeTick struct {
-	Tick
-	buyone  int
-	sellone int
-	status  int
-}
-
-func (p *RealtimeTick) set_status(s []byte) {
-	//"00":"","01":"临停1H","02":"停牌","03":"停牌","04":"临停","05":"停1/2","07":"暂停","-1":"无记录","-2":"未上市","-3":"退市"
-	p.status, _ = strconv.Atoi(string(s))
-	if p.status == 3 {
-		p.status = 2
-	}
 }
 
 func FixTickTime(ticks []Tick) {

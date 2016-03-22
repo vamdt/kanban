@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
+
+	"github.com/golang/glog"
 
 	. "../"
 	. "../../base"
@@ -31,6 +34,8 @@ func (p *SinaRobot) Can(id string, task int32) bool {
 		return false
 	case TaskTick:
 		return true
+	case TaskRealTicks:
+		fallthrough
 	case TaskRealTick:
 		return true
 	default:
@@ -189,4 +194,73 @@ func (p *SinaRobot) Cate(tc Category) {
 		tc[key] = item
 	}
 
+}
+
+func parse_realtime_tick(r *RealtimeTick, line []byte) {
+	infos := bytes.Split(line, []byte(","))
+	if len(infos) < 33 {
+		glog.Warningln("sina hq api, res format changed")
+		return
+	}
+
+	r.Name = string(infos[0])
+	nul := []byte("")
+	t, _ := time.Parse("2006-01-02", string(infos[30]))
+	timestr := infos[31]
+	price := infos[3]
+	change := nul
+	volume := infos[8]
+	turnover := infos[9]
+	typestr := nul
+	r.FromString(t, timestr, price, change, volume, turnover, typestr)
+	r.High = ParseCent(string(infos[4]))
+	r.Low = ParseCent(string(infos[5]))
+	r.Buyone = ParseCent(string(infos[11]))
+	r.Sellone = ParseCent(string(infos[21]))
+	open := ParseCent(string(infos[1]))
+
+	//"00":"","01":"临停1H","02":"停牌","03":"停牌","04":"临停","05":"停1/2","07":"暂停","-1":"无记录","-2":"未上市","-3":"退市"
+	r.Status, _ = strconv.Atoi(string(infos[32]))
+	if r.Status == 3 {
+		r.Status = 2
+	}
+
+	if r.Price > open {
+		r.Type = Buy_tick
+	} else if r.Price < open {
+		r.Type = Sell_tick
+	} else {
+		r.Type = Eq_tick
+	}
+	r.Change = open
+}
+
+func (p *SinaRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
+	if len(ids) < 1 {
+		return
+	}
+	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
+		time.Now().UnixNano()/int64(time.Millisecond), ids)
+	body, err := Http_get_gbk(url, nil)
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+
+	for _, line := range bytes.Split(body, []byte("\";")) {
+		line = bytes.TrimSpace(line)
+		info := bytes.Split(line, []byte("=\""))
+		if len(info) != 2 {
+			continue
+		}
+		prefix := "var hq_str_"
+		if !bytes.HasPrefix(info[0], []byte(prefix)) {
+			continue
+		}
+		id := string(info[0][len(prefix):])
+		rt := RealtimeTickRes{Id: id}
+		parse_realtime_tick(&rt.RealtimeTick, info[1])
+		res = append(res, rt)
+	}
+	return
 }

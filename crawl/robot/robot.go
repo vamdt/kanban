@@ -23,16 +23,17 @@ const (
 	TaskDay
 	TaskMin1
 	TaskMin5
-	TaskRealTick
 	TaskTick
+	TaskRealTick
+	TaskRealTicks
 )
 
-const DefaultRobotConcurrent int = 4
+const DefaultRobotConcurrent int = 3
 const maxMultiJobsConcurrent int = 50
 
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
-	RealtimeTick(id string)
+	GetRealtimeTick(ids string) []RealtimeTickRes
 	Can(id string, task int32) bool
 }
 
@@ -74,11 +75,11 @@ func (p *RobotBox) Registry(robot Robot) {
 	}
 }
 
-func (p *RobotBox) getJob(robot Robot) *jobItem {
+func (p *RobotBox) getJob(robot Robot) *JobItem {
 	p.mjob.Lock()
 	defer p.mjob.Unlock()
 	for e := p.jobs.Front(); e != nil; e = e.Next() {
-		job := e.Value.(*jobItem)
+		job := e.Value.(*JobItem)
 		if robot.Can(job.id, job.task) {
 			p.jobs.Remove(e)
 			return job
@@ -87,17 +88,19 @@ func (p *RobotBox) getJob(robot Robot) *jobItem {
 	return nil
 }
 
-func (p *RobotBox) getJobs(robot Robot, job *jobItem) []*jobItem {
+func (p *RobotBox) getJobs(robot Robot, job *JobItem) []*JobItem {
 	p.mjob.Lock()
 	defer p.mjob.Unlock()
-	jobs := []*jobItem{job}
+	jobs := []*JobItem{job}
 	task := job.task
-	for e := p.jobs.Front(); e != nil && len(jobs) < maxMultiJobsConcurrent; e = e.Next() {
-		job := e.Value.(*jobItem)
+	for e := p.jobs.Front(); e != nil && len(jobs) < maxMultiJobsConcurrent; {
+		job := e.Value.(*JobItem)
+		next := e.Next()
 		if task == job.task && robot.Can(job.id, task) {
-			p.jobs.Remove(e)
 			jobs = append(jobs, job)
+			p.jobs.Remove(e)
 		}
+		e = next
 	}
 	return jobs
 }
@@ -106,14 +109,15 @@ func Days_download(id string, start time.Time) ([]Tdata, error) {
 	return DefaultRobotBox.Days_download(id, start)
 }
 
-type jobItem struct {
+type JobItem struct {
 	id    string
 	start time.Time
 	res   chan []Tdata
 	task  int32
+	cb    func(interface{}, bool) bool
 }
 
-func (p *Worker) DoRealTick(jobs []*jobItem) {
+func (p *Worker) DoRealTick(jobs []*JobItem) {
 	defer atomic.StoreInt32(&p.busy, robotIdle)
 	if jobs == nil || len(jobs) < 1 {
 		return
@@ -123,14 +127,23 @@ func (p *Worker) DoRealTick(jobs []*jobItem) {
 		b.WriteString(",")
 		b.WriteString(job.id)
 	}
-	if b.Len() < 2 {
-		return
-	}
 	ids := b.String()[1:]
-	p.worker.RealtimeTick(ids)
+	res := p.worker.GetRealtimeTick(ids)
+	for _, job := range jobs {
+		ok := false
+		var rt *RealtimeTick
+		for _, r := range res {
+			if job.id == r.Id {
+				rt = &r.RealtimeTick
+				ok = true
+				break
+			}
+		}
+		job.cb(rt, ok)
+	}
 }
 
-func (p *Worker) Do(job *jobItem) {
+func (p *Worker) Do(job *JobItem) {
 	defer atomic.StoreInt32(&p.busy, robotIdle)
 	if job == nil {
 		return
@@ -189,7 +202,7 @@ func (p *RobotBox) Work(once bool) {
 				return
 			}
 
-			if job.task == TaskRealTick {
+			if job.task == TaskRealTick && w.worker.Can(job.id, TaskRealTicks) {
 				jobs := p.getJobs(w.worker, job)
 				go w.DoRealTick(jobs)
 			} else {
@@ -205,7 +218,7 @@ func (p *RobotBox) Work(once bool) {
 }
 
 func (p *RobotBox) Days_download(id string, start time.Time) ([]Tdata, error) {
-	job := jobItem{
+	job := JobItem{
 		id:    id,
 		start: start,
 		task:  TaskDay,
@@ -216,4 +229,19 @@ func (p *RobotBox) Days_download(id string, start time.Time) ([]Tdata, error) {
 	p.mjob.Unlock()
 	res := <-job.res
 	return res, nil
+}
+
+func GetRealtimeTick(id string, cb func(interface{}, bool) bool) {
+	DefaultRobotBox.GetRealtimeTick(id, cb)
+}
+
+func (p *RobotBox) GetRealtimeTick(id string, cb func(interface{}, bool) bool) {
+	job := JobItem{
+		id:   id,
+		task: TaskRealTick,
+		cb:   cb,
+	}
+	p.mjob.Lock()
+	p.jobs.PushBack(&job)
+	p.mjob.Unlock()
 }

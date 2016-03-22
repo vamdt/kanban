@@ -24,9 +24,12 @@ func init() {
 }
 
 func (p *SSE) Can(id string, task int32) bool {
+	if !strings.HasPrefix(id, "sh") {
+		return false
+	}
 	switch task {
 	case TaskDay:
-		return strings.HasPrefix(id, "sh")
+		return true
 	case TaskMin1:
 		return false
 	case TaskMin5:
