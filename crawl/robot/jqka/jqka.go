@@ -25,14 +25,6 @@ func (p *JQKARobot) Can(id string, task int32) bool {
 	switch task {
 	case TaskDay:
 		return true
-	case TaskMin1:
-		return false
-	case TaskMin5:
-		return false
-	case TaskTick:
-		return false
-	case TaskRealTick:
-		return true
 	default:
 		return false
 	}
