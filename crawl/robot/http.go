@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang/glog"
@@ -11,9 +12,20 @@ import (
 	"golang.org/x/text/transform"
 )
 
+const maxRetry int = 5
+
+var UA string = "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
+
+func init() {
+	ua := os.Getenv("User_Agent")
+	if len(ua) > 0 {
+		UA = ua
+	}
+}
+
 func Http_get(url string, referer *string) (res *http.Response, err error) {
 	glog.V(HttpV).Infoln(url)
-	for i := 0; i < 2; i++ {
+	for i := 0; i < maxRetry; i++ {
 		client := &http.Client{Timeout: time.Second * 5}
 
 		req, err := http.NewRequest("GET", url, nil)
@@ -21,7 +33,7 @@ func Http_get(url string, referer *string) (res *http.Response, err error) {
 			continue
 		}
 
-		req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9")
+		req.Header.Set("User-Agent", UA)
 		if referer != nil {
 			req.Header.Set("Referer", *referer)
 		}
@@ -35,7 +47,7 @@ func Http_get(url string, referer *string) (res *http.Response, err error) {
 		glog.Warningln("http get fail", url, err)
 	}
 	if res == nil && err == nil {
-		err = errors.New("req fail")
+		err = errors.New("req " + url + " fail")
 	}
 	return
 }
