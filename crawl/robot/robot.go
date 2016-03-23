@@ -149,9 +149,20 @@ func (p *Worker) Do(job *JobItem) {
 		return
 	}
 
-	if job.task == TaskDay {
+	switch job.task {
+	case TaskDay:
 		data, _ := p.worker.Days_download(job.id, job.start)
 		job.res <- data
+		return
+	case TaskRealTick:
+		res := p.worker.GetRealtimeTick(job.id)
+		var rt *RealtimeTick
+		ok := false
+		if len(res) > 0 {
+			rt = &res[0].RealtimeTick
+			ok = true
+		}
+		job.cb(rt, ok)
 		return
 	}
 }
@@ -210,6 +221,7 @@ func (p *RobotBox) Work(once bool) {
 			}
 			do++
 		})
+		p.robots = p.robots.Move(1)
 		if do > 0 {
 			glog.Infof("%dn %dbusy/robot(%d) %d/jobs(%d)", do, busy, count, l-do, l)
 		}
