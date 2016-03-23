@@ -72,7 +72,7 @@ func Http_get_gbk(url string, referer *string) ([]byte, error) {
 func Download(url string) []byte {
 	body, err := Http_get_raw(url, nil)
 	if err != nil {
-		glog.Warningln("Download fail", err)
+		glog.Warningln("Download fail", url, err)
 		return nil
 	}
 	return body
