@@ -32,10 +32,12 @@ func ParseParamByte(s, name, sep, eq []byte) []byte {
 			continue
 		}
 		v := bytes.Split(lines[i], eq)
-		if len(v) > 2 {
-			return v[2]
+		if len(v) < 2 {
+			continue
 		}
-		break
+		if bytes.Equal(v[0], name) {
+			return v[1]
+		}
 	}
 	return nil
 }

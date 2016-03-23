@@ -13,6 +13,8 @@ import (
 	. "../../base"
 )
 
+const tout time.Duration = time.Second * 10
+
 type SinaRobot struct {
 	RobotBase
 }
@@ -51,7 +53,7 @@ func (p *SinaRobot) Day_url(id string, t time.Time) string {
 
 func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_url(id, start)
-	body := Download(url)
+	body := Download(url, tout)
 	body = bytes.TrimSpace(body)
 	lines := bytes.Split(body, []byte("\n"))
 
@@ -75,12 +77,12 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 	for i := 1; ; i++ {
 		url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=%d&num=80&sort=symbol&asc=1&node=%s&symbol=&_s_r_a=page",
 			i, code)
-		c, err := Http_get_gbk(url, nil)
+		c, err := Http_get_gbk(url, nil, tout)
 		if err != nil {
 			break
 		}
 
-		n := item.LeafCount()
+		n := 0
 		for len(c) > 0 {
 			end := []byte(`symbol`)
 			if i := bytes.Index(c, end); i > -1 {
@@ -101,9 +103,17 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 			if len(id) < 1 {
 				break
 			}
+			n++
+			code, ok := FromSymbol(id)
+			if !ok {
+				continue
+			}
+			if code.InShB() || code.InSzB() {
+				continue
+			}
 			item.AddStock(id)
 		}
-		if item.LeafCount()-n < 80 {
+		if n < 80 {
 			break
 		}
 	}
@@ -134,7 +144,7 @@ func (p *SinaRobot) sub_cate(c *CategoryItem, cont []byte) {
 
 func (p *SinaRobot) Cate(tc Category) {
 	url := "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodes"
-	c, err := Http_get_gbk(url, nil)
+	c, err := Http_get_gbk(url, nil, tout)
 	if err != nil {
 		return
 	}
@@ -241,7 +251,7 @@ func (p *SinaRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
 	}
 	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
 		time.Now().UnixNano()/int64(time.Millisecond), ids)
-	body, err := Http_get_gbk(url, nil)
+	body, err := Http_get_gbk(url, nil, tout)
 	if err != nil {
 		glog.Warningln(err)
 		return

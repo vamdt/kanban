@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const tout time.Duration = time.Second * 10
+
 func raw_cache_filename(id string, t time.Time) string {
 	return path.Join(os.Getenv("HOME"), "cache", t.Format("2006/0102"), id)
 }
@@ -32,7 +34,7 @@ func Tick_download_from_sina(id string, t time.Time) []byte {
 		return body
 	}
 
-	body, err = Http_get_gbk(Tick_sina_url(id, t), nil)
+	body, err = Http_get_gbk(Tick_sina_url(id, t), nil, tout)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -45,7 +47,7 @@ func Tick_download_from_sina(id string, t time.Time) []byte {
 func Tick_download_today_from_sina(id string) []byte {
 	url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/view/CN_TransListV2.php?num=9000&symbol=%s&rn=%d",
 		id, time.Now().UnixNano()/int64(time.Millisecond))
-	body, err := Http_get_gbk(url, nil)
+	body, err := Http_get_gbk(url, nil, tout)
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -60,7 +62,7 @@ func Tick_download_real_from_sina(id string) []byte {
 	}
 	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
 		time.Now().UnixNano()/int64(time.Millisecond), id)
-	body, err := Http_get_gbk(url, nil)
+	body, err := Http_get_gbk(url, nil, tout)
 	if err != nil {
 		log.Println(err)
 		return nil

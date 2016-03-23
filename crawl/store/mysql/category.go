@@ -114,6 +114,7 @@ func (p *Mysql) SaveCategories(c Category, pid int) (err error) {
 
 func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	table := categoryTable
+	p.db.Exec("UPDATE `" + table + "` SET `factor`=0")
 	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=? WHERE `id`=?")
 	if err != nil {
 		glog.Warningln(err)

@@ -8,8 +8,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/golang/glog"
-
 	. "../base"
 )
 
@@ -29,7 +27,7 @@ const (
 )
 
 const DefaultRobotConcurrent int = 3
-const maxMultiJobsConcurrent int = 50
+const maxMultiJobsConcurrent int = 30
 
 type Robot interface {
 	Days_download(id string, start time.Time) ([]Tdata, error)
@@ -132,9 +130,9 @@ func (p *Worker) DoRealTick(jobs []*JobItem) {
 	for _, job := range jobs {
 		ok := false
 		var rt *RealtimeTick
-		for _, r := range res {
-			if job.id == r.Id {
-				rt = &r.RealtimeTick
+		for i, _ := range res {
+			if job.id == res[i].Id {
+				rt = &res[i].RealtimeTick
 				ok = true
 				break
 			}
@@ -222,10 +220,10 @@ func (p *RobotBox) Work(once bool) {
 			do++
 		})
 		p.robots = p.robots.Move(1)
-		if do > 0 {
-			glog.Infof("%dn %dbusy/robot(%d) %d/jobs(%d)", do, busy, count, l-do, l)
-		}
 		p.mrobot.Unlock()
+		if do == 0 {
+			time.Sleep(time.Second)
+		}
 	}
 }
 

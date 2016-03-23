@@ -13,6 +13,8 @@ import (
 	. "../../base"
 )
 
+const tout time.Duration = time.Second * 30
+
 type QQRobot struct {
 	RobotBase
 }
@@ -68,7 +70,7 @@ func (p *QQRobot) tdata_from_line(td *Tdata, line []byte) bool {
 
 func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_latest_url(id)
-	body := Download(url)
+	body := Download(url, tout)
 	if !bytes.HasPrefix(body, []byte(`latest_daily_data`)) {
 		return
 	}
@@ -80,6 +82,7 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 	// start:901219
 	start_str := string(ParseParamByte(lines[1], []byte("start"), []byte(" "), []byte(":")))
 	start_date, _ := time.Parse(QQmt, start_str)
+	glog.Infoln(id, start, start_date, start_str, string(lines[1]))
 	if start.Before(start_date) {
 		start = start_date
 	}
@@ -109,7 +112,7 @@ func (p *QQRobot) years_download(id string, start time.Time) (res []Tdata, err e
 	for t, ys, ye := start, start.Year(), time.Now().Year()+1; ys < ye; ys++ {
 		url := p.Day_url(id, t)
 		t = t.AddDate(1, 0, 0)
-		body := Download(url)
+		body := Download(url, tout)
 		if !bytes.HasPrefix(body, []byte(`daily_data_`)) {
 			continue
 		}
@@ -176,11 +179,11 @@ func (p *QQRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
 		return
 	}
 	rand.Seed(time.Now().UnixNano())
-	url := fmt.Sprintf("http://qt.gtimg.cn/r=%fq=%s",
+	url := fmt.Sprintf("http://qt.gtimg.cn/r=%.16fq=%s",
 		rand.Float64(), ids)
-	body, err := Http_get_gbk(url, nil)
+	body, err := Http_get_gbk(url, nil, tout)
 	if err != nil {
-		glog.Warningln(err)
+		glog.Warningln(url, err)
 		return
 	}
 

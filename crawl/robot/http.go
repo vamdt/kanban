@@ -23,10 +23,10 @@ func init() {
 	}
 }
 
-func Http_get(url string, referer *string) (res *http.Response, err error) {
+func http_get(url string, referer *string, tout time.Duration) (res *http.Response, err error) {
 	glog.V(HttpV).Infoln(url)
 	for i := 0; i < maxRetry; i++ {
-		client := &http.Client{Timeout: time.Second * 5}
+		client := &http.Client{Timeout: tout}
 
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
@@ -52,8 +52,8 @@ func Http_get(url string, referer *string) (res *http.Response, err error) {
 	return
 }
 
-func Http_get_raw(url string, referer *string) ([]byte, error) {
-	resp, err := Http_get(url, referer)
+func Http_get_raw(url string, referer *string, tout time.Duration) ([]byte, error) {
+	resp, err := http_get(url, referer, tout)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +66,8 @@ func Http_get_raw(url string, referer *string) ([]byte, error) {
 	return body, nil
 }
 
-func Http_get_gbk(url string, referer *string) ([]byte, error) {
-	resp, err := Http_get(url, referer)
+func Http_get_gbk(url string, referer *string, tout time.Duration) ([]byte, error) {
+	resp, err := http_get(url, referer, tout)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +81,8 @@ func Http_get_gbk(url string, referer *string) ([]byte, error) {
 	return body, nil
 }
 
-func Download(url string) []byte {
-	body, err := Http_get_raw(url, nil)
+func Download(url string, tout time.Duration) []byte {
+	body, err := Http_get_raw(url, nil, tout)
 	if err != nil {
 		glog.Warningln("Download fail", url, err)
 		return nil
