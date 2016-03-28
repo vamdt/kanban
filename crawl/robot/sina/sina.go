@@ -108,10 +108,9 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 			if !ok {
 				continue
 			}
-			if code.InShB() || code.InSzB() {
-				continue
+			if code.InShA() || code.InSzA() || code.InSmeBoardMarket() || code.InSecondBoardMarket() {
+				item.AddStock(id)
 			}
-			item.AddStock(id)
 		}
 		if n < 80 {
 			break
