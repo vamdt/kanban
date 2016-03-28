@@ -81,7 +81,7 @@ func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err er
 
 	// start:901219
 	start_str := string(ParseParamByte(lines[1], []byte("start"), []byte(" "), []byte(":")))
-	start_date, _ := time.Parse(QQmt, start_str)
+	start_date, _ := time.Parse("060102", start_str)
 	glog.Infoln(id, start, start_date, start_str, string(lines[1]))
 	if start.Before(start_date) {
 		start = start_date

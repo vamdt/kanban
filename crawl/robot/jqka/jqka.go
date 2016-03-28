@@ -102,7 +102,7 @@ func (p *JQKARobot) Days_download(id string, start time.Time) (res []Tdata, err 
 	start_str := string(ParseParamBeginEnd(body, []byte(`"start":"`), []byte(`"`)))
 	var start_date time.Time
 	if len(start_str) > 0 {
-		start_date, _ = time.Parse(JQKAmt, start_str)
+		start_date, _ = time.Parse("20060102", start_str)
 	} else {
 		start_date = time.Now().AddDate(0, 0, -1)
 	}

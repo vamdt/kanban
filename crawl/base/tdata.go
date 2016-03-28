@@ -7,21 +7,24 @@ import (
 )
 
 const (
-	lmt    = "2006-01-02 15:04:05"
-	smt    = "2006-01-02"
-	QQmt   = "060102"
-	JQKAmt = "20060102"
-	l_lmt  = len(lmt)
-	l_smt  = len(smt)
-	l_qqmt = len(QQmt)
-	l_jqka = len(JQKAmt)
+	lmt   = "2006-01-02 15:04:05"
+	l_lmt = len(lmt)
+
+	smt   = "2006-01-02"
+	l_smt = len(smt)
+
+	yymmdd   = "060102"
+	l_yymmdd = len(yymmdd)
+
+	yyyymmdd   = "20060102"
+	l_yyyymmdd = len(yyyymmdd)
 )
 
 type Tdata struct {
 	Time   time.Time
-	Open   int       `json:"open"`
-	Close  int       `json:"close"`
-	Volume int       `json:"volume"`
+	Open   int `json:"open"`
+	Close  int `json:"close"`
+	Volume int `json:"volume"`
 	HL     `bson:",inline"`
 	Emas   int `json:"-"`
 	Emal   int `json:"-"`
@@ -63,10 +66,10 @@ func (p *Tdata) FromString(timestr, open, high, cloze, low, volume string) {
 		p.Time, _ = time.Parse(lmt, timestr)
 	case l_smt:
 		p.Time, _ = time.Parse(smt, timestr)
-	case l_qqmt:
-		p.Time, _ = time.Parse(QQmt, timestr)
-	case l_jqka:
-		p.Time, _ = time.Parse(JQKAmt, timestr)
+	case l_yymmdd:
+		p.Time, _ = time.Parse(yymmdd, timestr)
+	case l_yyyymmdd:
+		p.Time, _ = time.Parse(yyyymmdd, timestr)
 	}
 	p.Open = ParseCent(open)
 	p.High = ParseCent(high)
