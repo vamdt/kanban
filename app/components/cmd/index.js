@@ -23,21 +23,13 @@ const handlers = {
 
 export default {
   ready() {
-    const bind = (e, func) => {
-      this.$on(e, (...opt) => {
-        func.apply(this, opt);
-      });
-    };
-    for (const e in handlers) {
-      if (handlers.hasOwnProperty(e)) {
-        bind(e, handlers[e]);
-      }
-    }
+    Object.keys(handlers).forEach((e) => {
+      this.$on(e, handlers[e]);
+    });
 
     kanpan.forEach((e) => {
-      this.$on(e, (opt) => {
-        opt.unshift(e);
-        this.$root.$broadcast('kline_cmd', opt);
+      this.$on(e, (...opt) => {
+        this.$root.$broadcast('kline_cmd', e, ...opt);
       });
     });
   },

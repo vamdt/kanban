@@ -77,7 +77,7 @@ export default {
       } else {
         cmd = opt.shift();
       }
-      this.$emit(cmd, opt);
+      this.$emit(cmd, ...opt);
     },
   },
 };

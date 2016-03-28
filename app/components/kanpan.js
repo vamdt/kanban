@@ -6,11 +6,11 @@ Vue.directive('kanpan', {
   deep: true,
 
   bind() {
-    this.vm.$on('kline_cmd', (opt) => {
+    this.vm.$on('kline_cmd', (...opt) => {
       if (!this.kl) {
         return;
       }
-      this.kl.cmd.apply(this.kl, opt);
+      this.kl.cmd(...opt);
     });
 
     window.addEventListener('resize', () => {
