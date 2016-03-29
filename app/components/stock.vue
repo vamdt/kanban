@@ -12,11 +12,11 @@
           <a class="pure-menu-link" v-link="{name:'stock', params: {sid:
           opt.s, k: k}, replace: true}">{{k}}</a>
         </li>
-        <li v-if="starred" class="pure-menu-item">
-          <button class="pure-button" @click="unstar(opt.s)">Unstar</button>
-        </li>
-        <li v-else class="pure-menu-item">
+        <li v-if="!starred" class="pure-menu-item">
           <button class="pure-button" @click="star(opt.s)">Star</button>
+        </li>
+        <li class="pure-menu-item">
+          <button class="pure-button" @click="unstar(opt.s)">Unstar</button>
         </li>
         <li class="pure-menu-item">
           <a v-link="{ path: '/lucky/'+opt.s }" class="pure-menu-link">Lucky</a>
