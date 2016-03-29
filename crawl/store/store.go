@@ -48,6 +48,7 @@ type Store interface {
 	UnStar(int, string)
 	IsStar(pid int, symbol string) bool
 	Lucky(pid int, symbol string) string
+	GetSymbolName(symbol string) string
 }
 
 func Get(s string) Store {

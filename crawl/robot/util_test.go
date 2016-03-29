@@ -2,6 +2,27 @@ package robot
 
 import "testing"
 
+// s xxxxxxbegin^_^end return ^_^ or nil
+func TestParseParamBeginEnd(t *testing.T) {
+	type date_pair struct {
+		src, begin, end, exp string
+	}
+	tests := []date_pair{
+		{"xxxxxxbegin^_^end", "begin", "end", "^_^"},
+		{`symbol:"sh600112"`, `symbol:"`, `"`, "sh600112"},
+	}
+	for i, td := range tests {
+		act := string(ParseParamBeginEnd([]byte(td.src), []byte(td.begin), []byte(td.end)))
+		if act != td.exp {
+			t.Error(
+				"For", "case", i,
+				"expected", td.exp,
+				"got", act,
+			)
+		}
+	}
+}
+
 func TestParseParamByte(t *testing.T) {
 	type date_pair struct {
 		src, name, sep, eq, exp string

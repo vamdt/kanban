@@ -82,37 +82,22 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 			break
 		}
 
-		n := 0
-		for len(c) > 0 {
-			end := []byte(`symbol`)
-			if i := bytes.Index(c, end); i > -1 {
-				c = c[i+len(end):]
-			} else {
-				break
+		lines := bytes.Split(c, []byte("},{"))
+		for _, c := range lines {
+			symbol := string(ParseParamBeginEnd(c, []byte(`symbol:"`), []byte(`"`)))
+			if len(symbol) < 1 {
+				continue
 			}
-
-			end = []byte(`,`)
-			id := ""
-			if i := bytes.Index(c, end); i > -1 {
-				id = string(bytes.Trim(c[:i], `:" `))
-				c = c[i+len(end):]
-			} else {
-				break
-			}
-
-			if len(id) < 1 {
-				break
-			}
-			n++
-			code, ok := FromSymbol(id)
+			code, ok := FromSymbol(symbol)
 			if !ok {
 				continue
 			}
 			if code.InShA() || code.InSzA() || code.InSmeBoardMarket() || code.InSecondBoardMarket() {
-				item.AddStock(id)
+				name := string(ParseParamBeginEnd(c, []byte(`name:"`), []byte(`"`)))
+				item.AddStock(symbol, name)
 			}
 		}
-		if n < 80 {
+		if len(lines) < 80 {
 			break
 		}
 	}

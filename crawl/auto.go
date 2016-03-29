@@ -357,6 +357,7 @@ func (p *Stock) Update(store store.Store, play bool) bool {
 		return false
 	}
 
+	p.Name = store.GetSymbolName(p.Id)
 	p.Days_update(store)
 
 	p.Ticks_update(store)

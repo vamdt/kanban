@@ -45,3 +45,7 @@ func (p *Mem) IsStar(pid int, symbol string) bool {
 func (p *Mem) Lucky(pid int, symbol string) string {
 	return symbol
 }
+
+func (p *Mem) GetSymbolName(symbol string) string {
+	return symbol
+}

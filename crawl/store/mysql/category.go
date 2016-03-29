@@ -24,6 +24,7 @@ func (p *Mysql) createCategorieTable() {
 		"`leaf` TINYINT(1) NOT NULL DEFAULT 0," +
 		"`updateAt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
 		"`name` VARCHAR(128) NOT NULL DEFAULT ''," +
+		"`tag` VARCHAR(128) NOT NULL DEFAULT ''," +
 		"PRIMARY KEY (`id`)," +
 		"UNIQUE KEY (`pid`, `name`)," +
 		"KEY (`updateAt`)" +
@@ -36,7 +37,7 @@ func (p *Mysql) createCategorieTable() {
 
 func (p *Mysql) LoadCategories() (res []CategoryItemInfo, err error) {
 	table := categoryTable
-	cols := "`id`,`name`,`pid`,`leaf`,`factor`"
+	cols := "`id`,`pid`,`factor`,`leaf`,`name`,`tag`"
 	var rows *sql.Rows
 	rows, err = p.db.Query("SELECT " + cols + " FROM `" + table + "`")
 	if err != nil {
@@ -47,7 +48,7 @@ func (p *Mysql) LoadCategories() (res []CategoryItemInfo, err error) {
 
 	for rows.Next() {
 		d := CategoryItemInfo{}
-		if err = rows.Scan(&d.Id, &d.Name, &d.Pid, &d.Leaf, &d.Factor); err != nil {
+		if err = rows.Scan(&d.Id, &d.Pid, &d.Factor, &d.Leaf, &d.Name, &d.Tag); err != nil {
 			glog.Warningln(err)
 			continue
 		}
@@ -74,8 +75,8 @@ func (p *Mysql) GetOrInsertCategoryItem(info *CategoryItemInfo) (id int, err err
 			continue
 		}
 		if err == sql.ErrNoRows {
-			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`,`leaf`) values(?,?,?)",
-				info.Pid, info.Name, info.Leaf)
+			_, err = p.db.Exec("INSERT INTO `"+table+"`(`pid`,`name`,`leaf`,`tag`) values(?,?,?,?)",
+				info.Pid, info.Name, info.Leaf, info.Tag)
 			continue
 		}
 		glog.Warningln(err)
@@ -115,7 +116,7 @@ func (p *Mysql) SaveCategories(c Category, pid int) (err error) {
 func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	table := categoryTable
 	p.db.Exec("UPDATE `" + table + "` SET `factor`=0")
-	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=? WHERE `id`=?")
+	stmt, err := p.db.Prepare("UPDATE `" + table + "` SET `factor`=?,`tag`=? WHERE `id`=?")
 	if err != nil {
 		glog.Warningln(err)
 		return
@@ -125,7 +126,7 @@ func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 		if datas[i].Factor < 1 {
 			continue
 		}
-		_, e := stmt.Exec(datas[i].Factor, datas[i].Id)
+		_, e := stmt.Exec(datas[i].Factor, datas[i].Tag, datas[i].Id)
 		if e != nil {
 			msg := e.Error()
 			if strings.Index(msg, "Error 1062:") > -1 {
@@ -191,6 +192,13 @@ func (p *Mysql) IsStar(pid int, symbol string) bool {
 	err := p.db.QueryRow("SELECT COUNT(1) FROM `"+table+"` WHERE `pid`=("+starSql+") AND name=?",
 		pid, symbol).Scan(&count)
 	return err == nil && count > 0
+}
+
+func (p *Mysql) GetSymbolName(symbol string) string {
+	table := categoryTable
+	p.db.QueryRow("SELECT `tag` FROM `"+table+"` WHERE name=? AND tag>'' ORDER BY `updateAt` DESC LIMIT 0,1",
+		symbol).Scan(&symbol)
+	return symbol
 }
 
 func (p *Mysql) Lucky(uid int, symbol string) string {

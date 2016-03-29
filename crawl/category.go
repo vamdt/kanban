@@ -53,6 +53,7 @@ func handle_realtimetick(stock *Stock, wg *sync.WaitGroup) func(interface{}, boo
 		td.Volume = rt.Volume / 100
 		td.HL = rt.HL
 		stock.Days.Add(td)
+		stock.Name = rt.Name
 		return true
 	}
 }
@@ -105,13 +106,8 @@ func UpdateFactor(storestr string) {
 	latest_time := market_begin_day
 	stocks := Stocks{store: store}
 	var wg sync.WaitGroup
-	c := 0
 	for i, _ := range data {
 
-		if c == 50 {
-			wg.Wait()
-			c = 0
-		}
 		if !data[i].Leaf {
 			continue
 		}
@@ -121,7 +117,6 @@ func UpdateFactor(storestr string) {
 		}
 
 		wg.Add(1)
-		c++
 		go func(s *Stock, i int) {
 			defer wg.Done()
 			s.Days_update(store)
@@ -151,15 +146,18 @@ func UpdateFactor(storestr string) {
 		j := int(s.loaded) - 2
 		if j < len(data) {
 			data[j].Factor = s.Days.Factor()
+			if s.Name != data[j].Tag && len(s.Name) > 0 {
+				data[j].Tag = s.Name
+			}
 		}
 	}
 	stocks.rwmutex.RUnlock()
 
 	factor := make(map[string]int)
 	stats := make([]int, 10)
-	for _, info := range data {
+	for i, info := range data {
 		if info.Leaf && info.Factor > 0 {
-			factor[info.Name] = info.Factor
+			factor[info.Name] = i
 			if info.Factor > -1 && info.Factor < 10 {
 				if IsChinaShareCode(info.Name) {
 					stats[info.Factor]++
@@ -172,7 +170,8 @@ func UpdateFactor(storestr string) {
 	for i, info := range data {
 		if info.Leaf && info.Factor == 0 {
 			if f, ok := factor[info.Name]; ok {
-				data[i].Factor = f
+				data[i].Factor = data[f].Factor
+				data[i].Tag = data[f].Tag
 			}
 		}
 	}

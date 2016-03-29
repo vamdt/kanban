@@ -6,6 +6,7 @@ type CategoryItemInfo struct {
 	Factor int
 	Leaf   bool
 	Name   string
+	Tag    string
 }
 
 type CategoryItem struct {
@@ -53,13 +54,9 @@ func (p *CategoryItem) Assembly(data []CategoryItemInfo) {
 	}
 }
 
-func (p *CategoryItem) AddStock(id string) {
-	info := CategoryItemInfo{Name: id}
+func (p *CategoryItem) AddStock(id, tag string) {
+	info := CategoryItemInfo{Name: id, Tag: tag}
 	p.Info = append(p.Info, info)
-}
-
-func (p *CategoryItem) LeafCount() int {
-	return len(p.Info)
 }
 
 func (p *CategoryItem) initSub() {
