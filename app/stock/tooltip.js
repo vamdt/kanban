@@ -52,7 +52,7 @@ function templ(name, d) {
   const e = d3.select(this);
   switch (name) {
     case 'k':
-      return `${d.time}<br/>
+      return `${d.Time}<br/>
         open: ${fmtCent(d.open)}<br/>
         high: ${fmtCent(d.High)}<br/>
         low: ${fmtCent(d.Low)}<br/>
