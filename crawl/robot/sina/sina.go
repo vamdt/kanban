@@ -140,7 +140,7 @@ func (p *SinaRobot) Cate(tc Category) {
 		return
 	}
 
-	end = []byte(`"hangye","cn"]`)
+	end = []byte(`"zhishu","bond"]`)
 	if i := bytes.Index(c, end); i > -1 {
 		c = c[:i+len(end)]
 	} else {
@@ -169,7 +169,16 @@ func (p *SinaRobot) Cate(tc Category) {
 
 		key := string(name)
 		if key == "证监会行业" {
-			break
+			end = []byte(`"fenlei"],`)
+			if i := bytes.Index(c, end); i > -1 {
+				c = c[i+len(end):]
+				continue
+			} else {
+				break
+			}
+		}
+		if key == "指数成分" {
+			continue
 		}
 
 		end = []byte(`]]`)
