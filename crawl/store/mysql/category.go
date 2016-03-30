@@ -155,6 +155,7 @@ func (p *Mysql) changeStar(pid int, symbol string, star bool) {
 		return
 	}
 
+	tag := p.GetSymbolName(symbol)
 	id := 0
 	err := p.db.QueryRow("SELECT `id`,`pid` FROM `"+table+"` WHERE `pid` in (?,?) AND name=?",
 		starId, unstarId, symbol).Scan(&id, &pid)
@@ -165,6 +166,7 @@ func (p *Mysql) changeStar(pid int, symbol string, star bool) {
 			info.Pid = starId
 		}
 		info.Leaf = true
+		info.Tag = tag
 		p.GetOrInsertCategoryItem(&info)
 		return
 	}
@@ -206,13 +208,14 @@ func (p *Mysql) Lucky(uid int, symbol string) string {
 
 	pidSql := "SELECT `id` FROM `" + table + "` WHERE `pid`=-1 AND `name`='star'"
 	nameSql := "SELECT ? UNION ALL SELECT `name` FROM `" + table + "` WHERE `pid`=(" + pidSql + ")"
-	sql := "SELECT `name` FROM `" + table + "` WHERE `factor`>0 AND `leaf`=1 AND `name` NOT IN (" + nameSql + ") ORDER BY `updateAt` LIMIT ?,1"
+	sql := "SELECT `name` FROM `" + table + "` WHERE `factor`=? AND `leaf`=1 AND `name` NOT IN (" + nameSql + ") ORDER BY `updateAt` LIMIT ?,1"
 
 	name := symbol
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 10; i > 0; i-- {
+	for i := 100; i > 0; i-- {
 		offset := rand.Intn(10)
-		err := p.db.QueryRow(sql, symbol, offset).Scan(&name)
+		factor := rand.Intn(9) + 1
+		err := p.db.QueryRow(sql, factor, symbol, offset).Scan(&name)
 		if err != nil {
 			glog.Warningln(err)
 			continue
