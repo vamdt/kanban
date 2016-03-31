@@ -10,7 +10,7 @@ module.exports = {
     filename: "[name].js",
     chunkFilename: "[chunkhash].js"
   },
-  devtool: 'source-map',
+  devtool: 'cheap-module-eval-source-map',
   resolve: {
     modulesDirectories: ['node_modules', 'styles', 'images', 'fonts']
   },
