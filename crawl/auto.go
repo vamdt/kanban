@@ -420,8 +420,24 @@ func (p *Stock) Ticks_update(store store.Store) int {
 		begin_time = end_time.AddDate(0, -2, -1)
 	}
 	begin_time = begin_time.AddDate(0, 0, 1).Truncate(time.Hour * 24)
+	daylen := len(p.Days.Data)
+	if daylen < 1 {
+		return 0
+	}
+	i, _ := ((TdataSlice)(p.Days.Data)).Search(begin_time)
+	glog.V(LogV).Infof("from %d/%d begin_time=%s end_time=%s", i, daylen, begin_time, end_time)
+	var t time.Time
+	for ; i <= daylen; i++ {
+		if i < daylen {
+			t = p.Days.Data[i].Time
+		} else if i == daylen {
+			t = p.Days.Data[i-1].Time.AddDate(0, 0, 1)
+		}
+		if !end_time.After(t) {
+			glog.V(LogV).Infoln(t, "reach end_time", end_time)
+			break
+		}
 
-	for t := begin_time; t.Before(end_time); t = t.AddDate(0, 0, 1) {
 		if !IsTradeDay(t) {
 			glog.V(LogV).Infoln(t, "skip non trading day")
 			continue
