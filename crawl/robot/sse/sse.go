@@ -12,7 +12,7 @@ import (
 	"github.com/golang/glog"
 )
 
-const tout time.Duration = time.Second * 10
+const tout time.Duration = time.Second * 30
 
 type SSE struct {
 	RobotBase
