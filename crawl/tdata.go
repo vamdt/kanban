@@ -90,31 +90,31 @@ func (p *Tdatas) Drop_lastday_data() {
 	p.Data = p.Data[:i]
 }
 
-func (p *Tdatas) Add(data Tdata) int {
+func (p *Tdatas) Add(data Tdata) (int, bool) {
 	if data.Volume == 0 && data.Open == 0 {
-		return 0
+		return 0, false
 	}
 
 	l := len(p.Data)
 	if l < 1 {
 		p.Data = append(p.Data, data)
-		return 0
+		return 0, true
 	}
 
 	if data.Time.After(p.Data[l-1].Time) {
 		p.Data = append(p.Data, data)
-		return l
+		return l, true
 	}
 
 	if data.Time.Equal(p.Data[l-1].Time) {
 		p.Data[l-1] = data
-		return l - 1
+		return l - 1, false
 	}
 
 	i, ok := (TdataSlice(p.Data)).Search(data.Time)
 	if ok {
 		p.Data[i] = data
-		return i
+		return i, false
 	}
 
 	if i < 1 {
@@ -124,7 +124,7 @@ func (p *Tdatas) Add(data Tdata) int {
 		copy(p.Data[i+1:], p.Data[i:])
 		p.Data[i] = data
 	}
-	return i
+	return i, true
 }
 
 func (p *Tdatas) latest_time() time.Time {

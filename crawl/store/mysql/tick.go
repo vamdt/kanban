@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"strings"
+	"time"
 
 	. "../../base"
 
@@ -84,4 +85,12 @@ func (p *Mysql) SaveTicks(table string, ticks []Tick) error {
 		glog.Warningf("insert tick error %v", err)
 	}
 	return err
+}
+
+func (p *Mysql) HasTickData(table string, t time.Time) bool {
+	has := false
+	t = t.Truncate(time.Hour * 24)
+	end := t.AddDate(0, 0, 1)
+	p.db.QueryRow("SELECT 1 FROM `"+table+"` WHERE `time` BETWEEN ? AND ? LIMIT 0,1", t, end).Scan(&has)
+	return has
 }

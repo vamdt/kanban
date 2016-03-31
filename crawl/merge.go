@@ -37,7 +37,7 @@ func (p *Stock) Ticks2M1s() int {
 		tdata, j := MergeTickTil(&p.Ticks, i, end)
 		i += j
 		tdata.Time = t
-		k := p.M1s.Add(tdata)
+		k, _ := p.M1s.Add(tdata)
 		if k < index {
 			index = k
 		}
@@ -122,7 +122,7 @@ func (p *Tdatas) MergeFrom(from *Tdatas, biglevel bool, endtime func(t time.Time
 		} else {
 			tdata.Time = t
 		}
-		k := p.Add(tdata)
+		k, _ := p.Add(tdata)
 		if k < index {
 			index = k
 		}

@@ -372,15 +372,19 @@ func (p *Stock) Update(store store.Store, play bool) bool {
 	return true
 }
 
-func (p *Stock) days_download(t time.Time) (bool, error) {
+func (p *Stock) days_download(t time.Time) ([]int, error) {
+	inds := []int{}
 	tds, err := robot.Days_download(p.Id, t)
 	if err != nil {
-		return false, err
+		return inds, err
 	}
 	for i, count := 0, len(tds); i < count; i++ {
-		p.Days.Add(tds[i])
+		ind, isnew := p.Days.Add(tds[i])
+		if isnew || ind > 0 {
+			inds = append(inds, ind)
+		}
 	}
-	return true, nil
+	return inds, nil
 }
 
 func (p *Stock) Days_update(store store.Store) int {

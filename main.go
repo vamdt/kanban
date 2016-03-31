@@ -28,6 +28,8 @@ type Opt struct {
 
 	update_factor bool
 
+	fix_data bool
+
 	min_hub_height int
 }
 
@@ -39,6 +41,7 @@ func init() {
 	flag.BoolVar(&opt.serve, "serve", true, "serve mode")
 	flag.BoolVar(&opt.update_cate, "update_cate", false, "update cate")
 	flag.BoolVar(&opt.update_factor, "update_factor", false, "update factor")
+	flag.BoolVar(&opt.fix_data, "fix_data", false, "check and fix data")
 	flag.IntVar(&opt.play, "play", 0, "play mode, ms/tick")
 	flag.BoolVar(&opt.https, "https", false, "https")
 	flag.StringVar(&opt.store, "store", "mem", "back store with")
@@ -83,6 +86,11 @@ func main() {
 	if opt.debug {
 		flag.Lookup("logtostderr").Value.Set("true")
 		glog.Infoln("debug on")
+	}
+
+	if opt.fix_data {
+		glog.Infoln("fix data on")
+		crawl.FixData(opt.store)
 	}
 
 	if opt.update_cate {

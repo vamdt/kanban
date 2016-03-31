@@ -2,6 +2,7 @@ package store
 
 import (
 	"sync"
+	"time"
 
 	. "../base"
 	"github.com/golang/glog"
@@ -34,13 +35,18 @@ func unregisterAllDrivers() {
 	stores = make(map[string]Store)
 }
 
+type TicksStore interface {
+	LoadTicks(table string) ([]Tick, error)
+	SaveTicks(string, []Tick) error
+	HasTickData(table string, t time.Time) bool
+}
+
 type Store interface {
+	TicksStore
 	Open() error
 	Close()
 	LoadTDatas(table string) ([]Tdata, error)
 	SaveTDatas(string, []Tdata) error
-	LoadTicks(table string) ([]Tick, error)
-	SaveTicks(string, []Tick) error
 	LoadCategories() ([]CategoryItemInfo, error)
 	SaveCategories(Category, int) error
 	SaveCategoryItemInfoFactor([]CategoryItemInfo)

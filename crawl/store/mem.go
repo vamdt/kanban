@@ -1,6 +1,8 @@
 package store
 
 import (
+	"time"
+
 	. "../base"
 )
 
@@ -48,4 +50,8 @@ func (p *Mem) Lucky(pid int, symbol string) string {
 
 func (p *Mem) GetSymbolName(symbol string) string {
 	return symbol
+}
+
+func (p *Mem) HasTickData(table string, t time.Time) bool {
+	return true
 }
