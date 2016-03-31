@@ -46,7 +46,39 @@ func (p *Mysql) LoadTicks(table string) (res []Tick, err error) {
 	return
 }
 
-func (p *Mysql) SaveTicks(table string, ticks []Tick) error {
+func (p *Mysql) checkTicks(table string, ticks []Tick) ([]Tick, error) {
+	var stmt *sql.Stmt
+	var err error
+	for i := 0; i < 2; i++ {
+		stmt, err = p.db.Prepare("SELECT 1 FROM `" + table + "` WHERE `time`=?")
+		if err == nil {
+			break
+		}
+		if strings.Index(err.Error(), "Error 1146:") > -1 {
+			p.createTickTable(table)
+			continue
+		}
+	}
+	if err != nil {
+		return ticks, err
+	}
+	defer stmt.Close()
+
+	unsave := []Tick{}
+	for i, c := 0, len(ticks); i < c; i++ {
+		has := false
+		stmt.QueryRow(ticks[i].Time).Scan(&has)
+		if !has {
+			unsave = append(unsave, ticks[i])
+		}
+	}
+	if err != nil {
+		glog.Warningf("insert tick error %v", err)
+	}
+	return unsave, err
+}
+
+func (p *Mysql) saveTicks(table string, ticks []Tick) error {
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -87,6 +119,22 @@ func (p *Mysql) SaveTicks(table string, ticks []Tick) error {
 	return err
 }
 
+func (p *Mysql) SaveTicks(table string, ticks []Tick) error {
+	var err error
+	unsave := ticks
+	saved := 0
+	for i := 0; i < 10 && len(unsave) > 0; i++ {
+		err = p.saveTicks(table, unsave)
+		sum := len(unsave)
+		unsave, err = p.checkTicks(table, unsave)
+		saved = sum - len(unsave)
+		if saved > 0 {
+			i--
+		}
+	}
+
+	return err
+}
 func (p *Mysql) HasTickData(table string, t time.Time) bool {
 	has := false
 	t = t.Truncate(time.Hour * 24)

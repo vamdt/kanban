@@ -45,7 +45,37 @@ func (p *Mysql) LoadTDatas(table string) (res []Tdata, err error) {
 	return
 }
 
-func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
+func (p *Mysql) checkTDatas(table string, datas []Tdata) ([]Tdata, error) {
+	var stmt *sql.Stmt
+	var err error
+	for i := 0; i < 2; i++ {
+		stmt, err = p.db.Prepare("SELECT 1 FROM `" + table + "` WHERE `time`=?")
+		if err == nil {
+			break
+		}
+		if strings.Index(err.Error(), "Error 1146:") > -1 {
+			p.createDayTdataTable(table)
+			continue
+		}
+	}
+	if err != nil {
+		return datas, err
+	}
+	defer stmt.Close()
+
+	unsave := []Tdata{}
+	for i, c := 0, len(datas); i < c; i++ {
+		has := false
+		stmt.QueryRow(datas[i].Time).Scan(&has)
+		if !has {
+			unsave = append(unsave, datas[i])
+		}
+	}
+
+	return unsave, nil
+}
+
+func (p *Mysql) saveTDatas(table string, datas []Tdata) error {
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -84,5 +114,22 @@ func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
 	if err != nil {
 		glog.Warningln("insert tdata error", err)
 	}
+	return err
+}
+
+func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
+	var err error
+	unsave := datas
+	saved := 0
+	for i := 0; i < 10 && len(unsave) > 0; i++ {
+		err = p.saveTDatas(table, unsave)
+		sum := len(unsave)
+		unsave, err = p.checkTDatas(table, unsave)
+		saved = sum - len(unsave)
+		if saved > 0 {
+			i--
+		}
+	}
+
 	return err
 }
