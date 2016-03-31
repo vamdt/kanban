@@ -72,10 +72,7 @@ func (p *Mysql) checkTicks(table string, ticks []Tick) ([]Tick, error) {
 			unsave = append(unsave, ticks[i])
 		}
 	}
-	if err != nil {
-		glog.Warningf("insert tick error %v", err)
-	}
-	return unsave, err
+	return unsave, nil
 }
 
 func (p *Mysql) saveTicks(table string, ticks []Tick) error {
@@ -108,6 +105,11 @@ func (p *Mysql) saveTicks(table string, ticks []Tick) error {
 			if strings.Index(msg, "Error 1615:") > -1 {
 				// Prepared statement needs to be re-prepared
 				i--
+				continue
+			}
+			if strings.Index(msg, "Error 1461:") > -1 {
+				i--
+				time.Sleep(time.Millisecond * 100)
 				continue
 			}
 			err = e

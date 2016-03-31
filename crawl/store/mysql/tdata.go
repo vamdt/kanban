@@ -3,6 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"strings"
+	"time"
 
 	. "../../base"
 
@@ -105,6 +106,11 @@ func (p *Mysql) saveTDatas(table string, datas []Tdata) error {
 			if strings.Index(msg, "Error 1615:") > -1 {
 				// Prepared statement needs to be re-prepared
 				i--
+				continue
+			}
+			if strings.Index(msg, "Error 1461:") > -1 {
+				i--
+				time.Sleep(time.Millisecond * 100)
 				continue
 			}
 			err = e
