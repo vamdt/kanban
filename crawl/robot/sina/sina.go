@@ -53,7 +53,7 @@ func (p *SinaRobot) Day_url(id string, t time.Time) string {
 
 func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_url(id, start)
-	body := Download(url, tout)
+	body, _ := Http_get(url, nil, tout)
 	body = bytes.TrimSpace(body)
 	lines := bytes.Split(body, []byte("\n"))
 
@@ -63,6 +63,7 @@ func (p *SinaRobot) Days_download(id string, start time.Time) (res []Tdata, err 
 		infos := bytes.Split(line, []byte(","))
 		if len(infos) != 6 {
 			err = errors.New("could not parse line " + string(line))
+			glog.Warningln("sina:", url, "len()!=6", string(line))
 			return
 		}
 
@@ -77,8 +78,9 @@ func (p *SinaRobot) stock_in_cate(item *CategoryItem, code string) {
 	for i := 1; ; i++ {
 		url := fmt.Sprintf("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=%d&num=80&sort=symbol&asc=1&node=%s&symbol=&_s_r_a=page",
 			i, code)
-		c, err := Http_get_gbk(url, nil, tout)
+		c, err := Http_get(url, nil, tout)
 		if err != nil {
+			glog.Warningln("sina:", url, err)
 			break
 		}
 
@@ -128,8 +130,9 @@ func (p *SinaRobot) sub_cate(c *CategoryItem, cont []byte) {
 
 func (p *SinaRobot) Cate(tc Category) {
 	url := "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodes"
-	c, err := Http_get_gbk(url, nil, tout)
+	c, err := Http_get(url, nil, tout)
 	if err != nil {
+		glog.Warningln("sina:", url, err)
 		return
 	}
 
@@ -244,7 +247,7 @@ func (p *SinaRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
 	}
 	url := fmt.Sprintf("http://hq.sinajs.cn/rn=%d&list=%s",
 		time.Now().UnixNano()/int64(time.Millisecond), ids)
-	body, err := Http_get_gbk(url, nil, tout)
+	body, err := Http_get(url, nil, tout)
 	if err != nil {
 		glog.Warningln(err)
 		return
@@ -258,6 +261,7 @@ func (p *SinaRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
 		}
 		prefix := "var hq_str_"
 		if !bytes.HasPrefix(info[0], []byte(prefix)) {
+			glog.Warningln("sina hq api, prefix fail: ", prefix, string(info[0]))
 			continue
 		}
 		id := string(info[0][len(prefix):])

@@ -88,7 +88,7 @@ func (p *JQKARobot) Days_download(id string, start time.Time) (res []Tdata, err 
 		id = "sh1A0001"
 	}
 	url := p.Day_latest_url(id)
-	body := Download(url, tout)
+	body, _ := Http_get(url, nil, tout)
 	if !bytes.HasPrefix(body, []byte(`quotebridge_v2_line_hs_`)) {
 		return
 	}
@@ -130,7 +130,7 @@ func (p *JQKARobot) years_download(id string, start time.Time) (res []Tdata, err
 	for t, ys, ye := start, start.Year(), time.Now().Year()+1; ys < ye; ys++ {
 		url := p.Day_url(id, t)
 		t = t.AddDate(1, 0, 0)
-		body := Download(url, tout)
+		body, _ := Http_get(url, nil, tout)
 		if !bytes.HasPrefix(body, []byte(`quotebridge_v2_line_hs_`)) {
 			continue
 		}

@@ -72,7 +72,7 @@ type DaysRes struct {
 
 func (p *SSE) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.day_url(id, start)
-	body := Download(url, tout)
+	body, _ := Http_get(url, nil, tout)
 	if !bytes.HasPrefix(body, []byte(cb)) {
 		glog.Warningln("sse:", url, "prefix not correct", string(body))
 		return
@@ -142,7 +142,7 @@ func (p *SSE) GetRealtimeTick(id string) (res []RealtimeTickRes) {
 	cols := "name%2Clast%2Cchg_rate%2Cchange%2Camount%2Cvolume%2Copen%2Cprev_close%2Cask%2Cbid%2Chigh%2Clow%2Ctradephase"
 	url := fmt.Sprintf("http://yunhq.sse.com.cn:32041/v1/sh1/snap/%s?callback=%s%d&select=%s&_=%d",
 		id[2:], cb, r, cols, r)
-	body, _ := Http_get_gbk(url, nil, tout)
+	body, _ := Http_get(url, nil, tout)
 	if !bytes.HasPrefix(body, []byte(cb)) {
 		glog.Warningln("sse:", url, "prefix not correct", string(body))
 		return

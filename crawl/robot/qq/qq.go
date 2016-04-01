@@ -70,12 +70,14 @@ func (p *QQRobot) tdata_from_line(td *Tdata, line []byte) bool {
 
 func (p *QQRobot) Days_download(id string, start time.Time) (res []Tdata, err error) {
 	url := p.Day_latest_url(id)
-	body := Download(url, tout)
+	body, _ := Http_get(url, nil, tout)
 	if !bytes.HasPrefix(body, []byte(`latest_daily_data`)) {
+		glog.Warningln("qq:", url, "prefix latest_daily_data not correct", string(body))
 		return
 	}
 	lines := bytes.Split(body, []byte("\\n\\"))
 	if len(lines) < 3 {
+		glog.Warningln("qq:", url, "lines < 3", string(body))
 		return
 	}
 
@@ -112,7 +114,7 @@ func (p *QQRobot) years_download(id string, start time.Time) (res []Tdata, err e
 	for t, ys, ye := start, start.Year(), time.Now().Year()+1; ys < ye; ys++ {
 		url := p.Day_url(id, t)
 		t = t.AddDate(1, 0, 0)
-		body := Download(url, tout)
+		body, _ := Http_get(url, nil, tout)
 		if !bytes.HasPrefix(body, []byte(`daily_data_`)) {
 			continue
 		}
@@ -181,7 +183,7 @@ func (p *QQRobot) GetRealtimeTick(ids string) (res []RealtimeTickRes) {
 	rand.Seed(time.Now().UnixNano())
 	url := fmt.Sprintf("http://qt.gtimg.cn/r=%.16fq=%s",
 		rand.Float64(), ids)
-	body, err := Http_get_gbk(url, nil, tout)
+	body, err := Http_get(url, nil, tout)
 	if err != nil {
 		glog.Warningln(url, err)
 		return
