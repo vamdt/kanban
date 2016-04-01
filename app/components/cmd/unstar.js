@@ -6,5 +6,5 @@ export default function (sid) {
   }
 
   d3.xhr(`/star?s=${sid}`).send('DELETE');
-  this.$root.$broadcast('unwatch', sid);
+  this.$root.$broadcast('unstar', sid);
 }

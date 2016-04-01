@@ -55,3 +55,7 @@ func (p *Mem) GetSymbolName(symbol string) string {
 func (p *Mem) HasTickData(table string, t time.Time) bool {
 	return true
 }
+
+func (p *Mem) LoadStar(uid int) (res []CategoryItemInfo, err error) {
+	return
+}

@@ -188,6 +188,32 @@ func (p *Mysql) UnStar(pid int, symbol string) {
 	p.changeStar(pid, symbol, false)
 }
 
+func (p *Mysql) LoadStar(uid int) (res []CategoryItemInfo, err error) {
+	table := categoryTable
+	cols := "`id`,`pid`,`factor`,`leaf`,`name`,`tag`"
+	var rows *sql.Rows
+	pidSql := "SELECT `id` FROM `" + table + "` WHERE `pid`=-1 AND `name`='star'"
+	rows, err = p.db.Query("SELECT " + cols + " FROM `" + table + "` WHERE `pid`=(" + pidSql + ")")
+	if err != nil {
+		glog.Warningln(err)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		d := CategoryItemInfo{}
+		if err = rows.Scan(&d.Id, &d.Pid, &d.Factor, &d.Leaf, &d.Name, &d.Tag); err != nil {
+			glog.Warningln(err)
+			continue
+		}
+		res = append(res, d)
+	}
+	if err = rows.Err(); err != nil {
+		glog.Warningln(err)
+	}
+	return
+}
+
 func (p *Mysql) IsStar(pid int, symbol string) bool {
 	table := categoryTable
 	count := 0

@@ -8,7 +8,7 @@ export default function (sid) {
   d3.xhr('/star')
     .header('Content-Type', 'application/x-www-form-urlencoded')
     .post(`s=${sid}`);
-  this.$root.$broadcast('watch', sid);
+  this.$root.$broadcast('star', sid);
 }
 
 export function isStar(sid, cb) {

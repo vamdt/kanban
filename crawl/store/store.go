@@ -41,20 +41,25 @@ type TicksStore interface {
 	HasTickData(table string, t time.Time) bool
 }
 
+type StarStore interface {
+	LoadCategories() ([]CategoryItemInfo, error)
+	SaveCategories(Category, int) error
+	SaveCategoryItemInfoFactor([]CategoryItemInfo)
+	Lucky(pid int, symbol string) string
+	GetSymbolName(symbol string) string
+	Star(int, string)
+	UnStar(int, string)
+	IsStar(pid int, symbol string) bool
+	LoadStar(uid int) ([]CategoryItemInfo, error)
+}
+
 type Store interface {
 	TicksStore
+	StarStore
 	Open() error
 	Close()
 	LoadTDatas(table string) ([]Tdata, error)
 	SaveTDatas(string, []Tdata) error
-	LoadCategories() ([]CategoryItemInfo, error)
-	SaveCategories(Category, int) error
-	SaveCategoryItemInfoFactor([]CategoryItemInfo)
-	Star(int, string)
-	UnStar(int, string)
-	IsStar(pid int, symbol string) bool
-	Lucky(pid int, symbol string) string
-	GetSymbolName(symbol string) string
 }
 
 func Get(s string) Store {

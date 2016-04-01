@@ -80,6 +80,11 @@ func plates_handle(w http.ResponseWriter, r *http.Request) {
 func star_handle(w http.ResponseWriter, r *http.Request) {
 	sid := r.FormValue("s")
 	if len(sid) < 1 {
+		if r.Method == http.MethodGet {
+			stars, _ := stocks.Store().LoadStar(-1)
+			jsonp(w, r, stars)
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}

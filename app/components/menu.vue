@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import d3 from 'd3';
 import cmd from './cmd.vue';
 function param(hash = {}, key) {
   return hash[key];
@@ -56,20 +57,19 @@ export default {
   events: {
     show_stock: 'show_stock',
     stock_change: 'stock_change',
+    star: 'loadStar',
+    unstar: 'loadStar',
   },
   components: {
     cmd,
   },
 
   data() {
-    let stocks = [];
-    try {
-      stocks = JSON.parse(localStorage.getItem('stocks'));
-    } catch (e) {
-      stocks = [];
-    }
+    this.$nextTick(() => {
+      this.loadStar();
+    });
     return {
-      stocks: stocks || [],
+      stocks: [],
       cur_stock: { name: 'Stock', sid: '' },
     };
   },
@@ -87,19 +87,19 @@ export default {
       };
     },
 
-    lru(s) {
-      const stocks = this.stocks || [];
-      const i = stocks.findIndex((e) => e.sid === s.sid);
-      if (i > -1) {
-        stocks.splice(i, 1);
-      }
-      stocks.unshift(s);
-      localStorage.setItem('stocks', JSON.stringify(stocks));
-      this.stocks = stocks;
+    loadStar() {
+      d3.json('/star', (err, data) => {
+        if (!Array.isArray(data)) {
+          return;
+        }
+        this.stocks = [];
+        data.forEach((d) => {
+          this.stocks.push({ sid: d.Name, name: d.Tag });
+        });
+      });
     },
 
     show_stock(to) {
-      this.lru(to);
       const k = param(this.$route.params, 'k') || 1;
       this.$route.router.go({
         name: 'stock',
