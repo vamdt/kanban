@@ -49,7 +49,7 @@ func TestTdatasAdd(t *testing.T) {
 
 		d, _ := time.Parse("2006-01-02", tests[i].date)
 		tdata := Tdata{Time: d, Volume: 1}
-		index := cases.Add(tdata)
+		index, _ := cases.Add(tdata)
 		new_len := len(cases.Data)
 
 		if tests[i].new && new_len-old_len != 1 {
