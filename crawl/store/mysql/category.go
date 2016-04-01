@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -203,12 +204,19 @@ func (p *Mysql) GetSymbolName(symbol string) string {
 	return symbol
 }
 
-func (p *Mysql) Lucky(uid int, symbol string) string {
+func (p *Mysql) Lucky(pid int, symbol string) string {
 	table := categoryTable
 
 	pidSql := "SELECT `id` FROM `" + table + "` WHERE `pid`=-1 AND `name`='star'"
 	nameSql := "SELECT ? UNION ALL SELECT `name` FROM `" + table + "` WHERE `pid`=(" + pidSql + ")"
-	sql := "SELECT `name` FROM `" + table + "` WHERE `factor`=? AND `leaf`=1 AND `name` NOT IN (" + nameSql + ") ORDER BY `updateAt` LIMIT ?,1"
+	order := "ORDER BY `updateAt`"
+
+	var pidStr string
+	if pid > 0 {
+		pidStr = fmt.Sprintf("AND `pid`=%d", pid)
+		order = ""
+	}
+	sql := "SELECT `name` FROM `" + table + "` WHERE `factor`=? AND `leaf`=1 " + pidStr + " AND `name` NOT IN (" + nameSql + ") " + order + " LIMIT ?,1"
 
 	name := symbol
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))

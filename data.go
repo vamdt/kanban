@@ -115,8 +115,9 @@ func expect_json_res(r *http.Request) bool {
 }
 
 func lucky_handle(w http.ResponseWriter, r *http.Request) {
+	pool, _ := strconv.Atoi(r.FormValue("pool"))
 	sid := r.FormValue("s")
-	sid = stocks.Store().Lucky(-1, sid)
+	sid = stocks.Store().Lucky(pool, sid)
 	if expect_json_res(r) {
 		jsonp(w, r, map[string]string{"lucky": sid})
 		return

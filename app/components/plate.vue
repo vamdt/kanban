@@ -7,16 +7,20 @@
           class="pure-menu-link">{{p.Name}} {{p.Factor}}</a>
           <ul class="pure-menu-children">
               <li v-for="s in p.Sub" class="pure-menu-item">
-                <a @click="show(s, $event)" v-link="{ path: '/plate/' + s.Pid + '/' + s.Id}"
+                <a @click.stop.prevent="show(s)" href="#"
                   class="pure-menu-link">{{s.Name}} {{s.Factor}}</a>
               </li>
           </ul>
         </li>
     </ul>
+    <li v-if="title" class="pure-menu-item">
+      &gt;&gt;<button class="pure-button" @click="pool(id)">{{title}}</button>
+    </li>
 </div>
 <div class="pure-g">
   <div v-for="i in stocks" class="pure-u-1-5">
-    <a v-if="i.Leaf" v-link="{ path: '/s/' + i.Name + '/1'}" class="pure-menu-link">{{i.Name}} {{i.Factor}}</a>
+    <a v-if="i.Leaf" v-link="{ path: '/s/' + i.Name + '/1'}"
+    class="pure-menu-link">{{i.Tag}} {{i.Factor}}</a>
   </div>
 </div>
 </div>
@@ -24,12 +28,15 @@
 
 <script>
 import d3 from 'd3';
+import config from './config';
 const param = (hash = {}, key) => hash[key];
 function noop() {}
 
 export default {
   data() {
     return {
+      title: '',
+      id: '',
       plate: [],
       stocks: [],
     };
@@ -52,12 +59,21 @@ export default {
   },
 
   methods: {
-    show(plate, e) {
+    pool(id) {
+      config.update({ pool: id });
+    },
+
+    show(plate) {
+      this.title = plate.Name;
+      this.id = plate.Id;
       if (!plate.Sub || !plate.Sub.length) {
+        this.$route.router.go({
+          path: `/plate/${plate.Pid}/${plate.Id}`,
+          replace: true,
+        });
         return;
       }
       this.stocks = plate.Sub;
-      e.preventDefault();
     },
 
     rdata(pids, cb = noop) {
