@@ -37,7 +37,7 @@ export default class KLine {
     this.plugins = [];
     this._param = {};
     this._cache = {};
-    this.options.size = +this.options.size || 100;
+    this.options.size = +this.options.size || 120;
     this.bindEvent();
   }
 
@@ -46,8 +46,8 @@ export default class KLine {
   }
 
   updateSize(_size, _left) {
-    let size = _size || this.options.size || 10;
-    size = Math.max(size, 10);
+    let size = _size || this.options.size || 120;
+    size = Math.max(size, 120);
     this.options.size = size;
 
     const left = _left || this._left;
