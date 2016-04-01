@@ -1,10 +1,13 @@
 package robot
 
 import (
+	"compress/gzip"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -23,8 +26,26 @@ func init() {
 	}
 }
 
-func http_get(url string, referer *string, tout time.Duration) (res *http.Response, err error) {
+func guess_charset(contype string) string {
+	excel := "application/vnd.ms-excel"
+	if contype == excel {
+		return "GBK"
+	}
+
+	charset := strings.ToUpper(contype)
+	if i := strings.Index(charset, "CHARSET="); i == -1 {
+		return "UTF8"
+	} else {
+		charset = charset[i+len("CHARSET="):]
+		charset = strings.TrimSpace(charset)
+		charset = strings.Trim(charset, ";")
+	}
+	return charset
+}
+
+func Http_get(url string, referer *string, tout time.Duration) (body []byte, err error) {
 	glog.V(HttpV).Infoln(url)
+	var res *http.Response
 	for i := 0; i < maxRetry; i++ {
 		client := &http.Client{Timeout: tout}
 
@@ -33,6 +54,8 @@ func http_get(url string, referer *string, tout time.Duration) (res *http.Respon
 			continue
 		}
 
+		req.Header.Set("Accept-Encoding", "gzip, deflate")
+		req.Header.Add("Connection", "keep-alive")
 		req.Header.Set("User-Agent", UA)
 		if referer != nil {
 			req.Header.Set("Referer", *referer)
@@ -45,47 +68,33 @@ func http_get(url string, referer *string, tout time.Duration) (res *http.Respon
 	}
 	if err != nil {
 		glog.Warningln("http get fail", url, err)
+		return
 	}
 	if res == nil && err == nil {
 		err = errors.New("req " + url + " fail")
+		return
 	}
-	return
-}
 
-func Http_get_raw(url string, referer *string, tout time.Duration) ([]byte, error) {
-	resp, err := http_get(url, referer, tout)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
+	contype := res.Header.Get("Content-Type")
+	charset := guess_charset(contype)
 
-func Http_get_gbk(url string, referer *string, tout time.Duration) ([]byte, error) {
-	resp, err := http_get(url, referer, tout)
-	if err != nil {
-		return nil, err
+	var reader io.ReadCloser
+	switch res.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(res.Body)
+		defer reader.Close()
+	default:
+		reader = res.Body
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(transform.NewReader(resp.Body,
-		simplifiedchinese.GBK.NewDecoder()))
-	if err != nil {
-		return nil, err
+	if charset[:2] == "GB" {
+		body, err = ioutil.ReadAll(transform.NewReader(reader,
+			simplifiedchinese.GBK.NewDecoder()))
+	} else {
+		body, err = ioutil.ReadAll(reader)
 	}
-	return body, nil
-}
 
-func Download(url string, tout time.Duration) []byte {
-	body, err := Http_get_raw(url, nil, tout)
-	if err != nil {
-		glog.Warningln("Download fail", url, err)
-		return nil
-	}
-	return body
+	return body, err
 }

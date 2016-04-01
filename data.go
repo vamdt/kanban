@@ -46,7 +46,7 @@ func search_handle(w http.ResponseWriter, r *http.Request) {
 	name := fmt.Sprintf("suggestdata_%d", time.Now().UnixNano()/int64(time.Millisecond))
 	url := fmt.Sprintf("http://suggest3.sinajs.cn/suggest/type=11,12,13,14,15&key=%s&name=%s",
 		sid, name)
-	body, err := robot.Http_get_gbk(url, nil, time.Second*10)
+	body, err := robot.Http_get(url, nil, time.Second*10)
 	if err != nil {
 		glog.Warningln(err)
 		http.NotFound(w, r)
