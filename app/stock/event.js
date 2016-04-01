@@ -7,7 +7,9 @@ export default class EventEmitter {
     this.events[event] = this.events[event] || [];
     if (this.events[event].indexOf(cb) < 0) {
       this.events[event].push(cb);
+      return true;
     }
+    return false;
   }
 
   off(event, cb) {

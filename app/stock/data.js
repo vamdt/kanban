@@ -76,8 +76,8 @@ export default class IO extends EventEmitter {
   }
 
   subscribe(sid, cb) {
-    this.on(`subscribe.${sid}`, cb);
-    if (this.connected) {
+    const first = this.on(`subscribe.${sid}`, cb);
+    if (first && this.connected) {
       this.ws.send(JSON.stringify({ s: sid }));
       return;
     }
