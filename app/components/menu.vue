@@ -24,7 +24,7 @@
         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
             <a v-link="{ path: '/s/'+cur_stock.sid+'/1' }" class="pure-menu-link">{{cur_stock.name}}</a>
             <ul class="pure-menu-children">
-              <li v-for="s in stocks" class="pure-menu-item">
+              <li v-for="s in stocks | orderBy 'c' -1" class="pure-menu-item">
                 <a v-link="{ path: '/s/'+s.sid+'/1' }"
                 @click.prevent="show_stock(s)"
                 class="pure-menu-link">{{s.name}}/{{s.sid}}</a>
@@ -94,13 +94,17 @@ export default {
         }
         this.stocks = [];
         data.forEach((d) => {
-          this.stocks.push({ sid: d.Name, name: d.Tag });
+          this.stocks.push({ sid: d.Name, name: d.Tag, c: d.Factor });
         });
       });
     },
 
     show_stock(to) {
       const k = param(this.$route.params, 'k') || 1;
+      if (to.hasOwnProperty('c')) {
+        const _to = to;
+        _to.c = to.c + 1;
+      }
       this.$route.router.go({
         name: 'stock',
         params: { sid: to.sid, k },
