@@ -21,11 +21,9 @@ func (p *segment_parser) need_sure() bool {
 }
 
 func (p *segment_parser) add_typing(typing Typing, case1 bool) {
-	l := len(p.Data)
 	typing.Case1 = case1
 
 	p.Data = append(p.Data, typing)
-	glog.V(SegmentD).Infof("new segment typing [%d] case1[%t] %+v", l, case1, typing)
 }
 
 func (p *segment_parser) is_unsure_typing_fail(a HL) bool {
@@ -92,7 +90,6 @@ func (p *segment_parser) new_node(i int, ptyping *typing_parser, isbreak bool) {
 	} else {
 		p.break_index--
 	}
-	glog.V(SegmentD).Infoln("new node len(tp)", len(p.tp), "line:", i, "len(data):", len(p.Data), "bindex", p.break_index, isbreak)
 }
 
 func (p *segment_parser) reset() {
@@ -169,7 +166,6 @@ func (p *segment_parser) handle_special_case1(i int, a HL) bool {
 }
 
 func merge_contain_node(prev *Typing, a Typing, i int) {
-	glog.V(SegmentD).Infof("merge prev %+v with line[%d] %+v", prev, i, a)
 	newPos := false
 	if prev.Type == UpTyping {
 		prev.HL, newPos = DownContainMergeHL(prev.HL, a.HL)
@@ -276,9 +272,7 @@ func (p *Tdatas) ParseSegment() bool {
 		a := p.Typing.Line[i]
 
 		if p.Segment.need_sure() && p.Segment.is_unsure_typing_fail(a.HL) {
-			glog.V(SegmentV).Infoln("found unsure typing fail", i, a, p.Segment.Data[len(p.Segment.Data)-1])
 			i = p.Segment.clean_fail_unsure_typing() - 2
-			glog.V(SegmentV).Infoln("new start", i, "need_sure", p.Segment.need_sure)
 			p.Segment.reset()
 			continue
 		}

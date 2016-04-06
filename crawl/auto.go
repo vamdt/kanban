@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -293,18 +292,14 @@ func (p *Stocks) Ticks_update_real() {
 				if idx, ok := pstocks.Search(string(id)); ok {
 					if pstocks[idx].tick_get_real(info[1]) {
 						pstocks[idx].Merge(false, p.store)
-						glog.V(LogV).Infoln("pre send stocks", pstocks[idx].Id)
 						p.res(pstocks[idx])
-						glog.V(LogV).Infoln("send done stocks", pstocks[idx].Id)
 					}
 				}
 			}
 		}(b.String(), pstocks)
 
 	}
-	glog.V(LogV).Infoln("wait Ticks_update_real")
 	wg.Wait()
-	glog.V(LogV).Infoln("Ticks_update_real done")
 }
 
 func StockHash(id string) int {
@@ -323,6 +318,7 @@ func (p *Stock) Merge(day bool, store store.Store) {
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
 
 	if day {
+		p.Ticks.clean()
 		td, _ := store.LoadMacd(p.Id, L1, p.M1s.start)
 		p.M1s.Macd(m1_fresh_index, td)
 		store.SaveMacds(p.Id, L1, p.M1s.Data)
@@ -377,7 +373,6 @@ func (p *Stock) Update(store store.Store, play bool) bool {
 		return false
 	}
 
-	p.Name = store.GetSymbolName(p.Id)
 	p.Days_update(store)
 
 	p.Ticks_update(store)
@@ -433,8 +428,11 @@ func (p *Stock) Ticks_update(store store.Store) int {
 	c := Tick_collection_name(p.Id)
 	p.M1s.start = store.GetStartTime(p.Id, L1)
 	p.Ticks.Data, _ = store.LoadTicks(c, p.M1s.start)
-	begin_time := p.Ticks.latest_time()
+	begin_time := p.M1s.start
 	l := len(p.Ticks.Data)
+	if l > 0 {
+		begin_time = p.Ticks.Data[0].Time
+	}
 
 	now := time.Now().UTC()
 	end_time := now.Truncate(time.Hour * 24)
@@ -451,7 +449,7 @@ func (p *Stock) Ticks_update(store store.Store) int {
 		return 0
 	}
 	i, _ := ((TdataSlice)(p.Days.Data)).Search(begin_time)
-	glog.V(LogV).Infof("from %d/%d begin_time=%s end_time=%s", i, daylen, begin_time, end_time)
+	glog.V(LogV).Infof("from %d/%d %s begin_time=%s end_time=%s", i, daylen, p.M1s.start, begin_time, end_time)
 	var t time.Time
 	for ; i <= daylen; i++ {
 		if i < daylen {
@@ -464,13 +462,7 @@ func (p *Stock) Ticks_update(store store.Store) int {
 			break
 		}
 
-		if !IsTradeDay(t) {
-			glog.V(LogV).Infoln(t, "skip non trading day")
-			continue
-		}
-
 		if p.Ticks.hasTimeData(t) {
-			glog.V(LogV).Infoln(t, "already in db, skip")
 			continue
 		}
 
@@ -486,7 +478,7 @@ func (p *Stock) Ticks_update(store store.Store) int {
 	if count > l {
 		store.SaveTicks(c, p.Ticks.Data[l:])
 	}
-	glog.V(LogV).Infoln("download ticks", count-l)
+	glog.V(LogV).Infof("download ticks %d/%d", count-l, count)
 	return count - l
 }
 
@@ -576,11 +568,12 @@ func (p *Stock) Ticks_today_update() int {
 }
 
 func (p *Stock) ticks_get_today() bool {
-	last_t, err := Tick_get_today_date(p.Id)
+	last_t, name, err := Tick_get_today_date(p.Id)
 	if err != nil {
-		log.Println("get today date fail", err)
+		glog.Warningln("get today date fail", err)
 		return false
 	}
+	p.Name = name
 	t := time.Now().UTC().Truncate(time.Hour * 24)
 	if t.After(last_t) {
 		return false
@@ -628,7 +621,7 @@ func (p *Stock) ticks_get_today() bool {
 func (p *Stock) tick_get_real(line []byte) bool {
 	infos := bytes.Split(line, []byte(","))
 	if len(infos) < 33 {
-		log.Println("sina hq api, res format changed")
+		glog.Warningln("sina hq api, res format changed")
 		return false
 	}
 

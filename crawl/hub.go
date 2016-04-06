@@ -182,12 +182,10 @@ func (p *Tdatas) ParseHubFromBase() {
 
 		if DD1 > GG0 { // DD1 > GG0 Up
 			if width > 7 {
-				glog.Infoln("found width > 7")
 				hub.addHub(t)
 			}
 		} else if GG1 < DD0 { // GG1 < DD0 Down
 			if width > 7 {
-				glog.Infoln("found width > 7")
 				hub.addHub(t)
 			}
 		} else {
@@ -197,10 +195,8 @@ func (p *Tdatas) ParseHubFromBase() {
 			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
 				t.High = ZD0
 				t.Low = ZG1
-				glog.Infoln("found ZG1 < ZD0 && GG1 >= DD0 New Hub")
 				hub.addHub(t)
 			} else if ZD1 > ZG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
-				glog.Infoln("found ZD1 > ZG0 && DD1 <= GG0")
 				t.High = ZD1
 				t.Low = ZG0
 				hub.addHub(t)
@@ -368,6 +364,7 @@ func (p *Tdatas) LinkHub() {
 		p.LinkHubSimple()
 		return
 	}
+	return
 
 	hub := p.Hub
 	hub.drop_last_5_line()

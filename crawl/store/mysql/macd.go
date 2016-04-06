@@ -173,6 +173,15 @@ func (p *Mysql) SaveMacds(symbol string, typ int, datas []Tdata) error {
 func (p *Mysql) GetStartTime(symbol string, typ int) time.Time {
 	table := macdTable
 	t := Market_begin_day
-	p.db.QueryRow("SELECT `time` FROM `"+table+"` WHERE `code`=? AND `typ`=? ORDER BY `time` DESC LIMIT 4,1", symbol, typ).Scan(&t)
+	for i := 4; i > -1; i-- {
+		err := p.db.QueryRow("SELECT `time` FROM `"+table+"` WHERE `code`=? AND `typ`=? ORDER BY `time` DESC LIMIT ?,1", symbol, typ, i).Scan(&t)
+		if err == nil {
+			break
+		}
+		if err != sql.ErrNoRows {
+			glog.Warningln(err)
+			break
+		}
+	}
 	return t
 }

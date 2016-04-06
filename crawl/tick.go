@@ -3,8 +3,9 @@ package crawl
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"time"
+
+	"github.com/golang/glog"
 
 	. "./base"
 	"./robot"
@@ -13,6 +14,23 @@ import (
 type Ticks struct {
 	Data []Tick `json:"data"`
 	play []Tick
+}
+
+func (p *Ticks) clean() {
+	if len(p.play) > 0 {
+		return
+	}
+
+	ldata := len(p.Data)
+	if ldata < 1 {
+		return
+	}
+
+	t := p.Data[ldata-1].Time.Truncate(time.Hour * 24)
+	i, _ := (TickSlice(p.Data)).Search(t)
+	if i > 0 {
+		p.Data = p.Data[i:]
+	}
 }
 
 func FixTickTime(ticks []Tick) {
@@ -48,28 +66,29 @@ func FixTickData(ticks []Tick) {
 	}
 }
 
-func Tick_get_today_date(id string) (time.Time, error) {
+func Tick_get_today_date(id string) (time.Time, string, error) {
 	body := robot.Tick_download_real_from_sina(id)
 	if body == nil {
-		return market_begin_day, fmt.Errorf("get realtime info fail")
+		return market_begin_day, "", fmt.Errorf("get realtime info fail")
 	}
 
 	lines := bytes.Split(body, []byte("\";"))
 	if len(lines) < 1 {
-		return market_begin_day, fmt.Errorf("get realtime info empty")
+		return market_begin_day, "", fmt.Errorf("get realtime info empty")
 	}
 	info := bytes.Split(lines[0], []byte("=\""))
 	if len(info) != 2 {
-		return market_begin_day, fmt.Errorf("get realtime info format error, donot found =\"")
+		return market_begin_day, "", fmt.Errorf("get realtime info format error, donot found =\"")
 	}
 
 	infos := bytes.Split(info[1], []byte(","))
 	if len(infos) < 33 {
-		log.Println("sina hq api, res format changed")
-		return market_begin_day, fmt.Errorf("sina hq api, res format changed")
+		glog.Warningln("sina hq api, res format changed")
+		return market_begin_day, "", fmt.Errorf("sina hq api, res format changed")
 	}
 
-	return time.Parse("2006-01-02 15:04:05", string(infos[30])+" "+string(infos[31]))
+	t, err := time.Parse("2006-01-02 15:04:05", string(infos[30])+" "+string(infos[31]))
+	return t, string(infos[0]), err
 }
 
 func Tick_collection_name(id string) string {
@@ -89,15 +108,14 @@ func (p *Ticks) latest_time() time.Time {
 }
 
 func (p *Ticks) hasTimeData(t time.Time) bool {
-	end := t.AddDate(0, 0, 1)
-	for i := len(p.Data) - 1; i > -1; i-- {
-		if p.Data[i].Time.Equal(t) {
-			return true
-		} else if p.Data[i].Time.After(t) && p.Data[i].Time.Before(end) {
-			return true
-		}
+	i, ok := (TickSlice(p.Data)).Search(t)
+	if ok {
+		return true
 	}
-	return false
+	if i > len(p.Data) {
+		return false
+	}
+	return t.Truncate(24 * time.Hour).Equal(p.Data[i].Time.Truncate(24 * time.Hour))
 }
 
 func (p *Ticks) Add(data Tick) {

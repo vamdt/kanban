@@ -293,7 +293,6 @@ func (p *Tdatas) ParseTyping() {
 		start = p.findChanTypingStart()
 	}
 
-	glog.Infof("start %d/%d", start, len(p.Data))
 	for i, l := start, len(p.Data); i < l; i++ {
 		t, ok := p.ReadContainedTdata(base, i)
 		if !ok {
