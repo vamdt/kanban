@@ -467,7 +467,11 @@ func (p *Stock) Ticks_update(store store.Store) int {
 		}
 
 		glog.V(LogV).Infoln("prepare download ticks", t)
-		if ok, err := p.ticks_download(t); ok {
+		if ticks, err := p.ticks_download(t); ticks != nil {
+			for j, _ := range ticks {
+				p.Ticks.Add(ticks[j])
+			}
+			store.SaveTicks(c, ticks)
 			glog.V(LogV).Infoln("download ticks succ", t)
 		} else if err != nil {
 			glog.V(LogD).Infoln("download ticks err", err)
@@ -475,9 +479,6 @@ func (p *Stock) Ticks_update(store store.Store) int {
 	}
 
 	count := len(p.Ticks.Data)
-	if count > l {
-		store.SaveTicks(c, p.Ticks.Data[l:])
-	}
 	glog.V(LogV).Infof("download ticks %d/%d", count-l, count)
 	return count - l
 }
@@ -511,22 +512,22 @@ func (p *Tdata) parse_mins_from_sina(line []byte) error {
 
 var UnknowSinaRes error = errors.New("could not find '成交时间' in head line")
 
-func (p *Stock) ticks_download(t time.Time) (bool, error) {
+func (p *Stock) ticks_download(t time.Time) ([]Tick, error) {
 	body := robot.Tick_download_from_sina(p.Id, t)
 	if body == nil {
-		return false, nil
+		return nil, UnknowSinaRes
 	}
 	body = bytes.TrimSpace(body)
 	lines := bytes.Split(body, []byte("\n"))
 	count := len(lines) - 1
 	if count < 1 {
-		return false, nil
+		return nil, UnknowSinaRes
 	}
 	if bytes.Contains(lines[0], []byte("script")) {
-		return false, nil
+		return nil, UnknowSinaRes
 	}
 	if !bytes.Contains(lines[0], []byte("成交时间")) {
-		return false, UnknowSinaRes
+		return nil, UnknowSinaRes
 	}
 
 	ticks := make([]Tick, count)
@@ -535,17 +536,14 @@ func (p *Stock) ticks_download(t time.Time) (bool, error) {
 		infos := bytes.Split(line, []byte("\t"))
 		if len(infos) != 6 {
 			err := errors.New("could not parse line " + string(line))
-			return false, err
+			return nil, err
 		}
 		ticks[count-i].FromString(t, infos[0], infos[1], infos[2],
 			infos[3], infos[4], infos[5])
 	}
 	FixTickTime(ticks)
 
-	for _, tick := range ticks {
-		p.Ticks.Add(tick)
-	}
-	return true, nil
+	return ticks, nil
 }
 
 func (p *Stock) Ticks_today_update() int {
