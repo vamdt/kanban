@@ -193,12 +193,12 @@ func (p *Tdatas) ParseHubFromBase() {
 			t.b1 = GG1
 			t.e3 = DD0
 			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
-				t.High = ZD0
-				t.Low = ZG1
+				t.High = GG1
+				t.Low = DD0
 				hub.addHub(t)
 			} else if ZD1 > ZG0 { // ZD1 > ZG0 && DD1 <= GG0 New Hub
-				t.High = ZD1
-				t.Low = ZG0
+				t.High = GG0
+				t.Low = DD1
 				hub.addHub(t)
 			} else {
 				glog.Warningf("found [ZD0/%d, ZG0/%d] mix with [ZD1/%d, ZG1/%d]",
