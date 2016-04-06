@@ -237,7 +237,7 @@ func (p *Stocks) play_next_tick() {
 		ldata := len(p.stocks[i].Ticks.Data)
 		if ldata < lplay {
 			p.stocks[i].Ticks.Data = p.stocks[i].Ticks.play[:ldata+1]
-			p.stocks[i].Merge(false)
+			p.stocks[i].Merge(false, p.store)
 			p.res(p.stocks[i])
 		}
 		p.stocks[i].rw.Unlock()
@@ -292,7 +292,7 @@ func (p *Stocks) Ticks_update_real() {
 				id := info[0][len(prefix):]
 				if idx, ok := pstocks.Search(string(id)); ok {
 					if pstocks[idx].tick_get_real(info[1]) {
-						pstocks[idx].Merge(false)
+						pstocks[idx].Merge(false, p.store)
 						glog.V(LogV).Infoln("pre send stocks", pstocks[idx].Id)
 						p.res(pstocks[idx])
 						glog.V(LogV).Infoln("send done stocks", pstocks[idx].Id)
@@ -317,13 +317,27 @@ func StockHash(id string) int {
 	return 0
 }
 
-func (p *Stock) Merge(day bool) {
+func (p *Stock) Merge(day bool, store store.Store) {
 	m1_fresh_index := p.Ticks2M1s()
-	p.M1s.Macd(m1_fresh_index)
 	m5_fresh_index := p.M5s.MergeFrom(&p.M1s, false, Minute5end)
-	p.M5s.Macd(m5_fresh_index)
 	m30_fresh_index := p.M30s.MergeFrom(&p.M1s, false, Minute30end)
-	p.M30s.Macd(m30_fresh_index)
+
+	if day {
+		td, _ := store.LoadMacd(p.Id, L1, p.M1s.start)
+		p.M1s.Macd(m1_fresh_index, td)
+		store.SaveMacds(p.Id, L1, p.M1s.Data)
+		td, _ = store.LoadMacd(p.Id, L5, p.M1s.start)
+		p.M5s.Macd(m5_fresh_index, td)
+		store.SaveMacds(p.Id, L5, p.M5s.Data)
+		td, _ = store.LoadMacd(p.Id, L30, p.M1s.start)
+		p.M30s.Macd(m30_fresh_index, td)
+		store.SaveMacds(p.Id, L30, p.M30s.Data)
+	} else {
+		p.M1s.Macd(m1_fresh_index, nil)
+		p.M5s.Macd(m5_fresh_index, nil)
+		p.M30s.Macd(m30_fresh_index, nil)
+	}
+
 	p.M1s.ParseChan()
 	p.M5s.ParseChan()
 	p.M30s.ParseChan()
@@ -331,9 +345,15 @@ func (p *Stock) Merge(day bool) {
 	if day {
 		p.Weeks.MergeFrom(&p.Days, true, Weekend)
 		p.Months.MergeFrom(&p.Days, true, Monthend)
-		p.Days.Macd(0)
-		p.Weeks.Macd(0)
-		p.Months.Macd(0)
+		td, _ := store.LoadMacd(p.Id, LDay, p.Days.start)
+		p.Days.Macd(0, td)
+		store.SaveMacds(p.Id, LDay, p.Days.Data)
+		td, _ = store.LoadMacd(p.Id, LWeek, p.Days.start)
+		p.Weeks.Macd(0, td)
+		store.SaveMacds(p.Id, LWeek, p.Weeks.Data)
+		td, _ = store.LoadMacd(p.Id, LMonth, p.Days.start)
+		p.Months.Macd(0, td)
+		store.SaveMacds(p.Id, LMonth, p.Months.Data)
 		p.Days.ParseChan()
 		p.Weeks.ParseChan()
 		p.Months.ParseChan()
@@ -366,7 +386,7 @@ func (p *Stock) Update(store store.Store, play bool) bool {
 	if play {
 		glog.Warningln("WITH PLAY MODE")
 	} else {
-		p.Merge(true)
+		p.Merge(true, store)
 	}
 	atomic.StoreInt32(&p.loaded, 2)
 	return true
@@ -389,7 +409,8 @@ func (p *Stock) days_download(t time.Time) ([]int, error) {
 
 func (p *Stock) Days_update(store store.Store) int {
 	c := Day_collection_name(p.Id)
-	p.Days.Data, _ = store.LoadTDatas(c)
+	p.Days.start = store.GetStartTime(p.Id, LDay)
+	p.Days.Data, _ = store.LoadTDatas(c, p.Days.start)
 	t := p.Days.latest_time()
 	now := time.Now().AddDate(0, 0, -1).UTC().Truncate(time.Hour * 24)
 	for !IsTradeDay(now) {
@@ -410,7 +431,8 @@ func (p *Stock) Days_update(store store.Store) int {
 
 func (p *Stock) Ticks_update(store store.Store) int {
 	c := Tick_collection_name(p.Id)
-	p.Ticks.Data, _ = store.LoadTicks(c)
+	p.M1s.start = store.GetStartTime(p.Id, L1)
+	p.Ticks.Data, _ = store.LoadTicks(c, p.M1s.start)
 	begin_time := p.Ticks.latest_time()
 	l := len(p.Ticks.Data)
 

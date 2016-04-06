@@ -6,6 +6,18 @@ import (
 	"time"
 )
 
+var Market_begin_day, _ = time.Parse("2006-01-02", "1990-12-19")
+
+const (
+	_ int = iota
+	L1
+	L5
+	L30
+	LDay
+	LWeek
+	LMonth
+)
+
 const (
 	lmt   = "2006-01-02 15:04:05"
 	l_lmt = len(lmt)
@@ -76,4 +88,9 @@ func (p *Tdata) FromString(timestr, open, high, cloze, low, volume string) {
 	p.Low = ParseCent(low)
 	p.Close = ParseCent(cloze)
 	p.Volume, _ = strconv.Atoi(volume)
+}
+
+func (p *Tdata) UpdateMacd() {
+	p.DIFF = p.Emas - p.Emal
+	p.MACD = 2 * (p.DIFF - p.DEA)
 }

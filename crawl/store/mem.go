@@ -18,13 +18,13 @@ func (p *Mem) Open() error { return nil }
 func (p *Mem) Close() {
 }
 
-func (p *Mem) LoadTDatas(table string) (res []Tdata, err error) {
+func (p *Mem) LoadTDatas(table string, start time.Time) (res []Tdata, err error) {
 	return
 }
 
 func (p *Mem) SaveTDatas(string, []Tdata) (err error) { return }
 
-func (p *Mem) LoadTicks(table string) (res []Tick, err error) {
+func (p *Mem) LoadTicks(table string, start time.Time) (res []Tick, err error) {
 	return
 }
 
@@ -58,4 +58,16 @@ func (p *Mem) HasTickData(table string, t time.Time) bool {
 
 func (p *Mem) LoadStar(uid int) (res []CategoryItemInfo, err error) {
 	return
+}
+
+func (p *Mem) GetStartTime(symbol string, typ int) time.Time {
+	return Market_begin_day
+}
+
+func (p *Mem) LoadMacd(symbol string, typ int, start time.Time) (*Tdata, error) {
+	return nil, nil
+}
+
+func (p *Mem) SaveMacds(symbol string, typ int, datas []Tdata) error {
+	return nil
 }

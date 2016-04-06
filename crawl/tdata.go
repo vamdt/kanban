@@ -12,6 +12,7 @@ type Tdatas struct {
 	Segment segment_parser
 	Hub     hub_parser
 	tag     string
+	start   time.Time
 
 	min_hub_height int
 

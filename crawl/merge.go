@@ -1,23 +1,12 @@
 package crawl
 
 import (
-	"flag"
 	"time"
 
 	. "./base"
 )
 
-var jhjj_k bool
-
-func init() {
-	flag.BoolVar(&jhjj_k, "auction_as_a_k", true, "集合竞价作为一个独立K线")
-}
-
 func (p *Stock) Ticks2M1s() int {
-	jhjj := time.Duration(31)
-	if jhjj_k {
-		jhjj = time.Duration(30)
-	}
 	p.M1s.Drop_lastday_data()
 	index := len(p.M1s.Data)
 	start_time := p.M1s.latest_time().AddDate(0, 0, 1).Truncate(time.Hour * 24)
@@ -27,7 +16,7 @@ func (p *Stock) Ticks2M1s() int {
 		t := end.Add(-1 * time.Minute)
 		h, m, _ := t.Clock()
 		if h == 9 && m < 30 { // < 9:30
-			end = end.Truncate(time.Hour).Add(jhjj * time.Minute)
+			end = end.Truncate(time.Hour).Add(30 * time.Minute)
 			t = end.Add(-1 * time.Minute)
 		} else if h == 11 && m > 29 { // > 11:29 11:35
 			end = end.Add(5 * time.Minute)

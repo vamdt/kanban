@@ -26,9 +26,9 @@ func (p *Mysql) createTickTable(table string) {
 	}
 }
 
-func (p *Mysql) LoadTicks(table string) (res []Tick, err error) {
+func (p *Mysql) LoadTicks(table string, start time.Time) (res []Tick, err error) {
 	d := Tick{}
-	rows, err := p.db.Query("SELECT `time`,`price`,`change`,`volume`,`turnover`,`type` FROM `" + table + "` ORDER BY time")
+	rows, err := p.db.Query("SELECT `time`,`price`,`change`,`volume`,`turnover`,`type` FROM `"+table+"` WHERE `time`>=? ORDER BY time", start)
 	if err != nil {
 		glog.Warningln(err)
 		return

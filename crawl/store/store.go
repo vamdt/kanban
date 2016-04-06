@@ -36,7 +36,7 @@ func unregisterAllDrivers() {
 }
 
 type TicksStore interface {
-	LoadTicks(table string) ([]Tick, error)
+	LoadTicks(table string, start time.Time) ([]Tick, error)
 	SaveTicks(string, []Tick) error
 	HasTickData(table string, t time.Time) bool
 }
@@ -53,13 +53,20 @@ type StarStore interface {
 	LoadStar(uid int) ([]CategoryItemInfo, error)
 }
 
+type TDataStore interface {
+	LoadTDatas(table string, start time.Time) ([]Tdata, error)
+	SaveTDatas(string, []Tdata) error
+	GetStartTime(symbol string, typ int) time.Time
+	LoadMacd(symbol string, typ int, start time.Time) (*Tdata, error)
+	SaveMacds(symbol string, typ int, datas []Tdata) error
+}
+
 type Store interface {
 	TicksStore
 	StarStore
+	TDataStore
 	Open() error
 	Close()
-	LoadTDatas(table string) ([]Tdata, error)
-	SaveTDatas(string, []Tdata) error
 }
 
 func Get(s string) Store {

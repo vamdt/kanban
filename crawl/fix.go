@@ -12,7 +12,7 @@ import (
 
 func (p *Stock) Days_fix(store store.Store) {
 	c := Day_collection_name(p.Id)
-	p.Days.Data, _ = store.LoadTDatas(c)
+	p.Days.Data, _ = store.LoadTDatas(c, Market_begin_day)
 	l := len(p.Days.Data)
 	if l < 1 {
 		return

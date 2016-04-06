@@ -26,8 +26,8 @@ func (p *Mysql) createDayTdataTable(table string) {
 	}
 }
 
-func (p *Mysql) LoadTDatas(table string) (res []Tdata, err error) {
-	rows, err := p.db.Query("SELECT `time`,`open`,`high`,`low`,`close`,`volume` FROM `" + table + "` ORDER BY time")
+func (p *Mysql) LoadTDatas(table string, start time.Time) (res []Tdata, err error) {
+	rows, err := p.db.Query("SELECT `time`,`open`,`high`,`low`,`close`,`volume` FROM `"+table+"` WHERE `time`>=? ORDER BY time", start)
 	if err != nil {
 		glog.Warningln(err)
 		return
