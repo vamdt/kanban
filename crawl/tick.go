@@ -112,7 +112,7 @@ func (p *Ticks) hasTimeData(t time.Time) bool {
 	if ok {
 		return true
 	}
-	if i > len(p.Data) {
+	if i >= len(p.Data) {
 		return false
 	}
 	return t.Truncate(24 * time.Hour).Equal(p.Data[i].Time.Truncate(24 * time.Hour))
