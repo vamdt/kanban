@@ -2,45 +2,20 @@ package robot
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"path"
 	"time"
+
+	"github.com/golang/glog"
 )
 
-const tout time.Duration = time.Second * 10
-
-func raw_cache_filename(id string, t time.Time) string {
-	return path.Join(os.Getenv("HOME"), "cache", t.Format("2006/0102"), id)
-}
-
-func tick_read_raw_cache(id string, t time.Time) ([]byte, error) {
-	return ioutil.ReadFile(raw_cache_filename(id, t))
-}
-
-func tick_write_raw_cache(c []byte, id string, t time.Time) {
-	if len(c) < 1 {
-		return
-	}
-	f := raw_cache_filename(id, t)
-	os.MkdirAll(path.Dir(f), 0755)
-	ioutil.WriteFile(f, c, 0644)
-}
+const tout time.Duration = time.Second * 20
 
 func Tick_download_from_sina(id string, t time.Time) []byte {
-	body, err := tick_read_raw_cache(id, t)
-	if err == nil {
-		return body
-	}
-
-	body, err = Http_get(Tick_sina_url(id, t), nil, tout)
+	body, err := Http_get(Tick_sina_url(id, t), nil, tout)
 	if err != nil {
-		log.Println(err)
+		glog.Warningln(err)
 		return nil
 	}
 
-	tick_write_raw_cache(body, id, t)
 	return body
 }
 
@@ -49,7 +24,7 @@ func Tick_download_today_from_sina(id string) []byte {
 		id, time.Now().UnixNano()/int64(time.Millisecond))
 	body, err := Http_get(url, nil, tout)
 	if err != nil {
-		log.Println(err)
+		glog.Warningln(err)
 		return nil
 	}
 
@@ -64,7 +39,7 @@ func Tick_download_real_from_sina(id string) []byte {
 		time.Now().UnixNano()/int64(time.Millisecond), id)
 	body, err := Http_get(url, nil, tout)
 	if err != nil {
-		log.Println(err)
+		glog.Warningln(err)
 		return nil
 	}
 
