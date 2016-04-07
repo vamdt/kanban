@@ -11,7 +11,7 @@
   </form>
   <ul v-show="sugg" class="pure-menu-children">
     <li v-for="s in sugg" class="pure-menu-item">
-      <a v-link="{ path: '/s/'+s.sid+'/1' }"
+      <a v-link="{ path: '/s/'+s.sid }"
       @click.prevent="show_stock(s)"
       class="pure-menu-link">{{s.name}}</a>
     </li>

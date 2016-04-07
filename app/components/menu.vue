@@ -22,10 +22,10 @@
     <ul class="pure-menu-list">
         <li class="pure-menu-item pure-menu-selected"><a v-link="{ path: '/' }" class="pure-menu-link">Home</a></li>
         <li class="pure-menu-item pure-menu-has-children pure-menu-allow-hover">
-            <a v-link="{ path: '/s/'+cur_stock.sid+'/1' }" class="pure-menu-link">{{cur_stock.name}}</a>
+            <a v-link="{ path: '/s/'+cur_stock.sid }" class="pure-menu-link">{{cur_stock.name}}</a>
             <ul class="pure-menu-children">
               <li v-for="s in stocks | orderBy 'c' -1" class="pure-menu-item">
-                <a v-link="{ path: '/s/'+s.sid+'/1' }"
+                <a v-link="{ path: '/s/'+s.sid }"
                 @click.prevent="show_stock(s)"
                 class="pure-menu-link">{{s.name}}/{{s.sid}}</a>
               </li>
@@ -100,7 +100,7 @@ export default {
     },
 
     show_stock(to) {
-      const k = param(this.$route.params, 'k') || 1;
+      const k = param(this.$route.params, 'k') || 30;
       if (to.hasOwnProperty('c')) {
         const _to = to;
         _to.c = to.c + 1;

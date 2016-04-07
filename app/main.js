@@ -31,6 +31,7 @@ router.map({
 
 router.redirect({
   '/lucky': '/lucky/sh000001',
+  '/s/:sid': '/s/:sid/30',
 });
 
 router.start(App, '#app');
