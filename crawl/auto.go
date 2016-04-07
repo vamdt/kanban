@@ -357,9 +357,8 @@ func (p *Stock) Merge(day bool, store store.Store) {
 }
 
 func (p *Tdatas) ParseChan() {
-	p.ParseTyping()
-
 	if p.base == nil {
+		p.ParseTyping()
 		p.Typing.LinkTyping()
 		p.ParseSegment()
 		p.Segment.LinkTyping()
