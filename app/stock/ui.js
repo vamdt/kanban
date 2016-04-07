@@ -362,7 +362,12 @@ export default class KUI {
   }
 
   color(compare) {
-    return (...args) => compare(...args) ? color.up : color.down;
+    return (...args) => {
+      if (compare(...args)) {
+        return color.up;
+      }
+      return color.down;
+    };
   }
 
   tColor(d) {

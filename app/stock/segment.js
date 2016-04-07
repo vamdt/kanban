@@ -16,9 +16,16 @@ class Segment {
     const sdata = segment.Data;
     const dataset = filter(sdata, data);
 
+    const fillFn = (d) => {
+      if (d.Case1) {
+        return this._ui.tColor(d);
+      }
+      return '#fff';
+    };
+
     const style = {
       stroke: this._ui.tColor,
-      fill: (d) => d.Case1 ? this._ui.tColor(d) : '#fff',
+      fill: fillFn,
     };
     this._ui.circle(dataset, 'segment', style);
   }
