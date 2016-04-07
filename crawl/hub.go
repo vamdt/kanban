@@ -150,7 +150,7 @@ func (p *Tdatas) ParseHubBase() {
 }
 
 func (p *Tdatas) ParseHubFromBase() {
-	hub := p.Hub
+	hub := &p.Hub
 	base := p.base.Hub
 	hub.drop_last_5_data()
 	start := 0
@@ -190,8 +190,8 @@ func (p *Tdatas) ParseHubFromBase() {
 			}
 		} else {
 			// GG1 >= DD0 and DD1 <= GG0 must be true
-			t.b1 = GG1
-			t.e3 = DD0
+			t.b1 = maxInt(GG0, GG1)
+			t.e3 = minInt(DD0, DD1)
 			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
 				t.High = GG1
 				t.Low = DD0
