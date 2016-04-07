@@ -14,6 +14,8 @@ const defaults = {
     down: '#080',
     eq: '#000',
   },
+  typing_circle_size: 1,
+  segment_circle_size: 3,
 };
 
 function load() {
