@@ -19,16 +19,7 @@ func (p *Stock) Days_fix(store store.Store) {
 	}
 	t := p.Days.Data[0].Time
 	inds, _ := p.days_download(t)
-	tdatas := []Tdata{}
-	l = len(p.Days.Data)
-	for _, ind := range inds {
-		if ind < l {
-			tdatas = append(tdatas, p.Days.Data[ind])
-		}
-	}
-	if len(tdatas) > 0 {
-		store.SaveTDatas(c, tdatas)
-	}
+	store.SaveTDatas(c, p.Days.Data, inds)
 }
 
 func (p *Stock) Ticks_fix(store store.Store) {

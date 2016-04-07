@@ -114,6 +114,11 @@ func (p *Mysql) SaveCategories(c Category, pid int) (err error) {
 	return
 }
 
+func (p *Mysql) UpdateFactor(name string, factor int) {
+	table := categoryTable
+	p.db.Exec("UPDATE `"+table+"` SET `factor`=? WHERE `name`=?", factor, name)
+}
+
 func (p *Mysql) SaveCategoryItemInfoFactor(datas []CategoryItemInfo) {
 	table := categoryTable
 	p.db.Exec("UPDATE `" + table + "` SET `factor`=0")

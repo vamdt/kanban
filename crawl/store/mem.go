@@ -22,7 +22,7 @@ func (p *Mem) LoadTDatas(table string, start time.Time) (res []Tdata, err error)
 	return
 }
 
-func (p *Mem) SaveTDatas(string, []Tdata) (err error) { return }
+func (p *Mem) SaveTDatas(string, []Tdata, []int) (err error) { return }
 
 func (p *Mem) LoadTicks(table string, start time.Time) (res []Tick, err error) {
 	return
@@ -71,3 +71,5 @@ func (p *Mem) LoadMacd(symbol string, typ int, start time.Time) (*Tdata, error) 
 func (p *Mem) SaveMacds(symbol string, typ int, datas []Tdata) error {
 	return nil
 }
+
+func (p *Mem) UpdateFactor(name string, factor int) {}

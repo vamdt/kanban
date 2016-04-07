@@ -415,13 +415,13 @@ func (p *Stock) Days_update(store store.Store) int {
 		return 0
 	}
 
-	l := len(p.Days.Data)
-	p.days_download(t)
-	count := len(p.Days.Data)
-	if count > l {
-		store.SaveTDatas(c, p.Days.Data[l:])
+	inds, _ := p.days_download(t)
+	if len(inds) > 0 {
+		store.SaveTDatas(c, p.Days.Data, inds)
+		factor := p.Days.Factor()
+		store.UpdateFactor(p.Id, factor)
 	}
-	return count - l
+	return len(inds)
 }
 
 func (p *Stock) Ticks_update(store store.Store) int {

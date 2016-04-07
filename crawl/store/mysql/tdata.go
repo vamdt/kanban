@@ -46,7 +46,7 @@ func (p *Mysql) LoadTDatas(table string, start time.Time) (res []Tdata, err erro
 	return
 }
 
-func (p *Mysql) checkTDatas(table string, datas []Tdata) ([]Tdata, error) {
+func (p *Mysql) checkTDatas(table string, datas []Tdata, inds []int) ([]int, error) {
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -60,23 +60,27 @@ func (p *Mysql) checkTDatas(table string, datas []Tdata) ([]Tdata, error) {
 		}
 	}
 	if err != nil {
-		return datas, err
+		return nil, err
 	}
 	defer stmt.Close()
 
-	unsave := []Tdata{}
-	for i, c := 0, len(datas); i < c; i++ {
+	unsave := []int{}
+	dlen := len(datas)
+	for _, i := range inds {
+		if i < 0 || i >= dlen {
+			continue
+		}
 		has := false
 		stmt.QueryRow(datas[i].Time).Scan(&has)
 		if !has {
-			unsave = append(unsave, datas[i])
+			unsave = append(unsave, i)
 		}
 	}
 
 	return unsave, nil
 }
 
-func (p *Mysql) saveTDatas(table string, datas []Tdata) error {
+func (p *Mysql) saveTDatas(table string, datas []Tdata, inds []int) error {
 	var stmt *sql.Stmt
 	var err error
 	for i := 0; i < 2; i++ {
@@ -94,7 +98,11 @@ func (p *Mysql) saveTDatas(table string, datas []Tdata) error {
 	}
 	defer stmt.Close()
 
-	for i, c := 0, len(datas); i < c; i++ {
+	dlen := len(datas)
+	for _, i := range inds {
+		if i < 0 || i >= dlen {
+			continue
+		}
 		data := &datas[i]
 		_, e := stmt.Exec(data.Time, data.Open, data.High, data.Low, data.Close, data.Volume)
 		if e != nil {
@@ -123,14 +131,16 @@ func (p *Mysql) saveTDatas(table string, datas []Tdata) error {
 	return err
 }
 
-func (p *Mysql) SaveTDatas(table string, datas []Tdata) error {
+func (p *Mysql) SaveTDatas(table string, datas []Tdata, unsave []int) error {
+	if len(unsave) < 1 {
+		return nil
+	}
 	var err error
-	unsave := datas
 	saved := 0
 	for i := 0; i < 10 && len(unsave) > 0; i++ {
-		err = p.saveTDatas(table, unsave)
+		err = p.saveTDatas(table, datas, unsave)
 		sum := len(unsave)
-		unsave, err = p.checkTDatas(table, unsave)
+		unsave, err = p.checkTDatas(table, datas, unsave)
 		saved = sum - len(unsave)
 		if saved > 0 {
 			i--

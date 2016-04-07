@@ -51,11 +51,12 @@ type StarStore interface {
 	UnStar(int, string)
 	IsStar(pid int, symbol string) bool
 	LoadStar(uid int) ([]CategoryItemInfo, error)
+	UpdateFactor(name string, factor int)
 }
 
 type TDataStore interface {
 	LoadTDatas(table string, start time.Time) ([]Tdata, error)
-	SaveTDatas(string, []Tdata) error
+	SaveTDatas(string, []Tdata, []int) error
 	GetStartTime(symbol string, typ int) time.Time
 	LoadMacd(symbol string, typ int, start time.Time) (*Tdata, error)
 	SaveMacds(symbol string, typ int, datas []Tdata) error
