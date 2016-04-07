@@ -26,6 +26,7 @@ func (p *hub_parser) addHub(h Typing) {
 			p.Data[l-1].b1 = maxInt(GG0, GG1)
 			p.Data[l-1].e3 = minInt(DD0, DD1)
 			p.Data[l-1].end = h.end
+			p.Data[l-1].ETime = h.ETime
 			return
 		}
 	}
@@ -87,7 +88,6 @@ func (p *Tdatas) ParseHubBase() {
 	if start == -1 {
 		return
 	}
-	glog.Infoln(p.tag, "for hub start", start)
 
 	//change_direction := false
 	for i, l := start, len(line); i+2 < l; i++ {
@@ -156,6 +156,7 @@ func (p *Tdatas) ParseHubFromBase() {
 	start := 0
 
 	ldata := len(base.Data)
+	prevI := 0
 
 	DD1, GG1, ZD1, ZG1 := 0, 0, 0, 0
 	DD0, GG0, ZD0, ZG0 := DD1, GG1, ZD1, ZG1
@@ -166,6 +167,7 @@ func (p *Tdatas) ParseHubFromBase() {
 			h := base.Data[start-1]
 			ZD0, ZG0 = h.Low, h.High
 			DD0, GG0 = h.b1, h.e3
+			prevI = start - 1
 		}
 	}
 
@@ -183,15 +185,21 @@ func (p *Tdatas) ParseHubFromBase() {
 		if DD1 > GG0 { // DD1 > GG0 Up
 			if width > 7 {
 				hub.addHub(t)
+			} else {
+				prevI = i
 			}
 		} else if GG1 < DD0 { // GG1 < DD0 Down
 			if width > 7 {
 				hub.addHub(t)
+			} else {
+				prevI = i
 			}
 		} else {
 			// GG1 >= DD0 and DD1 <= GG0 must be true
 			t.b1 = maxInt(GG0, GG1)
 			t.e3 = minInt(DD0, DD1)
+			t.Time = base.Data[prevI].Time
+			t.begin = prevI
 			if ZG1 < ZD0 { // ZG1 < ZD0 && GG1 >= DD0 New Hub
 				t.High = GG1
 				t.Low = DD0
@@ -201,8 +209,8 @@ func (p *Tdatas) ParseHubFromBase() {
 				t.Low = DD1
 				hub.addHub(t)
 			} else {
-				glog.Warningf("found [ZD0/%d, ZG0/%d] mix with [ZD1/%d, ZG1/%d]",
-					ZD0, ZG0, ZD1, ZG1)
+				glog.Warningf("%s found [%d] Z[%d, %d] mix with Z[%d, %d]",
+					p.tag, i, ZD0, ZG0, ZD1, ZG1)
 			}
 		}
 
